@@ -2,7 +2,19 @@ import type { PostRow } from './types'
 
 const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
 
-export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://agroconecta.com.py').replace(/\/$/, '')
+function normalizeSiteUrl(value: string | undefined) {
+  const fallback = 'https://agroconecta.com.py'
+  const raw = value?.trim() || fallback
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+
+  try {
+    return new URL(withProtocol).origin
+  } catch {
+    return fallback
+  }
+}
+
+export const siteUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)
 
 export function absoluteUrl(path: string) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path

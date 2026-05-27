@@ -18,39 +18,49 @@ function isCategory(value: string | undefined): value is NewsCategory {
 }
 
 async function loadAvailableCategories() {
-  const supabase = await createSupabaseServer()
-  const { data, error } = await supabase
-    .from('posts')
-    .select('category')
-    .eq('editorial_status', 'published')
-    .limit(200)
+  try {
+    const supabase = await createSupabaseServer()
+    const { data, error } = await supabase
+      .from('posts')
+      .select('category')
+      .eq('editorial_status', 'published')
+      .limit(200)
 
-  if (error) return []
+    if (error) return []
 
-  return Array.from(
-    new Set(
-      (data ?? [])
-        .map((row) => row.category)
-        .filter((category): category is NewsCategory => isCategory(category))
+    return Array.from(
+      new Set(
+        (data ?? [])
+          .map((row) => row.category)
+          .filter((category): category is NewsCategory => isCategory(category))
+      )
     )
-  )
+  } catch (error) {
+    console.error('Home categories failed', error)
+    return []
+  }
 }
 
 async function loadPosts(category?: NewsCategory) {
-  const supabase = await createSupabaseServer()
-  let query = supabase
-    .from('posts')
-    .select('id,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,is_highlighted,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
-    .eq('editorial_status', 'published')
-    .order('is_important', { ascending: false })
-    .order('published_at', { ascending: false })
-    .limit(24)
+  try {
+    const supabase = await createSupabaseServer()
+    let query = supabase
+      .from('posts')
+      .select('id,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,is_highlighted,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
+      .eq('editorial_status', 'published')
+      .order('is_important', { ascending: false })
+      .order('published_at', { ascending: false })
+      .limit(24)
 
-  if (category) query = query.eq('category', category)
+    if (category) query = query.eq('category', category)
 
-  const { data, error } = await query
-  if (error) return []
-  return (data ?? []) as unknown as PostRow[]
+    const { data, error } = await query
+    if (error) return []
+    return (data ?? []) as unknown as PostRow[]
+  } catch (error) {
+    console.error('Home posts failed', error)
+    return []
+  }
 }
 
 export default async function HomePage({ searchParams }: Props) {

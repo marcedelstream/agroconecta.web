@@ -1,7 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { SignOutButton } from './SignOutButton'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 const ADMIN_NAV = [
   { href: '/admin', label: 'Dashboard', icon: '▦' },

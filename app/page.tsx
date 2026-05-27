@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { NewsCard } from '@/components/NewsCard'
@@ -8,6 +9,14 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { CATEGORY_LABELS, type NewsCategory, type PostRow } from '@/lib/types'
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as NewsCategory[]
+
+export const metadata: Metadata = {
+  title: 'Noticias agropecuarias del Paraguay',
+  description: 'Últimas noticias agropecuarias de Paraguay publicadas por Agroconecta y organizaciones verificadas.',
+  alternates: {
+    canonical: '/',
+  },
+}
 
 interface Props {
   searchParams: Promise<{ categoria?: string }>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { CategoryBadge } from './CategoryBadge'
 import type { PostRow, NewsCategory } from '@/lib/types'
+import { postPath } from '@/lib/seo'
 
 interface Props {
   post: PostRow
@@ -34,10 +35,11 @@ function VerifiedBadge() {
 export function NewsCard({ post, featured = false }: Props) {
   const org = post.organizations ?? null
   const date = post.published_at ?? post.created_at
+  const href = postPath(post)
 
   if (featured) {
     return (
-      <Link href={`/noticias/${post.id}`} className="block group">
+      <Link href={href} className="block group">
         <article className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[21/9]">
           {post.image_url ? (
             <Image
@@ -82,7 +84,7 @@ export function NewsCard({ post, featured = false }: Props) {
   }
 
   return (
-    <Link href={`/noticias/${post.id}`} className="block group h-full">
+    <Link href={href} className="block group h-full">
       <article className="card flex gap-4 hover:border-bdr/60 transition-colors h-full">
         {post.image_url && (
           <div className="relative w-24 h-24 md:w-28 md:h-24 shrink-0 rounded-lg overflow-hidden">

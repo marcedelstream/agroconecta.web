@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,17 +7,19 @@ import { Footer } from '@/components/Footer'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
+import { absoluteUrl, extractPostId, postPath, postUrl, truncateMeta } from '@/lib/seo'
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
 async function loadPost(id: string) {
+  const postId = extractPostId(id)
   const supabase = await createSupabaseServer()
   const { data } = await supabase
     .from('posts')
     .select('id,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
-    .eq('id', id)
+    .eq('id', postId)
     .eq('editorial_status', 'published')
     .single()
   return data as PostRow | null
@@ -33,20 +35,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const post = await loadPost(id)
   if (!post) return { title: 'Artículo no encontrado' }
+
+  const description = truncateMeta(post.summary || post.content)
+  const url = postUrl(post)
+  const images = post.image_url
+    ? [{ url: post.image_url, width: 1200, height: 630, alt: post.title }]
+    : [{ url: absoluteUrl('/logo-dark.png'), width: 1200, height: 630, alt: 'Agroconecta' }]
+
   return {
     title: post.title,
-    description: post.summary,
+    description,
+    alternates: {
+      canonical: postPath(post),
+    },
     openGraph: {
       title: post.title,
-      description: post.summary,
-      images: post.image_url ? [post.image_url] : [],
-      url: `https://agroconecta.com.py/noticias/${id}`,
+      description,
+      type: 'article',
+      publishedTime: post.published_at ?? post.created_at,
+      authors: post.organizations?.name ? [post.organizations.name] : ['Agroconecta'],
+      images,
+      url,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.summary,
-      images: post.image_url ? [post.image_url] : [],
+      description,
+      images: images.map((image) => image.url),
     },
   }
 }
@@ -64,13 +79,40 @@ export default async function ArticlePage({ params }: Props) {
         year: 'numeric',
       })
     : null
-  const canonicalUrl = `https://agroconecta.com.py/noticias/${post.id}`
+  const canonicalUrl = postUrl(post)
+  const description = truncateMeta(post.summary || post.content)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: post.title,
+    description,
+    image: post.image_url ? [post.image_url] : undefined,
+    datePublished: post.published_at ?? post.created_at,
+    dateModified: post.published_at ?? post.created_at,
+    author: {
+      '@type': 'Organization',
+      name: org?.name ?? 'Agroconecta',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Agroconecta',
+      logo: {
+        '@type': 'ImageObject',
+        url: absoluteUrl('/logo-dark.png'),
+      },
+    },
+    mainEntityOfPage: canonicalUrl,
+  }
 
   return (
     <>
       <Header />
 
       <main className="site-container py-10">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <Link href="/" className="text-muted text-sm hover:text-foreground transition-colors inline-flex items-center gap-1.5 mb-6">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11 12.5L6.5 8 11 3.5 9.5 2l-6 6 6 6z" /></svg>
           Volver a noticias
@@ -105,7 +147,7 @@ export default async function ArticlePage({ params }: Props) {
                   )}
                 </div>
               )}
-              {dateStr && <span>{dateStr}</span>}
+              {dateStr && <time dateTime={post.published_at ?? post.created_at}>{dateStr}</time>}
             </div>
           </header>
 
@@ -167,4 +209,3 @@ export default async function ArticlePage({ params }: Props) {
     </>
   )
 }
-

@@ -6,6 +6,9 @@ import { Footer } from '@/components/Footer'
 export const metadata: Metadata = {
   title: 'Quiénes somos',
   description: 'Conocé a Agroconecta, sus fundadores y la visión detrás del ecosistema digital agropecuario.',
+  alternates: {
+    canonical: '/quienes-somos',
+  },
 }
 
 const FOUNDERS = [

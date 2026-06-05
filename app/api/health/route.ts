@@ -3,6 +3,22 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+const HEALTH_TIMEOUT_MS = 2500
+
+const fetchWithTimeout: typeof fetch = async (input, init) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export async function GET() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -29,6 +45,7 @@ export async function GET() {
   try {
     const supabase = createClient(url, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
+      global: { fetch: fetchWithTimeout },
     })
     const { error } = await supabase.from('posts').select('id').limit(1)
     result.supabase = error ? error.message : 'ok'

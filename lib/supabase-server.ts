@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const SUPABASE_TIMEOUT_MS = 8000
+const SUPABASE_TIMEOUT_MS = 2500
 
 const fetchWithTimeout: typeof fetch = async (input, init) => {
   const controller = new AbortController()

@@ -75,11 +75,11 @@ async function loadPosts(category?: NewsCategory) {
 export default async function HomePage({ searchParams }: Props) {
   const { categoria } = await searchParams
   const requestedCategory = isCategory(categoria) ? categoria : undefined
-  const availableCategories = await loadAvailableCategories()
-  const activeCategory = requestedCategory && availableCategories.includes(requestedCategory)
-    ? requestedCategory
-    : undefined
-  const posts = await loadPosts(activeCategory)
+  const [availableCategories, posts] = await Promise.all([
+    loadAvailableCategories(),
+    loadPosts(requestedCategory),
+  ])
+  const activeCategory = requestedCategory
   const featured = posts.find((p) => p.is_highlighted) ?? posts[0]
   const rest = posts.filter((p) => p.id !== featured?.id)
 

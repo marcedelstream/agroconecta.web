@@ -5,7 +5,6 @@ import { Footer } from '@/components/Footer'
 import { NewsCard } from '@/components/NewsCard'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { HomeSidebar } from '@/components/HomeSidebar'
-import { VisitCounter } from '@/components/VisitCounter'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { CATEGORY_LABELS, type NewsCategory, type PostRow } from '@/lib/types'
 
@@ -101,9 +100,6 @@ export default async function HomePage({ searchParams }: Props) {
               <p className="text-muted text-base mt-3 max-w-2xl">
                 Actualidad del sector, instituciones y organizaciones verificadas de Paraguay.
               </p>
-              <div className="mt-4">
-                <VisitCounter path="/" label="Visitas del portal" />
-              </div>
             </section>
 
             {featured && (

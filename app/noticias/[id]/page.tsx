@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { CategoryBadge } from '@/components/CategoryBadge'
+import { VisitCounter } from '@/components/VisitCounter'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
 import { absoluteUrl, extractPostId, postPath, postUrl, truncateMeta } from '@/lib/seo'
@@ -148,6 +149,7 @@ export default async function ArticlePage({ params }: Props) {
                 </div>
               )}
               {dateStr && <time dateTime={post.published_at ?? post.created_at}>{dateStr}</time>}
+              <VisitCounter path={postPath(post)} label="Lecturas" />
             </div>
           </header>
 
@@ -183,7 +185,7 @@ export default async function ArticlePage({ params }: Props) {
 
           <div className="mt-12 pt-8 border-t border-bdr">
             <p className="text-muted text-sm mb-3">Compartir</p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(`${post.title} — ${canonicalUrl}`)}`}
                 target="_blank"
@@ -199,6 +201,22 @@ export default async function ArticlePage({ params }: Props) {
                 className="btn text-xs"
               >
                 Twitter / X
+              </a>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn text-xs"
+              >
+                Facebook
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn text-xs"
+              >
+                LinkedIn
               </a>
             </div>
           </div>

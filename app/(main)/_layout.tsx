@@ -19,7 +19,6 @@ const tabs: { name: string; title: string; icon: IconName; activeIcon: IconName 
   { name: 'prices', title: 'Precios', icon: 'trending-up-outline', activeIcon: 'trending-up' },
   { name: 'videos', title: 'Videos', icon: 'play-circle-outline', activeIcon: 'play-circle' },
   { name: 'ecosystem', title: 'Ecosistema', icon: 'globe-outline', activeIcon: 'globe' },
-  { name: 'profile', title: 'Perfil', icon: 'person-outline', activeIcon: 'person' },
 ]
 
 export default function MainLayout() {
@@ -77,6 +76,20 @@ export default function MainLayout() {
         />
         <Tabs.Screen
           name="webview"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="video/[id]"
           options={{
             href: null,
             tabBarStyle: { display: 'none' },

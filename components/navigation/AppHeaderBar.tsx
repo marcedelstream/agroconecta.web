@@ -1,5 +1,6 @@
 import { Image, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import { Spacing } from '@/constants/spacing'
 import { useColors, useTheme } from '@/lib/theme-context'
 
@@ -20,9 +21,14 @@ export function AppHeaderBar({ onMenuPress }: Props) {
         style={styles.logo}
         resizeMode="contain"
       />
-      <TouchableOpacity onPress={onMenuPress} style={styles.menuBtn} hitSlop={12}>
-        <Ionicons name="menu-outline" size={28} color={C.foreground} />
-      </TouchableOpacity>
+      <View style={styles.actions}>
+        <TouchableOpacity onPress={() => router.push('/(main)/profile')} style={styles.iconBtn} hitSlop={12}>
+          <Ionicons name="person-circle-outline" size={26} color={C.foreground} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onMenuPress} style={styles.iconBtn} hitSlop={12}>
+          <Ionicons name="menu-outline" size={28} color={C.foreground} />
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
@@ -40,7 +46,12 @@ const styles = StyleSheet.create({
     height: 32,
     width: 140,
   },
-  menuBtn: {
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
+  iconBtn: {
     padding: Spacing[1],
   },
 })

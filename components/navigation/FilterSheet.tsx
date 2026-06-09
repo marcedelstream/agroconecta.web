@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import {
   View,
   Animated,
@@ -17,7 +17,7 @@ import { newsCategories } from '@/lib/mock-data'
 import type { NewsCategory } from '@/lib/types'
 
 const { height: SCREEN_H } = Dimensions.get('window')
-const SHEET_H = SCREEN_H * 0.52
+const SHEET_H = SCREEN_H * 0.58
 
 interface Props {
   selected: NewsCategory | null
@@ -29,6 +29,7 @@ export function FilterSheet({ selected, onSelect, onClose }: Props) {
   const C = useColors()
   const slideAnim = useRef(new Animated.Value(SHEET_H)).current
   const overlayAnim = useRef(new Animated.Value(0)).current
+  const [pending, setPending] = useState<NewsCategory | null>(selected)
 
   useEffect(() => {
     Animated.parallel([
@@ -44,8 +45,8 @@ export function FilterSheet({ selected, onSelect, onClose }: Props) {
     ]).start(onClose)
   }
 
-  function handleSelect(cat: NewsCategory | null) {
-    onSelect(cat)
+  function handleApply() {
+    onSelect(pending)
     handleClose()
   }
 
@@ -56,42 +57,41 @@ export function FilterSheet({ selected, onSelect, onClose }: Props) {
       </Animated.View>
 
       <Animated.View style={[styles.sheet, { backgroundColor: C.surface, borderColor: C.border, transform: [{ translateY: slideAnim }] }]}>
-        {/* Handle */}
         <View style={[styles.handle, { backgroundColor: C.border }]} />
 
         <View style={[styles.sheetHeader, { borderBottomColor: C.border }]}>
-          <Text variant="subtitle" weight="semibold" family="poppins">Filtrar por categoría</Text>
+          <Text variant="subtitle" weight="semibold" family="poppins">Seleccionar categoría</Text>
           <TouchableOpacity onPress={handleClose} hitSlop={12}>
             <Ionicons name="close" size={22} color={C.muted} />
           </TouchableOpacity>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.options}>
-          {/* All option */}
+          {/* Todas */}
           <TouchableOpacity
-            style={[styles.option, { backgroundColor: C.secondary, borderColor: C.border }, selected === null && styles.optionActive]}
-            onPress={() => handleSelect(null)}
+            style={[styles.option, { backgroundColor: C.secondary, borderColor: C.border }, pending === null && styles.optionActive]}
+            onPress={() => setPending(null)}
             activeOpacity={0.75}
           >
-            <View style={[styles.optionIcon, selected === null && styles.optionIconActive]}>
-              <Ionicons name="apps-outline" size={20} color={selected === null ? '#0A0A13' : C.muted} />
+            <View style={[styles.optionIcon, pending === null && styles.optionIconActive]}>
+              <Ionicons name="apps-outline" size={20} color={pending === null ? '#0A0A13' : C.muted} />
             </View>
-            <Text variant="body" weight="medium" style={selected === null ? { color: '#0A0A13' } : { color: C.foreground }}>
+            <Text variant="body" weight="medium" style={pending === null ? { color: '#0A0A13' } : { color: C.foreground }}>
               Todas las categorías
             </Text>
-            {selected === null && (
+            {pending === null && (
               <Ionicons name="checkmark" size={18} color="#0A0A13" style={styles.check} />
             )}
           </TouchableOpacity>
 
           {newsCategories.map((cat) => {
-            const isActive = selected === cat.value
+            const isActive = pending === cat.value
             const catColor = Colors.category[cat.value as keyof typeof Colors.category]
             return (
               <TouchableOpacity
                 key={cat.value}
                 style={[styles.option, { backgroundColor: C.secondary, borderColor: C.border }, isActive && { backgroundColor: `${catColor}15`, borderColor: catColor }]}
-                onPress={() => handleSelect(cat.value)}
+                onPress={() => setPending(cat.value)}
                 activeOpacity={0.75}
               >
                 <View style={[styles.optionIcon, { backgroundColor: `${catColor}20` }]}>
@@ -107,6 +107,13 @@ export function FilterSheet({ selected, onSelect, onClose }: Props) {
             )
           })}
         </ScrollView>
+
+        {/* Botón Filtrar */}
+        <View style={[styles.footer, { borderTopColor: C.border }]}>
+          <TouchableOpacity style={styles.applyBtn} onPress={handleApply} activeOpacity={0.85}>
+            <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Filtrar</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
     </View>
   )
@@ -145,7 +152,7 @@ const styles = StyleSheet.create({
   options: {
     padding: Spacing[4],
     gap: Spacing[2],
-    paddingBottom: Spacing[8],
+    paddingBottom: Spacing[4],
   },
   option: {
     flexDirection: 'row',
@@ -170,4 +177,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
   check: { marginLeft: 'auto' },
+  footer: {
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[4],
+    paddingBottom: Spacing[8],
+    borderTopWidth: 1,
+  },
+  applyBtn: {
+    backgroundColor: Colors.lime,
+    borderRadius: Radius.base,
+    alignItems: 'center',
+    paddingVertical: Spacing[4],
+  },
 })

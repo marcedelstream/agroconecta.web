@@ -156,8 +156,12 @@ function HomeHeader({
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={onOpenFilters} style={styles.filterBtn} hitSlop={8}>
-          <Ionicons name="options-outline" size={22} color={C.lime} />
+        <TouchableOpacity
+          onPress={onOpenFilters}
+          style={[styles.filterBtn, { backgroundColor: C.surface, borderColor: C.border }]}
+          hitSlop={8}
+        >
+          <Text variant="body" weight="semibold" style={{ color: C.lime }}>Filtrar</Text>
         </TouchableOpacity>
       </View>
 
@@ -182,7 +186,7 @@ const styles = StyleSheet.create({
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], paddingTop: Spacing[3], paddingBottom: Spacing[2] },
   searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: Radius.base, paddingHorizontal: Spacing[3], paddingVertical: Spacing[2.5], gap: Spacing[2], borderWidth: 1 },
   searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 15 },
-  filterBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  filterBtn: { paddingHorizontal: Spacing[4], height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: Radius.base, borderWidth: 1 },
   activeCatRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], paddingBottom: Spacing[2] },
   adBanner: { marginVertical: Spacing[1] },
   empty: { alignItems: 'center', paddingTop: Spacing[12] },

@@ -41,30 +41,38 @@ function categoryLabel(cat: string) {
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const [article, setArticle] = useState<Post>(mockNews.find((n) => n.id === id) ?? mockNews[0])
-  const publisher = article.publisherId ? mockPublishers.find((p) => p.id === article.publisherId) : null
+  const [article, setArticle] = useState<Post | null>(null)
   const C = useColors()
 
+  // Resetear artículo al cambiar id para evitar mostrar el anterior mientras carga
   useEffect(() => {
+    if (!id) return
+    const local = mockNews.find((n) => n.id === id) ?? null
+    setArticle(local)
+
     let mounted = true
-    if (!id) return undefined
     fetchPublishedPostById(id)
-      .then((remoteArticle) => {
-        if (mounted && remoteArticle) setArticle(remoteArticle)
-      })
-      .catch(() => {
-        if (mounted) setArticle(mockNews.find((n) => n.id === id) ?? mockNews[0])
-      })
-    return () => {
-      mounted = false
-    }
+      .then((remote) => { if (mounted && remote) setArticle(remote) })
+      .catch(() => { if (mounted && !local) setArticle(null) })
+    return () => { mounted = false }
   }, [id])
+
+  if (!article) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background }}>
+        <Ionicons name="newspaper-outline" size={40} color={Colors.muted} />
+      </View>
+    )
+  }
+
+  const publisher = article.publisherId ? mockPublishers.find((p) => p.id === article.publisherId) : null
 
   const shareText = `${article.title}\n\nLeé más en Agroconecta`
   const shareUrl = `https://agroconecta.com.py/noticias/${article.id}`
 
   async function handleNativeShare() {
-    await Share.share({ message: `${shareText}\n${shareUrl}`, url: shareUrl })
+    // url solo en iOS — message ya no incluye la URL para evitar que aparezca doble
+    await Share.share({ message: shareText, url: shareUrl })
   }
 
   function shareWhatsApp() {

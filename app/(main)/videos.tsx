@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native'
-import WebView from 'react-native-webview'
+import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
@@ -8,33 +8,17 @@ import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
-import { mockVideos, newsCategories } from '@/lib/mock-data'
 import { fetchPublishedPosts } from '@/lib/supabase-repositories'
-import type { VideoItem, NewsCategory, Post } from '@/lib/types'
+import type { VideoItem, Post } from '@/lib/types'
 
-function formatViews(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-  return String(n)
-}
-
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime()
-  const d = Math.floor(diff / 86_400_000)
-  if (d < 1) return 'Hoy'
-  if (d === 1) return 'Ayer'
-  return `Hace ${d}d`
-}
-
-function categoryLabel(cat: string) {
-  return cat.charAt(0).toUpperCase() + cat.slice(1)
-}
-
-function postToVideoItem(post: Post): VideoItem {
+function postToVideo(post: Post): VideoItem {
   return {
     id: post.id,
     title: post.title,
     thumbnailUrl: post.imageUrl,
-    duration: post.contentType === 'auction' ? (post.auctionStatus === 'live' ? 'En vivo' : 'Proximo') : `${post.readTime}:00`,
+    duration: post.contentType === 'auction'
+      ? (post.auctionStatus === 'live' ? 'En vivo' : 'Próximo')
+      : `${post.readTime} min`,
     channel: post.source,
     category: post.category,
     views: 0,
@@ -48,39 +32,45 @@ function postToVideoItem(post: Post): VideoItem {
   }
 }
 
+function timeAgo(date: Date): string {
+  const d = Math.floor((Date.now() - date.getTime()) / 86_400_000)
+  if (d < 1) return 'Hoy'
+  if (d === 1) return 'Ayer'
+  return `Hace ${d}d`
+}
+
+function categoryLabel(cat: string) {
+  return cat.charAt(0).toUpperCase() + cat.slice(1)
+}
+
 export default function VideosScreen() {
-  const [activeCategory, setActiveCategory] = useState<NewsCategory | null>(null)
-  const [videos, setVideos] = useState<VideoItem[]>(mockVideos)
+  const [videos, setVideos] = useState<VideoItem[]>([])
+  const [loading, setLoading] = useState(true)
   const C = useColors()
 
   useEffect(() => {
     let mounted = true
+    setLoading(true)
     fetchPublishedPosts()
       .then((posts) => {
+        if (!mounted) return
         const remoteVideos = posts
-          .filter((post) => post.contentType === 'video' || post.contentType === 'auction')
-          .map(postToVideoItem)
-        if (mounted && remoteVideos.length > 0) setVideos(remoteVideos)
+          .filter((p) => p.contentType === 'video' || p.contentType === 'auction')
+          .map(postToVideo)
+        setVideos(remoteVideos)
       })
-      .catch(() => {
-        if (mounted) setVideos(mockVideos)
-      })
-    return () => {
-      mounted = false
-    }
+      .catch(() => { if (mounted) setVideos([]) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
   }, [])
 
-  const filtered = useMemo(() => {
-    const videoItems = videos.filter((v) => v.contentType !== 'auction')
-    if (!activeCategory) return videoItems
-    return videoItems.filter((v) => v.category === activeCategory)
-  }, [activeCategory, videos])
-  const featuredAuction = videos.find((v) => v.contentType === 'auction' && v.auctionStatus !== 'finished')
+  const auctions = videos.filter((v) => v.contentType === 'auction' && v.auctionStatus !== 'finished')
+  const regularVideos = videos.filter((v) => v.contentType !== 'auction')
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
       <FlatList
-        data={filtered}
+        data={regularVideos}
         keyExtractor={(v) => v.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
@@ -88,145 +78,92 @@ export default function VideosScreen() {
         columnWrapperStyle={styles.row}
         ListHeaderComponent={
           <>
-            {featuredAuction && <AuctionHero video={featuredAuction} />}
-            <Header activeCategory={activeCategory} onSelect={setActiveCategory} />
+            <Text variant="subtitle" weight="bold" family="poppins" style={styles.title}>
+              Galería de Videos
+            </Text>
+
+            {/* Cards de remates / en vivo */}
+            {auctions.map((v) => (
+              <AuctionCard key={v.id} video={v} />
+            ))}
+
+            {regularVideos.length > 0 && (
+              <Text variant="caption" color={C.muted} style={styles.sectionLabel}>
+                Últimos programas
+              </Text>
+            )}
           </>
         }
-        renderItem={({ item }) => <VideoCard video={item} />}
+        renderItem={({ item }) => (
+          <VideoCard video={item} onPress={() => router.push({ pathname: '/(main)/video/[id]', params: { id: item.id } })} />
+        )}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="videocam-outline" size={48} color={C.muted} />
-            <Text variant="body" color={C.muted} style={styles.emptyText}>
-              Sin videos para esta categoría.
-            </Text>
-          </View>
+          !loading ? (
+            <View style={styles.empty}>
+              <Ionicons name="videocam-outline" size={52} color={C.muted} />
+              <Text variant="body" color={C.muted} style={styles.emptyText}>
+                No hay videos disponibles.{'\n'}Pronto cargaremos los últimos programas.
+              </Text>
+            </View>
+          ) : null
         }
       />
     </View>
   )
 }
 
-function AuctionHero({ video }: { video: VideoItem }) {
+function AuctionCard({ video }: { video: VideoItem }) {
   const C = useColors()
+  const isLive = video.auctionStatus === 'live'
   return (
-    <View style={[styles.auctionCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-      <View style={styles.auctionHeader}>
-        <View style={styles.auctionTitleBlock}>
-          <Text variant="label" style={{ color: Colors.lime }}>REMATE DESTACADO</Text>
-          <Text variant="subtitle" weight="bold" family="poppins" style={styles.auctionTitle}>
-            {video.title}
-          </Text>
-        </View>
-        <View style={[styles.liveBadge, video.auctionStatus !== 'live' && { backgroundColor: C.secondary, borderColor: C.border }]}>
-          <View style={[styles.liveDot, video.auctionStatus !== 'live' && { backgroundColor: C.muted }]} />
-          <Text variant="label" style={{ color: video.auctionStatus === 'live' ? '#fff' : C.muted }}>
-            {video.auctionStatus === 'live' ? 'EN VIVO' : 'PROXIMO'}
+    <TouchableOpacity
+      style={[styles.auctionCard, { backgroundColor: C.surface, borderColor: isLive ? Colors.destructive : C.border }]}
+      activeOpacity={0.85}
+      onPress={() => router.push({ pathname: '/(main)/video/[id]', params: { id: video.id } })}
+    >
+      <View style={styles.auctionTop}>
+        <Text variant="label" style={{ color: Colors.lime }}>
+          {isLive ? 'REMATE EN VIVO' : 'REMATE PRÓXIMO'}
+        </Text>
+        <View style={[styles.liveBadge, { backgroundColor: isLive ? Colors.destructive : C.secondary, borderColor: isLive ? Colors.destructive : C.border }]}>
+          <View style={[styles.liveDot, { backgroundColor: isLive ? '#fff' : C.muted }]} />
+          <Text variant="label" style={{ color: isLive ? '#fff' : C.muted, fontSize: 10 }}>
+            {isLive ? 'EN VIVO' : 'PRÓXIMO'}
           </Text>
         </View>
       </View>
-      {video.youtubeUrl ? (
-        <WebView
-          source={{ uri: video.youtubeUrl }}
-          style={styles.auctionWebview}
-          javaScriptEnabled
-          domStorageEnabled
-          allowsFullscreenVideo
-        />
-      ) : (
-        <View style={[styles.auctionPlaceholder, { backgroundColor: C.secondary }]}>
-          <Ionicons name="calendar-outline" size={32} color={C.muted} />
-          <Text variant="body" color={C.muted}>Transmision pendiente de confirmacion.</Text>
-        </View>
-      )}
+      <Text variant="body" weight="bold" family="poppins" numberOfLines={2}>{video.title}</Text>
       <Text variant="caption" color={C.muted}>{video.channel}</Text>
-    </View>
+    </TouchableOpacity>
   )
 }
 
-function Header({
-  activeCategory,
-  onSelect,
-}: {
-  activeCategory: NewsCategory | null
-  onSelect: (c: NewsCategory | null) => void
-}) {
-  const C = useColors()
-  return (
-    <View style={styles.header}>
-      <Text variant="subtitle" weight="bold" family="poppins">Galería de Videos</Text>
-      <Text variant="body" color={C.muted} style={styles.headerDesc}>
-        Contenido audiovisual del agro paraguayo
-      </Text>
-
-      <FlatList
-        horizontal
-        data={[null, ...newsCategories.map((c) => c.value)] as (NewsCategory | null)[]}
-        keyExtractor={(c) => c ?? 'all'}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-        renderItem={({ item }) => {
-          const isActive = item === activeCategory
-          return (
-            <TouchableOpacity
-              onPress={() => onSelect(item)}
-              style={[
-                styles.filterChip,
-                { backgroundColor: C.surface, borderColor: C.border },
-                isActive && styles.filterChipActive,
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text
-                variant="caption"
-                weight="semibold"
-                style={{ color: isActive ? '#0A0A13' : C.muted }}
-              >
-                {item ? categoryLabel(item) : 'Todos'}
-              </Text>
-            </TouchableOpacity>
-          )
-        }}
-      />
-    </View>
-  )
-}
-
-function VideoCard({ video }: { video: VideoItem }) {
+function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const C = useColors()
   return (
     <TouchableOpacity
       style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}
       activeOpacity={0.85}
+      onPress={onPress}
     >
-      {/* Thumbnail */}
       <View style={styles.thumbContainer}>
         <Image source={{ uri: video.thumbnailUrl }} style={styles.thumb} />
         <View style={styles.thumbOverlay} />
-        {/* Play button */}
         <View style={styles.playBtn}>
           <Ionicons name="play" size={18} color="#fff" />
         </View>
-        {/* Duration */}
         <View style={styles.durationBadge}>
           <Text variant="label" style={styles.durationText}>{video.duration}</Text>
         </View>
       </View>
-
-      {/* Info */}
       <View style={styles.info}>
-        <Badge variant={video.category} style={styles.catBadge}>
-          {categoryLabel(video.category)}
-        </Badge>
+        <Badge variant={video.category}>{categoryLabel(video.category)}</Badge>
         <Text variant="caption" weight="semibold" numberOfLines={2} style={{ lineHeight: 17, color: C.foreground }}>
           {video.title}
         </Text>
         <View style={styles.meta}>
-          <Text variant="label" color={C.muted} numberOfLines={1} style={styles.channel}>
-            {video.channel}
-          </Text>
-          <Text variant="label" color={C.muted}>
-            {formatViews(video.views)} vistas · {timeAgo(video.publishedAt)}
-          </Text>
+          <Text variant="label" color={C.muted} numberOfLines={1}>{video.channel}</Text>
+          <Text variant="label" color={C.muted}>{timeAgo(video.publishedAt)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -236,25 +173,27 @@ function VideoCard({ video }: { video: VideoItem }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { padding: Spacing[4], paddingBottom: Spacing[8] },
+  title: { marginBottom: Spacing[4] },
+  sectionLabel: { marginBottom: Spacing[3], marginTop: Spacing[2] },
   row: { gap: Spacing[3], marginBottom: Spacing[3] },
-  header: { gap: Spacing[2], marginBottom: Spacing[4] },
-  headerDesc: { marginTop: -Spacing[1] },
-  auctionCard: { borderWidth: 1, borderRadius: Radius.base, padding: Spacing[3], gap: Spacing[3], marginBottom: Spacing[5] },
-  auctionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: Spacing[3] },
-  auctionTitleBlock: { flex: 1, minWidth: 0 },
-  auctionTitle: { marginTop: Spacing[1], flexShrink: 1 },
-  auctionWebview: { height: 210, borderRadius: Radius.md, overflow: 'hidden' },
-  auctionPlaceholder: { height: 210, alignItems: 'center', justifyContent: 'center', gap: Spacing[2], borderRadius: Radius.md },
-  liveBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing[1], backgroundColor: Colors.destructive, paddingHorizontal: Spacing[2], paddingVertical: Spacing[1], borderRadius: Radius.sm, borderWidth: 1, borderColor: Colors.destructive, alignSelf: 'flex-start', minWidth: 78, flexShrink: 0 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },
-  filterRow: { gap: Spacing[2], paddingVertical: Spacing[1] },
-  filterChip: {
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[1.5],
-    borderRadius: Radius.full,
+  auctionCard: {
+    borderWidth: 1,
+    borderRadius: Radius.base,
+    padding: Spacing[4],
+    gap: Spacing[2],
+    marginBottom: Spacing[4],
+  },
+  auctionTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[1],
+    paddingHorizontal: Spacing[2],
+    paddingVertical: Spacing[1],
+    borderRadius: Radius.sm,
     borderWidth: 1,
   },
-  filterChipActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },
+  liveDot: { width: 6, height: 6, borderRadius: 3 },
   card: {
     flex: 1,
     borderRadius: Radius.base,
@@ -288,9 +227,7 @@ const styles = StyleSheet.create({
   },
   durationText: { color: '#fff', fontSize: 10, fontFamily: Fonts.dmSansMedium },
   info: { padding: Spacing[2.5], gap: Spacing[1.5] },
-  catBadge: {},
   meta: { gap: 2 },
-  channel: {},
   empty: { alignItems: 'center', paddingTop: Spacing[12], gap: Spacing[3] },
-  emptyText: { textAlign: 'center' },
+  emptyText: { textAlign: 'center', lineHeight: 22 },
 })

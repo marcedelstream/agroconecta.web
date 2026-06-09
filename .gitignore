@@ -1,0 +1,43 @@
+# Build outputs
+.next/
+dist/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment variables — NUNCA subir credenciales
+.env
+.env.local
+.env*.local
+.env.production
+.env.staging
+
+# Expo
+.expo/
+expo-env.d.ts
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Misc (v0 sandbox)
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+
+# Build info / lock files del servidor
+pnpm-lock.yaml

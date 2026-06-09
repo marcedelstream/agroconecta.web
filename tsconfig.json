@@ -1,0 +1,36 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/ui/Text.tsx",
+    "components/ui/Badge.tsx",
+    "components/ui/Button.tsx",
+    "components/ui/card.tsx",
+    "constants/**/*.ts",
+    "lib/app-context.tsx",
+    "lib/feed-types.ts",
+    "lib/feed-utils.ts",
+    "lib/mock-data.ts",
+    "lib/push-notifications.ts",
+    "lib/supabase.ts",
+    "lib/supabase-repositories.ts",
+    "lib/theme-context.tsx",
+    "lib/types.ts",
+    ".expo/types/**/*.d.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts",
+    ".expo/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

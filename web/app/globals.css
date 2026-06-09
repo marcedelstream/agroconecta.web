@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema claro (default) */
+:root {
+  --clr-bg:        250 250 250;   /* #FAFAFA */
+  --clr-surface:   255 255 255;   /* #FFFFFF */
+  --clr-secondary: 240 240 240;   /* #F0F0F0 */
+  --clr-bdr:       229 229 229;   /* #E5E5E5 */
+  --clr-fg:        10 10 19;      /* #0A0A13 */
+  --clr-muted:     107 114 128;   /* #6B7280 */
+  --clr-lime:      122 184 0;     /* #7AB800 */
+  --clr-lime-dk:   101 153 0;     /* #659900 */
+}
+
+/* Tema oscuro */
+[data-theme="dark"] {
+  --clr-bg:        10 10 19;      /* #0A0A13 */
+  --clr-surface:   18 18 28;      /* #12121C */
+  --clr-secondary: 26 26 38;      /* #1A1A26 */
+  --clr-bdr:       42 42 58;      /* #2A2A3A */
+  --clr-fg:        255 255 255;   /* #FFFFFF */
+  --clr-muted:     139 139 154;   /* #8B8B9A */
+  --clr-lime:      164 210 51;    /* #A4D233 */
+  --clr-lime-dk:   139 184 43;    /* #8BB82B */
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { @apply bg-bg text-foreground; }
+  a    { @apply text-inherit no-underline; }
+}
+
+@layer components {
+  .site-container {
+    @apply max-w-site mx-auto px-5 md:px-8;
+  }
+
+  .card {
+    @apply bg-surface border border-bdr rounded-xl p-5;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium
+           transition-colors cursor-pointer border border-bdr bg-secondary text-foreground
+           hover:bg-bdr;
+  }
+
+  .btn-primary {
+    @apply btn bg-lime text-bg border-lime hover:bg-lime-dark hover:border-lime-dark;
+  }
+
+  .btn-ghost {
+    @apply btn border-transparent bg-transparent hover:bg-secondary;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-bdr bg-secondary px-4 py-3 text-foreground
+           placeholder-muted focus:outline-none focus:border-lime transition-colors;
+  }
+
+  .admin-table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .admin-table th {
+    @apply text-left text-muted font-medium px-4 py-3 border-b border-bdr;
+  }
+
+  .admin-table td {
+    @apply px-4 py-3 border-b border-bdr;
+  }
+
+  .admin-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .content-video {
+    @apply relative w-full aspect-video rounded-xl overflow-hidden my-8 bg-secondary;
+  }
+
+  .content-video iframe {
+    @apply absolute inset-0 w-full h-full;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
+  }
+
+  .prose blockquote cite {
+    @apply block text-sm text-muted not-italic mt-3;
+  }
+}

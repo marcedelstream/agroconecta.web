@@ -1,0 +1,29 @@
+name: Deploy Web a Hostinger
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy vía SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd ~/domains/agroconecta.com.py/public_html/web
+            git pull origin main
+            npm ci --omit=dev
+            npm run build
+            pm2 restart agroconecta-web || pm2 start ecosystem.config.js
+            pm2 save
+            echo "Deploy completado $(date)"

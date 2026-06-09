@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
-import { Stack } from 'expo-router'
+import { useEffect, useRef } from 'react'
+import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
+import * as Notifications from 'expo-notifications'
 import {
   useFonts,
   Poppins_300Light,
@@ -15,8 +16,9 @@ import {
   DMSans_500Medium,
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans'
-import { AppProvider } from '@/lib/app-context'
+import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
+import { registerPushToken } from '@/lib/push-notifications'
 import '../global.css'
 
 SplashScreen.preventAutoHideAsync()
@@ -35,9 +37,7 @@ export default function RootLayout() {
   })
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync()
-    }
+    if (fontsLoaded || fontError) SplashScreen.hideAsync()
   }, [fontsLoaded, fontError])
 
   if (!fontsLoaded && !fontError) return null
@@ -53,7 +53,28 @@ export default function RootLayout() {
 
 function ThemedRoot() {
   const { isDark } = useTheme()
+  const { user, isLoading } = useApp()
   const bg = isDark ? '#0A0A13' : '#FAFAFA'
+  const tokenRegistered = useRef(false)
+
+  // Registrar push token una vez que el usuario está disponible
+  useEffect(() => {
+    if (isLoading || !user?.id || tokenRegistered.current) return
+    tokenRegistered.current = true
+    registerPushToken(user.id).catch(() => null)
+  }, [user?.id, isLoading])
+
+  // Navegar al artículo cuando el usuario toca una notificación (app en background/cerrada)
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as Record<string, string> | null
+      if (data?.articleId) {
+        router.push({ pathname: '/article/[id]', params: { id: data.articleId } })
+      }
+    })
+    return () => sub.remove()
+  }, [])
+
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={bg} />

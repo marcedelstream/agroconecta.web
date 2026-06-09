@@ -96,10 +96,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </SafeAreaView>
 
-          {/* Avatar */}
+          {/* Avatar — anillo separado del contenido para que la inicial no quede cortada */}
           <View style={styles.avatarWrapper}>
-            <View style={[styles.avatar, { backgroundColor: isDark ? '#1A2B0A' : '#D6EF9A', borderColor: Colors.lime }]}>
-              <Text style={styles.avatarInitials}>{initials}</Text>
+            <View style={styles.avatarRing}>
+              <View style={[styles.avatarInner, { backgroundColor: isDark ? '#1A2B0A' : '#D6EF9A' }]}>
+                <Text style={styles.avatarInitials}>{initials}</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -270,14 +272,14 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: Spacing[10] },
 
   // Cover
-  coverSection: { height: 180, position: 'relative', marginBottom: 52 },
+  coverSection: { height: 156, position: 'relative', marginBottom: 44 },
   cover: { ...StyleSheet.absoluteFillObject },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing[5],
+    paddingHorizontal: Spacing[4],
     paddingTop: Spacing[2],
-    gap: Spacing[3],
+    gap: Spacing[2],
   },
   backBtn: { padding: Spacing[1] },
   editTopBtn: {
@@ -292,29 +294,42 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     position: 'absolute',
-    bottom: -52,
+    bottom: -44,
     alignSelf: 'center',
   },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+  // Anillo exterior — solo el borde lime
+  avatarRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     borderWidth: 3,
+    borderColor: Colors.lime,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Círculo interior — fondo + texto, separado del borde para no cortar la inicial
+  avatarInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
   avatarInitials: {
     fontFamily: Fonts.poppinsBold,
-    fontSize: 32,
+    fontSize: 28,
+    lineHeight: 34,
     color: Colors.lime,
+    includeFontPadding: false,
   },
 
   // Identity
   identitySection: {
     alignItems: 'center',
-    paddingHorizontal: Spacing[5],
-    gap: Spacing[1.5],
-    marginBottom: Spacing[4],
+    paddingHorizontal: Spacing[4],
+    gap: Spacing[1],
+    marginBottom: Spacing[3],
   },
   profRow: {
     flexDirection: 'row',
@@ -325,20 +340,20 @@ const styles = StyleSheet.create({
   // Stats
   statsRow: {
     flexDirection: 'row',
-    marginHorizontal: Spacing[5],
+    marginHorizontal: Spacing[4],
     borderRadius: Radius.base,
     borderWidth: 1,
     padding: Spacing[3],
-    marginBottom: Spacing[5],
+    marginBottom: Spacing[4],
   },
   statItem: { flex: 1, alignItems: 'center', gap: 2 },
   statDivider: { width: 1, marginVertical: Spacing[1] },
 
   // Sections
   section: {
-    marginHorizontal: Spacing[5],
-    marginBottom: Spacing[5],
-    gap: Spacing[3],
+    marginHorizontal: Spacing[4],
+    marginBottom: Spacing[4],
+    gap: Spacing[2],
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -359,31 +374,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3.5],
+    paddingVertical: Spacing[3],
     gap: Spacing[3],
   },
   settingIconBox: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  settingText: { flex: 1, gap: 2 },
+  settingText: { flex: 1, gap: 1 },
 
   // Footer
   footer: {
     alignItems: 'center',
-    gap: Spacing[4],
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[4],
+    gap: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    paddingTop: Spacing[3],
     paddingBottom: Spacing[6],
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[2],
-    paddingVertical: Spacing[3],
+    paddingVertical: Spacing[2.5],
     paddingHorizontal: Spacing[6],
     borderRadius: Radius.base,
     borderWidth: 1,

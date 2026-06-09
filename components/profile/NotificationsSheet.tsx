@@ -35,9 +35,12 @@ export function NotificationsSheet({ onClose }: Props) {
   return (
     <SettingsSheet title="Notificaciones" onClose={onClose} heightRatio={0.58}>
       <View style={styles.content}>
-        <Text variant="caption" style={{ color: C.muted }}>
-          Las notificaciones push se activarán en la próxima versión.
-        </Text>
+        <View style={[styles.infoBox, { backgroundColor: `${Colors.lime}12`, borderColor: `${Colors.lime}30` }]}>
+          <Ionicons name="notifications" size={16} color={Colors.lime} />
+          <Text variant="caption" style={{ color: C.muted, flex: 1 }}>
+            Las notificaciones se envían a este dispositivo. Podés activar o pausar cada tipo.
+          </Text>
+        </View>
         {rows.map((row, idx) => (
           <View key={row.key} style={[styles.row, { borderBottomColor: C.border }, idx === rows.length - 1 && styles.rowLast]}>
             <View style={[styles.iconBox, { backgroundColor: `${Colors.lime}15` }]}>
@@ -59,6 +62,7 @@ export function NotificationsSheet({ onClose }: Props) {
 
 const styles = StyleSheet.create({
   content: { padding: Spacing[5], gap: Spacing[3] },
+  infoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing[2], padding: Spacing[3], borderRadius: Radius.base, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3], paddingVertical: Spacing[3], borderBottomWidth: 1 },
   rowLast: { borderBottomWidth: 0 },
   iconBox: { width: 34, height: 34, borderRadius: Radius.sm, alignItems: 'center', justifyContent: 'center' },

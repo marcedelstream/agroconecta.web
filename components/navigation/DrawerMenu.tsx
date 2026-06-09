@@ -43,7 +43,6 @@ export function DrawerMenu({ onClose }: Props) {
   const slideAnim = useRef(new Animated.Value(DRAWER_W)).current
   const overlayAnim = useRef(new Animated.Value(0)).current
 
-  const [servicesOpen, setServicesOpen] = useState(false)
   const [activeService, setActiveService] = useState<typeof SERVICES[number] | null>(null)
 
   useEffect(() => {
@@ -85,39 +84,20 @@ export function DrawerMenu({ onClose }: Props) {
           {/* SERVICIOS — expandible */}
           <Text variant="label" color={Colors.muted} style={styles.sectionLabel}>SERVICIOS</Text>
 
-          <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={() => setServicesOpen((v) => !v)}
-          >
-            <View style={styles.menuIconBox}>
-              <Ionicons name="briefcase-outline" size={19} color={Colors.lime} />
-            </View>
-            <Text variant="body" weight="medium" style={styles.menuItemLabel}>Nuestros Servicios</Text>
-            <Ionicons
-              name={servicesOpen ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color={C.muted}
-              style={{ marginLeft: 'auto' }}
-            />
-          </TouchableOpacity>
-
-          {servicesOpen && (
-            <View style={[styles.servicesList, { borderLeftColor: C.border }]}>
-              {SERVICES.map((svc) => (
-                <TouchableOpacity
-                  key={svc.id}
-                  style={styles.serviceItem}
-                  activeOpacity={0.7}
-                  onPress={() => setActiveService(svc)}
-                >
-                  <Ionicons name={svc.icon} size={16} color={Colors.lime} />
-                  <Text variant="body" weight="medium" style={styles.serviceLabel}>{svc.label}</Text>
-                  <Ionicons name="chevron-forward" size={15} color={C.muted} style={{ marginLeft: 'auto' }} />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          <View style={[styles.servicesList, { borderLeftColor: C.border }]}>
+            {SERVICES.map((svc) => (
+              <TouchableOpacity
+                key={svc.id}
+                style={styles.serviceItem}
+                activeOpacity={0.7}
+                onPress={() => setActiveService(svc)}
+              >
+                <Ionicons name={svc.icon} size={16} color={Colors.lime} />
+                <Text variant="body" weight="medium" style={styles.serviceLabel}>{svc.label}</Text>
+                <Ionicons name="chevron-forward" size={15} color={C.muted} style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            ))}
+          </View>
 
           {/* CUENTA */}
           <Text variant="label" color={Colors.muted} style={[styles.sectionLabel, { marginTop: Spacing[4] }]}>CUENTA</Text>

@@ -16,11 +16,13 @@ export function AppHeaderBar({ onMenuPress }: Props) {
   const { isDark } = useTheme()
   return (
     <View style={[styles.header, { backgroundColor: C.surface, borderBottomColor: C.border }]}>
-      <Image
-        source={isDark ? darkLogo : lightLogo}
-        style={styles.logo}
-        resizeMode="contain"
-      />
+      <TouchableOpacity onPress={() => router.push('/(main)/home')} activeOpacity={0.75}>
+        <Image
+          source={isDark ? darkLogo : lightLogo}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
       <View style={styles.actions}>
         <TouchableOpacity onPress={() => router.push('/(main)/profile')} style={styles.iconBtn} hitSlop={12}>
           <Ionicons name="person-circle-outline" size={26} color={C.foreground} />

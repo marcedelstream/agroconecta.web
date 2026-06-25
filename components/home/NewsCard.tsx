@@ -1,9 +1,10 @@
-import { TouchableOpacity, Image, View, StyleSheet } from 'react-native'
+import { TouchableOpacity, Image, View, StyleSheet, Share } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
 import { useColors } from '@/lib/theme-context'
+import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
 import type { NewsArticle } from '@/lib/types'
 
 function timeAgo(date: Date): string {
@@ -25,6 +26,13 @@ interface Props {
 
 export function NewsCard({ article, onPress }: Props) {
   const C = useColors()
+
+  async function handleShare() {
+    await Share.share({
+      message: `${article.title}\n\nLeé más en Agroconecta: https://agroconecta.com.py/noticias/${article.id}`,
+    })
+  }
+
   return (
     <TouchableOpacity
       style={[styles.container, { backgroundColor: C.surface, borderColor: C.border }]}
@@ -37,9 +45,14 @@ export function NewsCard({ article, onPress }: Props) {
         <Text variant="body" weight="medium" numberOfLines={2} style={styles.title}>
           {article.title}
         </Text>
-        <View style={styles.meta}>
-          <Text variant="caption" style={{ color: C.muted }}>{article.source}</Text>
-          <Text variant="caption" style={{ color: C.muted }}> · {timeAgo(article.publishedAt)}</Text>
+        <View style={styles.footer}>
+          <View style={styles.meta}>
+            <Text variant="caption" style={{ color: C.muted }}>{article.source}</Text>
+            <Text variant="caption" style={{ color: C.muted }}> · {timeAgo(article.publishedAt)}</Text>
+          </View>
+          <TouchableOpacity onPress={handleShare} hitSlop={8} style={styles.shareBtn}>
+            <Ionicons name="share-outline" size={16} color={C.muted} />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -55,7 +68,9 @@ const styles = StyleSheet.create({
     minHeight: 112,
   },
   thumb: { width: 108, alignSelf: 'stretch' },
-  content: { flex: 1, padding: Spacing[3], justifyContent: 'center', gap: Spacing[1.5] },
-  title: { lineHeight: 21 },
-  meta: { flexDirection: 'row', marginTop: Spacing[1] },
+  content: { flex: 1, padding: Spacing[3], justifyContent: 'space-between', gap: Spacing[1.5] },
+  title: { lineHeight: 21, flex: 1 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  meta: { flexDirection: 'row', flexShrink: 1 },
+  shareBtn: { paddingLeft: Spacing[2] },
 })

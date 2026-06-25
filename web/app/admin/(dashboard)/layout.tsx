@@ -16,6 +16,7 @@ const ADMIN_NAV = [
   { href: '/admin/publicaciones', label: 'Publicaciones', icon: '✦' },
   { href: '/admin/organizaciones', label: 'Organizaciones', icon: '◈' },
   { href: '/admin/banners', label: 'Banners', icon: '◎' },
+  { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

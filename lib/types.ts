@@ -236,6 +236,32 @@ export interface NotificationPreferences {
   institutionalUpdates: boolean;
 }
 
+// Event types (source: eventosagropy.com Supabase)
+export interface AgroEvent {
+  id: string
+  title: string
+  description: string
+  longDescription?: string
+  category: string
+  date: string
+  endDate?: string
+  time?: string
+  location: string
+  city?: string
+  department?: string
+  imageUrl?: string
+  internalBannerUrl?: string
+  slug: string
+  isPremium: boolean
+  speakers?: string[]
+  importantLinks?: { label: string; url: string }[]
+  mapsUrl?: string
+  contactEmail?: string
+  contactPhone?: string
+  organizationId?: string
+  createdAt: string
+}
+
 // Onboarding state
 export interface OnboardingState {
   step: number;

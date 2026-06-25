@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { CATEGORY_LABELS, DEPARTMENT_LABELS, type AdCampaignRow, type Department, type NewsCategory } from '@/lib/types'
-import { createBanner, toggleBanner } from './actions'
+import { createBanner, deleteBanner, toggleBanner } from './actions'
 
 async function loadBanners() {
   const supabase = await createSupabaseServer()
@@ -46,21 +46,36 @@ export default async function BannersPage() {
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
-        <form action={createBanner} className="card space-y-4 h-fit">
+        {/* ── Formulario nuevo banner ── */}
+        <form action={createBanner} encType="multipart/form-data" className="card space-y-4 h-fit">
           <h2 className="font-display font-semibold text-base text-foreground">Nuevo banner</h2>
+
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Título</label>
             <input name="title" required className="input" placeholder="Remate Brangus destacado" />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">URL de imagen</label>
-            <input name="image_url" required className="input" placeholder="https://.../banners/demo/banner.png" />
-            <p className="text-xs text-muted mt-1">Formato recomendado: 640 × 200 px.</p>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Imagen del banner</label>
+            <input
+              name="image_file"
+              type="file"
+              accept="image/*"
+              required
+              className="block w-full text-sm text-muted
+                file:mr-3 file:py-1.5 file:px-3
+                file:rounded file:border-0
+                file:text-xs file:font-semibold
+                file:bg-lime/15 file:text-lime
+                hover:file:bg-lime/25 cursor-pointer"
+            />
+            <p className="text-xs text-muted mt-1">Formato recomendado: 640 × 200 px · Máx. 8 MB.</p>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Profesiones</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Profesiones (opcional)</label>
             <input name="target_professions" className="input" placeholder="productor, veterinario" />
-            <p className="text-xs text-muted mt-1">Vacío = todas.</p>
+            <p className="text-xs text-muted mt-1">Separadas por coma. Vacío = todas.</p>
           </div>
 
           <div>
@@ -92,9 +107,10 @@ export default async function BannersPage() {
             Activo
           </label>
 
-          <button type="submit" className="btn-primary text-sm w-full">Crear banner</button>
+          <button type="submit" className="btn-primary text-sm w-full">Subir banner</button>
         </form>
 
+        {/* ── Tabla de banners ── */}
         <div className="card p-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="admin-table">
@@ -124,7 +140,6 @@ export default async function BannersPage() {
                     </td>
                     <td>
                       <p className="font-medium">{banner.title}</p>
-                      <p className="text-xs text-muted break-all max-w-xs">{banner.image_url}</p>
                     </td>
                     <td className="text-xs text-muted max-w-sm">
                       <SegmentText banner={banner} />
@@ -135,13 +150,22 @@ export default async function BannersPage() {
                       </span>
                     </td>
                     <td>
-                      <form action={toggleBanner}>
-                        <input type="hidden" name="id" value={banner.id} />
-                        <input type="hidden" name="is_active" value={String(banner.is_active)} />
-                        <button type="submit" className="btn text-xs">
-                          {banner.is_active ? 'Pausar' : 'Activar'}
-                        </button>
-                      </form>
+                      <div className="flex items-center gap-2">
+                        <form action={toggleBanner}>
+                          <input type="hidden" name="id" value={banner.id} />
+                          <input type="hidden" name="is_active" value={String(banner.is_active)} />
+                          <button type="submit" className="btn text-xs">
+                            {banner.is_active ? 'Pausar' : 'Activar'}
+                          </button>
+                        </form>
+                        <form action={deleteBanner} onSubmit={(e) => { if (!confirm('¿Eliminar este banner?')) e.preventDefault() }}>
+                          <input type="hidden" name="id" value={banner.id} />
+                          <input type="hidden" name="image_url" value={banner.image_url} />
+                          <button type="submit" className="btn text-xs text-danger border-danger/40 hover:bg-danger/10">
+                            Eliminar
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}

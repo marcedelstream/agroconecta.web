@@ -1,7 +1,14 @@
-import { View, StyleSheet, type ViewStyle } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { View, FlatList, TouchableOpacity, useWindowDimensions, StyleSheet, type ViewStyle } from 'react-native'
+import { Image } from 'expo-image'
 import { Text } from './Text'
 import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
+import { Colors } from '@/constants/colors'
+import { fetchActiveBanners } from '@/lib/supabase-repositories'
+import type { AdCampaign } from '@/lib/types'
+
+const SLIDE_INTERVAL = 4000
 
 interface Props {
   segment?: unknown
@@ -10,22 +17,96 @@ interface Props {
 
 export function AdBanner({ style }: Props) {
   const C = useColors()
+  const { width } = useWindowDimensions()
+  const bannerWidth = width - Spacing[5] * 2
+  const [banners, setBanners] = useState<AdCampaign[]>([])
+  const [index, setIndex] = useState(0)
+  const listRef = useRef<FlatList<AdCampaign>>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    fetchActiveBanners()
+      .then((data) => { if (data.length > 0) setBanners(data) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (banners.length <= 1) return
+    timerRef.current = setInterval(() => {
+      setIndex((prev) => {
+        const next = (prev + 1) % banners.length
+        listRef.current?.scrollToIndex({ index: next, animated: true })
+        return next
+      })
+    }, SLIDE_INTERVAL)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [banners.length])
+
+  if (banners.length === 0) {
+    return (
+      <View style={[styles.container, style]}>
+        <View style={styles.labelRow}>
+          <Text variant="label" style={[styles.labelText, { color: C.muted }]}>Publicidad</Text>
+        </View>
+        <View style={[styles.placeholder, { backgroundColor: C.secondary, borderColor: C.border, width: bannerWidth }]}>
+          <Text variant="body" weight="semibold" style={{ color: C.muted }}>Espacio disponible</Text>
+          <Text variant="caption" style={{ color: C.muted }}>640 × 200 px</Text>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.label}>
+      <View style={styles.labelRow}>
         <Text variant="label" style={[styles.labelText, { color: C.muted }]}>Publicidad</Text>
       </View>
-      <View style={[styles.placeholder, { backgroundColor: C.secondary, borderColor: C.border }]}>
-        <Text variant="body" weight="semibold" style={{ color: C.muted }}>Espacio disponible</Text>
-        <Text variant="caption" style={{ color: C.muted }}>Banner 320 × 100 px</Text>
-      </View>
+
+      <FlatList
+        ref={listRef}
+        data={banners}
+        keyExtractor={(b) => b.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEnabled={banners.length > 1}
+        onMomentumScrollEnd={(e) => {
+          const newIndex = Math.round(e.nativeEvent.contentOffset.x / bannerWidth)
+          setIndex(newIndex)
+        }}
+        getItemLayout={(_, i) => ({ length: bannerWidth, offset: bannerWidth * i, index: i })}
+        renderItem={({ item }) => (
+          <TouchableOpacity activeOpacity={0.92} style={{ width: bannerWidth }}>
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={[styles.image, { width: bannerWidth }]}
+              contentFit="cover"
+              transition={300}
+            />
+          </TouchableOpacity>
+        )}
+      />
+
+      {banners.length > 1 && (
+        <View style={styles.dots}>
+          {banners.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                { backgroundColor: i === index ? Colors.lime : C.border },
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: { width: '100%' },
-  label: { alignSelf: 'flex-end', marginBottom: 3 },
+  labelRow: { alignSelf: 'flex-end', marginBottom: 3 },
   labelText: { fontSize: 9, letterSpacing: 0.5 },
   placeholder: {
     height: 100,
@@ -35,5 +116,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing[1],
+  },
+  image: {
+    height: 100,
+    borderRadius: Radius.md,
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing[1.5],
+    marginTop: Spacing[2],
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 })

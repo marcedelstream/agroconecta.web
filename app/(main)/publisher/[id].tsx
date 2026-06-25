@@ -1,16 +1,19 @@
-import { useState } from 'react'
-import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/Badge'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
+import { useApp } from '@/lib/app-context'
 import { mockPublishers, mockNews } from '@/lib/mock-data'
-import type { NewsArticle } from '@/lib/types'
+import { fetchPostsByOrganization, fetchOrganizationById } from '@/lib/supabase-repositories'
+import type { NewsArticle, Organization } from '@/lib/types'
 
 function timeAgo(date: Date): string {
   const diff = Date.now() - date.getTime()
@@ -32,25 +35,81 @@ const categoryColors: Record<string, string> = {
 
 export default function PublisherScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const publisher = mockPublishers.find((p) => p.id === id)!
-  const [subscribed, setSubscribed] = useState(false)
   const C = useColors()
+  const { user, updateUser } = useApp()
+
+  const [publisher, setPublisher] = useState<Organization | undefined>(
+    mockPublishers.find((p) => p.id === id)
+  )
+  const [loading, setLoading] = useState(!publisher)
+  const isFollowed = user?.organizationSubscriptions?.includes(id ?? '') ?? false
+  const [notifOn, setNotifOn] = useState(false)
+  const [articles, setArticles] = useState<NewsArticle[]>(
+    mockNews.filter((n) => n.publisherId === id)
+  )
+
+  useEffect(() => {
+    if (!id) return
+    let mounted = true
+
+    // Si no está en el mock, buscamos en Supabase
+    if (!publisher) {
+      fetchOrganizationById(id)
+        .then((org) => { if (mounted) setPublisher(org ?? undefined) })
+        .catch(() => {})
+        .finally(() => { if (mounted) setLoading(false) })
+    } else {
+      setLoading(false)
+    }
+
+    fetchPostsByOrganization(id)
+      .then((remote) => { if (mounted && remote.length > 0) setArticles(remote as NewsArticle[]) })
+      .catch(() => {})
+    return () => { mounted = false }
+  }, [id])
+
+  async function toggleFollow() {
+    if (!user || !id) return
+    const current = user.organizationSubscriptions ?? []
+    const updated = isFollowed ? current.filter((x) => x !== id) : [...current, id]
+    await updateUser({ organizationSubscriptions: updated, mediaPreferences: updated })
+  }
+
+  async function toggleNotif() {
+    const { status } = await Notifications.requestPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permisos necesarios', 'Activá las notificaciones en los ajustes del dispositivo.')
+      return
+    }
+    setNotifOn((v) => !v)
+    // TODO: registrar push token para este publisher en el backend
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['top', 'bottom']}>
+        <View style={styles.notFound}>
+          <Text variant="body" style={{ color: C.muted }}>Cargando...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   if (!publisher) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['top', 'bottom']}>
         <View style={styles.notFound}>
-          <Text variant="body" color={C.muted}>Medio no encontrado.</Text>
+          <Ionicons name="alert-circle-outline" size={40} color={C.muted} />
+          <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3] }}>Organización no encontrada.</Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-            <Text variant="body" color={Colors.lime}>Volver</Text>
+            <Text variant="body" style={{ color: Colors.lime }}>Volver</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     )
   }
 
-  const currentPublisher = publisher
-  const articles = mockNews.filter((n) => n.publisherId === currentPublisher.id)
+  const currentPublisher = publisher!
   const catColor = categoryColors[currentPublisher.category] ?? Colors.lime
 
   function PublisherHeader() {
@@ -79,7 +138,7 @@ export default function PublisherScreen() {
             </View>
 
             <Text variant="caption" color={C.muted} style={{ textTransform: 'capitalize' }}>
-              {publisher.category === 'media' ? 'Medio de comunicación' : publisher.category === 'institucion' ? 'Institución' : 'Gremio'}
+              {currentPublisher.category === 'media' ? 'Medio de comunicación' : currentPublisher.category === 'institucion' ? 'Institución' : 'Gremio'}
             </Text>
 
             <Text variant="body" color={C.muted} style={styles.publisherDesc}>
@@ -87,25 +146,38 @@ export default function PublisherScreen() {
             </Text>
           </View>
 
-          {/* Botón suscribir */}
-          <TouchableOpacity
-            onPress={() => setSubscribed((v) => !v)}
-            style={[styles.subscribeBtn, subscribed && styles.subscribeBtnActive]}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={subscribed ? 'checkmark-circle' : 'add-circle-outline'}
-              size={18}
-              color={subscribed ? '#0A0A13' : Colors.lime}
-            />
-            <Text
-              variant="caption"
-              weight="semibold"
-              style={{ color: subscribed ? '#0A0A13' : Colors.lime }}
+          {/* Acciones: Seguir + Notificaciones */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              onPress={toggleFollow}
+              style={[styles.followBtn, isFollowed && styles.followBtnActive]}
+              activeOpacity={0.8}
             >
-              {subscribed ? 'Siguiendo' : 'Seguir'}
-            </Text>
-          </TouchableOpacity>
+              <Ionicons
+                name={isFollowed ? 'checkmark-circle' : 'add-circle-outline'}
+                size={18}
+                color={isFollowed ? '#0A0A13' : Colors.lime}
+              />
+              <Text
+                variant="caption"
+                weight="semibold"
+                style={{ color: isFollowed ? '#0A0A13' : Colors.lime }}
+              >
+                {isFollowed ? 'Siguiendo' : 'Seguir'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={toggleNotif}
+              style={[styles.notifBtn, { borderColor: notifOn ? Colors.lime : C.border, backgroundColor: notifOn ? `${Colors.lime}18` : 'transparent' }]}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={notifOn ? 'notifications' : 'notifications-outline'}
+                size={18}
+                color={notifOn ? Colors.lime : C.muted}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {articles.length > 0 && (
@@ -184,11 +256,11 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], flexWrap: 'wrap' },
   verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: `${Colors.lime}15`, paddingHorizontal: Spacing[2], paddingVertical: 2, borderRadius: Radius.sm },
   publisherDesc: { lineHeight: 21, marginTop: Spacing[1] },
-  subscribeBtn: {
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2] },
+  followBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[1.5],
-    alignSelf: 'flex-start',
     paddingHorizontal: Spacing[4],
     paddingVertical: Spacing[2.5],
     borderRadius: Radius.base,
@@ -196,9 +268,17 @@ const styles = StyleSheet.create({
     borderColor: Colors.lime,
     backgroundColor: `${Colors.lime}10`,
   },
-  subscribeBtnActive: {
+  followBtnActive: {
     backgroundColor: Colors.lime,
     borderColor: Colors.lime,
+  },
+  notifBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionTitle: {},
   articleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing[2], padding: Spacing[4] },

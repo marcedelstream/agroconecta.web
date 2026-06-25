@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import { View, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native'
-import { router } from 'expo-router'
+import { router, Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/Badge'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
-import { useColors, useTheme } from '@/lib/theme-context'
+import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
-import { getDepartmentLabel, getProfessionLabel, newsCategories } from '@/lib/mock-data'
+import { getDepartmentLabel, getProfessionLabel } from '@/lib/mock-data'
 import { PreferencesSheet } from '@/components/profile/PreferencesSheet'
 import { MediaSheet } from '@/components/profile/MediaSheet'
 import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
@@ -23,11 +21,11 @@ import type { NewsCategory } from '@/lib/types'
 type ActiveSheet = 'preferences' | 'media' | 'notifications' | 'appearance' | 'edit-profile' | null
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
-const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; subtitle: string }[] = [
-  { id: 'notifications', icon: 'notifications-outline', label: 'Notificaciones', subtitle: 'Alertas y avisos de la app' },
-  { id: 'appearance',   icon: 'color-palette-outline', label: 'Apariencia',      subtitle: 'Tema claro u oscuro' },
-  { id: 'preferences',  icon: 'heart-outline',         label: 'Mis intereses',   subtitle: 'Categorías de noticias' },
-  { id: 'media',        icon: 'radio-outline',         label: 'Cuentas seguidas', subtitle: 'Medios y organizaciones' },
+const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: string }[] = [
+  { id: 'notifications', icon: 'notifications-outline', label: 'Notificaciones' },
+  { id: 'appearance',   icon: 'color-palette-outline', label: 'Apariencia' },
+  { id: 'preferences',  icon: 'heart-outline',         label: 'Mis intereses' },
+  { id: 'media',        icon: 'radio-outline',         label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
 ]
 
 function categoryLabel(cat: string) {
@@ -35,9 +33,8 @@ function categoryLabel(cat: string) {
 }
 
 export default function ProfileScreen() {
-  const { user, resetOnboarding, updateUser } = useApp()
+  const { user, signOut, updateUser } = useApp()
   const C = useColors()
-  const { isDark } = useTheme()
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
 
   async function handleLogout() {
@@ -50,8 +47,8 @@ export default function ProfileScreen() {
           text: 'Salir',
           style: 'destructive',
           onPress: async () => {
-            await resetOnboarding()
-            router.replace('/(onboarding)')
+            await signOut()
+            router.replace('/(auth)/login')
           },
         },
       ]
@@ -72,155 +69,113 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: C.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} bounces contentContainerStyle={styles.scroll}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Cover + avatar ── */}
-        <View style={styles.coverSection}>
-          <LinearGradient
-            colors={isDark ? ['#1A2B0A', '#0A0A13'] : ['#D6EF9A', '#FAFAFA']}
-            style={styles.cover}
-          />
-          {/* Back */}
-          <SafeAreaView edges={['top']} style={styles.topBar}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+        {/* ── Avatar + identidad (sin barra de título) ── */}
+        <SafeAreaView edges={['top']}>
+          <View style={styles.identity}>
+            {/* Flecha atrás pequeña, arriba a la izquierda */}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={12}
+              style={styles.backFloating}
+            >
               <Ionicons name="arrow-back" size={22} color={C.foreground} />
             </TouchableOpacity>
-            <Text variant="body" weight="semibold" family="poppins">Perfil</Text>
+
+            <View style={[styles.avatarCircle, { backgroundColor: `${Colors.lime}18`, borderColor: `${Colors.lime}50` }]}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+            <Text variant="title" weight="bold" family="poppins">{user.name}</Text>
+            <View style={styles.metaRow}>
+              <Ionicons name="briefcase-outline" size={13} color={C.muted} />
+              <Text variant="caption" style={{ color: C.muted }}>{getProfessionLabel(user.profession)}</Text>
+              <Text variant="caption" style={{ color: C.border }}> · </Text>
+              <Ionicons name="location-outline" size={13} color={C.muted} />
+              <Text variant="caption" style={{ color: C.muted }}>{getDepartmentLabel(user.department)}</Text>
+            </View>
+            {user.email ? (
+              <Text variant="caption" style={{ color: C.muted }}>{user.email}</Text>
+            ) : null}
+            {/* Editar perfil — debajo de la info */}
             <TouchableOpacity
               onPress={() => setActiveSheet('edit-profile')}
-              style={[styles.editTopBtn, { backgroundColor: `${Colors.lime}20`, borderColor: `${Colors.lime}40` }]}
+              style={[styles.editBtn, { borderColor: `${Colors.lime}50`, backgroundColor: `${Colors.lime}10` }]}
               hitSlop={8}
             >
-              <Ionicons name="create-outline" size={16} color={Colors.lime} />
-              <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Editar</Text>
+              <Ionicons name="create-outline" size={14} color={Colors.lime} />
+              <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Editar perfil</Text>
             </TouchableOpacity>
-          </SafeAreaView>
-
-          {/* Avatar — anillo separado del contenido para que la inicial no quede cortada */}
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatarRing}>
-              <View style={[styles.avatarInner, { backgroundColor: isDark ? '#1A2B0A' : '#D6EF9A' }]}>
-                <Text style={styles.avatarInitials}>{initials}</Text>
-              </View>
-            </View>
           </View>
-        </View>
-
-        {/* ── Identidad ── */}
-        <View style={styles.identitySection}>
-          <Text variant="title" weight="bold" family="poppins" style={{ textAlign: 'center' }}>
-            {user.name}
-          </Text>
-          <View style={styles.profRow}>
-            <Ionicons name="briefcase-outline" size={14} color={Colors.lime} />
-            <Text variant="body" color={C.muted}>{getProfessionLabel(user.profession)}</Text>
-          </View>
-          <View style={styles.profRow}>
-            <Ionicons name="location-outline" size={14} color={C.muted} />
-            <Text variant="body" color={C.muted}>{getDepartmentLabel(user.department)}</Text>
-          </View>
-          {user.email ? (
-            <View style={styles.profRow}>
-              <Ionicons name="mail-outline" size={14} color={C.muted} />
-              <Text variant="body" color={C.muted}>{user.email}</Text>
-            </View>
-          ) : null}
-          {user.phone ? (
-            <View style={styles.profRow}>
-              <Ionicons name="call-outline" size={14} color={C.muted} />
-              <Text variant="body" color={C.muted}>{user.phone}</Text>
-            </View>
-          ) : null}
-        </View>
+        </SafeAreaView>
 
         {/* ── Stats ── */}
         <View style={[styles.statsRow, { backgroundColor: C.surface, borderColor: C.border }]}>
-          <StatItem label="Intereses" value={interestsCount} />
+          <StatItem label="Intereses" value={interestsCount} C={C} />
           <View style={[styles.statDivider, { backgroundColor: C.border }]} />
-          <StatItem label="Siguiendo" value={followedCount} />
+          <StatItem label="Siguiendo" value={followedCount} C={C} />
           <View style={[styles.statDivider, { backgroundColor: C.border }]} />
-          <StatItem label="Miembro desde" value={memberYear} />
+          <StatItem label="Miembro" value={memberYear} C={C} />
         </View>
 
         {/* ── Mis intereses ── */}
         {interestsCount > 0 && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="heart" size={16} color={Colors.lime} />
-              <Text variant="body" weight="semibold">Mis intereses</Text>
-              <TouchableOpacity onPress={() => setActiveSheet('preferences')} style={styles.sectionAction} hitSlop={8}>
-                <Text variant="caption" style={{ color: Colors.lime }}>Editar</Text>
+            <View style={styles.sectionHead}>
+              <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Mis intereses</Text>
+              <TouchableOpacity onPress={() => setActiveSheet('preferences')} hitSlop={8}>
+                <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Editar</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.chips}>
               {user.preferences.map((pref) => (
-                <Badge key={pref} variant={pref}>
-                  {categoryLabel(pref)}
-                </Badge>
+                <Badge key={pref} variant={pref}>{categoryLabel(pref)}</Badge>
               ))}
             </View>
           </View>
         )}
 
-        {/* ── Cuentas que sigo ── */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="radio" size={16} color={Colors.lime} />
-            <Text variant="body" weight="semibold">Cuentas seguidas</Text>
-            <TouchableOpacity onPress={() => setActiveSheet('media')} style={styles.sectionAction} hitSlop={8}>
-              <Text variant="caption" style={{ color: Colors.lime }}>Editar</Text>
-            </TouchableOpacity>
-          </View>
-          {followedCount === 0 ? (
-            <Text variant="body" color={C.muted} style={styles.emptyHint}>
-              No seguís ninguna cuenta todavía.
-            </Text>
-          ) : (
-            <Text variant="body" color={C.muted}>
-              {followedCount} cuenta{followedCount > 1 ? 's' : ''} seguida{followedCount > 1 ? 's' : ''}
-            </Text>
-          )}
-        </View>
-
         {/* ── Configuración ── */}
         <View style={styles.section}>
-          <Text variant="body" weight="semibold" style={styles.sectionTitleStandalone}>Configuración</Text>
-          <Card padding={0}>
+          <Text variant="body" weight="semibold" style={[styles.sectionLabel, { color: C.foreground }]}>
+            Configuración
+          </Text>
+          <View style={[styles.settingsList, { backgroundColor: C.surface, borderColor: C.border }]}>
             {SETTINGS.map((item, idx) => (
               <TouchableOpacity
                 key={item.label}
                 style={[
                   styles.settingRow,
-                  idx < SETTINGS.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border },
+                  { borderTopColor: C.border },
+                  idx > 0 && styles.settingRowBorder,
                 ]}
                 activeOpacity={0.7}
-                onPress={() => setActiveSheet(item.id)}
+                onPress={() => item.navigate ? router.push(item.navigate as Href) : setActiveSheet(item.id)}
               >
-                <View style={[styles.settingIconBox, { backgroundColor: `${Colors.lime}15` }]}>
-                  <Ionicons name={item.icon} size={18} color={Colors.lime} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text variant="body" weight="medium">{item.label}</Text>
-                  <Text variant="caption" color={C.muted}>{item.subtitle}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={C.muted} />
+                <Ionicons name={item.icon} size={19} color={C.foreground} />
+                <Text variant="body" weight="medium" style={{ flex: 1, color: C.foreground }}>
+                  {item.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={C.muted} />
               </TouchableOpacity>
             ))}
-          </Card>
+          </View>
         </View>
 
         {/* ── Footer ── */}
         <View style={styles.footer}>
           <TouchableOpacity
             onPress={handleLogout}
-            style={[styles.logoutBtn, { borderColor: `${Colors.destructive}40` }]}
+            style={[styles.logoutBtn, { borderColor: `${Colors.destructive}35`, backgroundColor: `${Colors.destructive}08` }]}
             activeOpacity={0.8}
           >
             <Ionicons name="log-out-outline" size={18} color={Colors.destructive} />
-            <Text variant="body" weight="semibold" style={{ color: Colors.destructive }}>Cerrar sesión</Text>
+            <Text variant="body" weight="semibold" style={{ color: Colors.destructive }}>
+              Cerrar sesión
+            </Text>
           </TouchableOpacity>
-          <Text variant="caption" color={C.muted} style={{ textAlign: 'center' }}>
-            Agroconecta v1.0.0 · Ecosistema Digital Agropecuario
+          <Text variant="caption" style={{ color: C.muted, textAlign: 'center' }}>
+            Agroconecta v1.0.0
           </Text>
         </View>
       </ScrollView>
@@ -235,7 +190,10 @@ export default function ProfileScreen() {
       {activeSheet === 'media' && (
         <MediaSheet
           selected={user.mediaPreferences}
-          onClose={(updated: string[]) => { updateUser({ organizationSubscriptions: updated, mediaPreferences: updated }); setActiveSheet(null) }}
+          onClose={(updated: string[]) => {
+            updateUser({ organizationSubscriptions: updated, mediaPreferences: updated })
+            setActiveSheet(null)
+          }}
         />
       )}
       {activeSheet === 'notifications' && (
@@ -255,35 +213,41 @@ export default function ProfileScreen() {
   )
 }
 
-function StatItem({ label, value }: { label: string; value: number | string }) {
-  const C = useColors()
+function StatItem({ label, value, C }: { label: string; value: number | string; C: ReturnType<typeof useColors> }) {
   return (
     <View style={styles.statItem}>
-      <Text variant="subtitle" weight="bold" family="poppins" style={{ color: Colors.lime }}>
+      <Text
+        variant="subtitle"
+        weight="bold"
+        family="poppins"
+        style={{ color: Colors.lime }}
+      >
         {value}
       </Text>
-      <Text variant="caption" color={C.muted}>{label}</Text>
+      <Text variant="caption" style={{ color: C.muted }}>{label}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { paddingBottom: Spacing[10] },
+  scroll: { paddingBottom: Spacing[12] },
 
-  // Cover
-  coverSection: { height: 156, position: 'relative', marginBottom: 44 },
-  cover: { ...StyleSheet.absoluteFillObject },
-  topBar: {
-    flexDirection: 'row',
+  // Identity (sin topBar)
+  identity: {
     alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingTop: Spacing[2],
+    paddingTop: Spacing[4],
+    paddingBottom: Spacing[4],
+    paddingHorizontal: Spacing[5],
     gap: Spacing[2],
   },
-  backBtn: { padding: Spacing[1] },
-  editTopBtn: {
-    marginLeft: 'auto',
+  backFloating: {
+    position: 'absolute',
+    top: Spacing[4],
+    left: Spacing[5],
+    zIndex: 1,
+  },
+  editBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[1],
@@ -291,116 +255,85 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[1.5],
     borderRadius: Radius.full,
     borderWidth: 1,
+    marginTop: Spacing[1],
   },
-  avatarWrapper: {
-    position: 'absolute',
-    bottom: -44,
-    alignSelf: 'center',
-  },
-  // Anillo exterior — solo el borde lime
-  avatarRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 3,
-    borderColor: Colors.lime,
+  avatarCircle: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: Spacing[2],
   },
-  // Círculo interior — fondo + texto, separado del borde para no cortar la inicial
-  avatarInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarInitials: {
+  avatarText: {
     fontFamily: Fonts.poppinsBold,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 30,
+    lineHeight: 36,
     color: Colors.lime,
     includeFontPadding: false,
   },
-
-  // Identity
-  identitySection: {
-    alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    gap: Spacing[1],
-    marginBottom: Spacing[3],
-  },
-  profRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[1.5],
+    gap: Spacing[1],
   },
 
   // Stats
   statsRow: {
     flexDirection: 'row',
-    marginHorizontal: Spacing[4],
-    borderRadius: Radius.base,
+    marginHorizontal: Spacing[5],
+    borderRadius: Radius.xl,
     borderWidth: 1,
-    padding: Spacing[3],
-    marginBottom: Spacing[4],
+    paddingVertical: Spacing[4],
+    marginBottom: Spacing[5],
   },
   statItem: { flex: 1, alignItems: 'center', gap: 2 },
   statDivider: { width: 1, marginVertical: Spacing[1] },
 
   // Sections
   section: {
-    marginHorizontal: Spacing[4],
-    marginBottom: Spacing[4],
-    gap: Spacing[2],
+    marginHorizontal: Spacing[5],
+    marginBottom: Spacing[5],
+    gap: Spacing[3],
   },
-  sectionHeader: {
+  sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
+    justifyContent: 'space-between',
   },
-  sectionAction: { marginLeft: 'auto' },
-  sectionTitleStandalone: { marginBottom: Spacing[1] },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing[2],
-  },
-  emptyHint: { fontStyle: 'italic' },
+  sectionLabel: { marginBottom: Spacing[1] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
 
-  // Settings
+  // Settings list
+  settingsList: {
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
+    paddingVertical: Spacing[4],
     gap: Spacing[3],
   },
-  settingIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingText: { flex: 1, gap: 1 },
+  settingRowBorder: { borderTopWidth: 1 },
 
   // Footer
   footer: {
     alignItems: 'center',
     gap: Spacing[3],
-    paddingHorizontal: Spacing[4],
-    paddingTop: Spacing[3],
-    paddingBottom: Spacing[6],
+    paddingHorizontal: Spacing[5],
+    paddingTop: Spacing[2],
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[2],
-    paddingVertical: Spacing[2.5],
+    paddingVertical: Spacing[3],
     paddingHorizontal: Spacing[6],
-    borderRadius: Radius.base,
+    borderRadius: Radius.xl,
     borderWidth: 1,
   },
 })

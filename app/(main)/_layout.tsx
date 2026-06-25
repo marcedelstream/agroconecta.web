@@ -10,7 +10,7 @@ import { Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/typography'
 
 // Rutas que tienen su propio header completo — ocultar el shared header
-const FULL_SCREEN_ROUTES = ['webview', 'publisher']
+const FULL_SCREEN_ROUTES = ['webview', 'publisher', 'event', 'events', 'platform', 'media-subscriptions', 'noticias', 'profile']
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
@@ -18,7 +18,7 @@ const tabs: { name: string; title: string; icon: IconName; activeIcon: IconName 
   { name: 'home', title: 'Inicio', icon: 'home-outline', activeIcon: 'home' },
   { name: 'prices', title: 'Precios', icon: 'trending-up-outline', activeIcon: 'trending-up' },
   { name: 'videos', title: 'Videos', icon: 'play-circle-outline', activeIcon: 'play-circle' },
-  { name: 'ecosystem', title: 'Ecosistema', icon: 'globe-outline', activeIcon: 'globe' },
+  { name: 'ecosystem', title: 'Descubrir', icon: 'compass-outline', activeIcon: 'compass' },
 ]
 
 export default function MainLayout() {
@@ -90,6 +90,41 @@ export default function MainLayout() {
         />
         <Tabs.Screen
           name="video/[id]"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="events"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="event/[slug]"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="platform/[id]"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="media-subscriptions"
+          options={{
+            href: null,
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="noticias"
           options={{
             href: null,
             tabBarStyle: { display: 'none' },

@@ -143,8 +143,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
-    await resetOnboarding()
-  }, [resetOnboarding])
+    // Perfil queda en AsyncStorage para no repetir onboarding al volver a entrar
+  }, [])
 
   return (
     <AppContext.Provider

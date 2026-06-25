@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ScrollView, View, Image, TouchableOpacity, Share, Linking, StyleSheet } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
@@ -30,11 +31,9 @@ De cara al futuro, los especialistas proyectan que la tendencia continuará, sie
 function formatDate(date: Date) {
   return date.toLocaleDateString('es-PY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 }
-
 function formatTime(date: Date) {
   return date.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })
 }
-
 function categoryLabel(cat: string) {
   return cat.charAt(0).toUpperCase() + cat.slice(1)
 }
@@ -43,13 +42,12 @@ export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [article, setArticle] = useState<Post | null>(null)
   const C = useColors()
+  const insets = useSafeAreaInsets()
 
-  // Resetear artículo al cambiar id para evitar mostrar el anterior mientras carga
   useEffect(() => {
     if (!id) return
     const local = mockNews.find((n) => n.id === id) ?? null
     setArticle(local)
-
     let mounted = true
     fetchPublishedPostById(id)
       .then((remote) => { if (mounted && remote) setArticle(remote) })
@@ -59,56 +57,59 @@ export default function ArticleScreen() {
 
   if (!article) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background }}>
-        <Ionicons name="newspaper-outline" size={40} color={Colors.muted} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.background }}>
+        <Ionicons name="newspaper-outline" size={40} color={C.muted} />
       </View>
     )
   }
 
   const publisher = article.publisherId ? mockPublishers.find((p) => p.id === article.publisherId) : null
-
   const shareText = `${article.title}\n\nLeé más en Agroconecta`
   const shareUrl = `https://agroconecta.com.py/noticias/${article.id}`
 
   async function handleNativeShare() {
-    // url solo en iOS — message ya no incluye la URL para evitar que aparezca doble
     await Share.share({ message: shareText, url: shareUrl })
   }
-
   function shareWhatsApp() {
     Linking.openURL(`whatsapp://send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`)
   }
-
   function shareTwitter() {
     Linking.openURL(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`)
   }
-
   function shareFacebook() {
     Linking.openURL(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`)
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['bottom']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Banner image con botones flotantes */}
+      {/* Scroll sin bounce — la imagen sube con el contenido pero no rebota al bajar */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
+      >
+        {/* Banner: parte del scroll, pero sin rebote */}
         <View style={styles.bannerContainer}>
-          <Image source={{ uri: article.imageUrl }} style={styles.banner} />
+          <Image source={{ uri: article.imageUrl }} style={styles.banner} resizeMode="cover" />
           <View style={styles.bannerOverlay} />
 
-          {/* Botón back */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={[styles.backBtn, { top: insets.top + Spacing[2] }]}
+            onPress={() => router.back()}
+          >
             <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
 
-          {/* Botón share nativo */}
-          <TouchableOpacity style={styles.shareBtn} onPress={handleNativeShare}>
+          <TouchableOpacity
+            style={[styles.shareBtn, { top: insets.top + Spacing[2] }]}
+            onPress={handleNativeShare}
+          >
             <Ionicons name="share-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
-        {/* Contenido */}
+        {/* Contenido del artículo */}
         <View style={styles.content}>
-          {/* Categoría + fecha/hora */}
           <View style={styles.metaRow}>
             <Badge variant={article.category}>{categoryLabel(article.category)}</Badge>
             <View style={styles.dateRow}>
@@ -121,12 +122,10 @@ export default function ArticleScreen() {
             </View>
           </View>
 
-          {/* Título */}
           <Text variant="title" weight="bold" family="poppins" style={styles.title}>
             {article.title}
           </Text>
 
-          {/* Card de fuente/medio */}
           <TouchableOpacity
             activeOpacity={publisher ? 0.8 : 1}
             onPress={() => publisher && router.push(`/publisher/${publisher.id}`)}
@@ -145,14 +144,11 @@ export default function ArticleScreen() {
                     )}
                   </View>
                 </View>
-                {publisher && (
-                  <Ionicons name="chevron-forward" size={18} color={C.muted} />
-                )}
+                {publisher && <Ionicons name="chevron-forward" size={18} color={C.muted} />}
               </View>
             </Card>
           </TouchableOpacity>
 
-          {/* Compartir en redes */}
           <View style={styles.socialSection}>
             <Text variant="caption" color={C.muted} weight="medium">COMPARTIR</Text>
             <View style={styles.socialRow}>
@@ -168,22 +164,22 @@ export default function ArticleScreen() {
                 <Ionicons name="logo-facebook" size={20} color="#fff" />
                 <Text variant="caption" style={styles.socialLabel}>Facebook</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: C.secondary, borderWidth: 1, borderColor: C.border }]} onPress={handleNativeShare}>
+              <TouchableOpacity
+                style={[styles.socialBtn, { backgroundColor: C.secondary, borderWidth: 1, borderColor: C.border }]}
+                onPress={handleNativeShare}
+              >
                 <Ionicons name="share-social-outline" size={20} color={C.foreground} />
                 <Text variant="caption" style={[styles.socialLabel, { color: C.foreground }]}>Más</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Banner publicitario — antes del cuerpo */}
           <AdBanner />
 
-          {/* Sumario */}
           <Text variant="body" style={[styles.summary, { color: C.foreground, borderLeftColor: Colors.lime }]}>
             {article.summary}
           </Text>
 
-          {/* Cuerpo del artículo */}
           <View style={styles.body}>
             {(article.content || MOCK_CONTENT).split('\n\n').map((paragraph, i) => (
               <Text key={i} variant="body" style={[styles.paragraph, { color: C.foreground }]}>
@@ -192,7 +188,6 @@ export default function ArticleScreen() {
             ))}
           </View>
 
-          {/* Footer del artículo */}
           <View style={styles.articleFooter}>
             <View style={[styles.footerDivider, { backgroundColor: C.border }]} />
             <Text variant="caption" color={C.muted} style={{ textAlign: 'center' }}>
@@ -214,11 +209,10 @@ const styles = StyleSheet.create({
   banner: { width: '100%', height: '100%' },
   bannerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.28)',
   },
   backBtn: {
     position: 'absolute',
-    top: Spacing[5],
     left: Spacing[5],
     width: 40,
     height: 40,
@@ -229,7 +223,6 @@ const styles = StyleSheet.create({
   },
   shareBtn: {
     position: 'absolute',
-    top: Spacing[5],
     right: Spacing[5],
     width: 40,
     height: 40,
@@ -238,7 +231,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  content: { padding: Spacing[5], gap: Spacing[4] },
+  content: { padding: Spacing[5], gap: Spacing[4], paddingBottom: Spacing[10] },
   metaRow: { gap: Spacing[2] },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
   title: { lineHeight: 36 },

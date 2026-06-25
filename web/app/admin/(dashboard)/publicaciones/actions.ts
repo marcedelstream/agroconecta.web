@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { sendPushToAll } from '@/lib/push'
 
 export type ActionState = { error: string | null }
 
@@ -93,10 +94,26 @@ export async function approvePost(formData: FormData) {
   await requireAdmin()
   const id = formData.get('id') as string
   const supabase = createSupabaseAdmin()
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select('title, summary, is_important')
+    .eq('id', id)
+    .single()
+
   await supabase
     .from('posts')
     .update({ editorial_status: 'published', published_at: new Date().toISOString() })
     .eq('id', id)
+
+  if (post?.is_important) {
+    sendPushToAll({
+      title: post.title,
+      body: post.summary || 'Nueva publicación importante en Agroconecta.',
+      data: { articleId: id },
+    }).catch(() => null)
+  }
+
   revalidatePath('/admin/publicaciones')
   revalidatePath('/admin')
   revalidatePath('/')

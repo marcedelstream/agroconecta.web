@@ -17,13 +17,36 @@ jobs:
           host: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USER }}
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
-          port: 22
+          port: ${{ secrets.HOSTINGER_PORT }}
           script: |
             set -e
-            cd ~/domains/agroconecta.com.py/public_html/web
-            git pull origin main
+            NODEJS_DIR=~/domains/agroconecta.com.py/nodejs
+            REPO_DIR=~/agroconecta-source
+
+            # Clonar o actualizar el repositorio
+            if [ -d "$REPO_DIR/.git" ]; then
+              cd "$REPO_DIR" && git pull origin main
+            else
+              git clone https://github.com/marcedelstream/agroconecta.web.git "$REPO_DIR"
+            fi
+
+            # Build del subdirectorio web/
+            cd "$REPO_DIR/web"
             npm ci --omit=dev
             npm run build
-            pm2 restart agroconecta-web || pm2 start ecosystem.config.js
-            pm2 save
-            echo "Deploy completado $(date)"
+
+            # Reemplazar el build en la carpeta de Hostinger
+            rm -rf "$NODEJS_DIR/.next"
+            cp -r .next "$NODEJS_DIR/.next"
+
+            # Actualizar dependencias en nodejs/
+            cp package.json "$NODEJS_DIR/package.json"
+            cp package-lock.json "$NODEJS_DIR/package-lock.json" 2>/dev/null || true
+            cd "$NODEJS_DIR"
+            npm ci --omit=dev
+
+            # Reiniciar app (Passenger/Hostinger)
+            mkdir -p "$NODEJS_DIR/tmp"
+            touch "$NODEJS_DIR/tmp/restart.txt"
+
+            echo "✓ Deploy completado $(date)"

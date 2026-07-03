@@ -12,6 +12,10 @@ Notifications.setNotificationHandler({
   }),
 })
 
+export async function getNotificationPermissionStatus() {
+  return (await Notifications.getPermissionsAsync()).status
+}
+
 export async function registerPushToken(userId: string) {
   const permissions = await Notifications.getPermissionsAsync()
   const finalStatus = permissions.granted

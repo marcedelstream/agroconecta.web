@@ -85,9 +85,6 @@ export default function LoginScreen() {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text variant="body" style={{ color: C.muted, textAlign: 'center' }}>
-            El ecosistema digital del agro paraguayo
-          </Text>
         </View>
 
         {view === 'options' ? (
@@ -185,7 +182,15 @@ export default function LoginScreen() {
 
         {view === 'options' && (
           <Text variant="caption" style={[styles.terms, { color: C.muted }]}>
-            Al continuar, aceptás nuestros Términos de uso y Política de privacidad.
+            Al continuar, aceptás nuestros{' '}
+            <Text variant="caption" style={{ color: Colors.lime }} onPress={() => router.push('/legal/terms')}>
+              Términos de uso
+            </Text>
+            {' '}y{' '}
+            <Text variant="caption" style={{ color: Colors.lime }} onPress={() => router.push('/legal/privacy')}>
+              Política de privacidad
+            </Text>
+            .
           </Text>
         )}
       </ScrollView>

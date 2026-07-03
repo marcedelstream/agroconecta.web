@@ -157,7 +157,7 @@ export default function ArticleScreen() {
                 <Text variant="caption" style={styles.socialLabel}>WhatsApp</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#000' }]} onPress={shareTwitter}>
-                <Ionicons name="logo-twitter" size={20} color="#fff" />
+                <Text style={{ fontSize: 18, lineHeight: 20, fontWeight: '800', color: '#fff' }}>X</Text>
                 <Text variant="caption" style={styles.socialLabel}>X</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' }]} onPress={shareFacebook}>

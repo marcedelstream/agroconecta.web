@@ -72,6 +72,7 @@ export interface Organization {
   planStartedAt?: Date;
   billingNotes?: string;
   logoUrl?: string;
+  eventsOrganizerSlug?: string;
 }
 
 export type Publisher = Organization;
@@ -180,6 +181,7 @@ export interface EcosystemSite {
   logoUrl?: string;
   category: EcosystemCategory;
   isLive?: boolean;
+  isAvailable: boolean;
   tags: string[];
 }
 

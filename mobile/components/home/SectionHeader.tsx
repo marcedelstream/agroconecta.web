@@ -14,7 +14,6 @@ export function SectionHeader({ title, subtitle, action }: Props) {
   const C = useColors()
   return (
     <View style={[styles.container, { borderTopColor: C.border }]}>
-      <View style={styles.accent} />
       <View style={styles.text}>
         <Text variant="subtitle" weight="semibold" family="poppins">{title}</Text>
         {subtitle && <Text variant="caption" style={{ color: C.muted }}>{subtitle}</Text>}
@@ -38,7 +37,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing[2],
     paddingBottom: Spacing[3],
   },
-  accent: { width: 3, height: 28, borderRadius: 2, backgroundColor: Colors.lime },
   text: { flex: 1, gap: 1 },
   actionBtn: { paddingLeft: Spacing[2] },
 })

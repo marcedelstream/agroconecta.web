@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { View, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { router, Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
@@ -36,23 +37,12 @@ export default function ProfileScreen() {
   const { user, signOut, updateUser } = useApp()
   const C = useColors()
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false)
 
-  async function handleLogout() {
-    Alert.alert(
-      'Cerrar sesión',
-      '¿Seguro que querés salir?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut()
-            router.replace('/(auth)/login')
-          },
-        },
-      ]
-    )
+  async function confirmLogout() {
+    setLogoutModalVisible(false)
+    await signOut()
+    router.replace('/(auth)/login')
   }
 
   if (!user) return null
@@ -165,7 +155,7 @@ export default function ProfileScreen() {
         {/* ── Footer ── */}
         <View style={styles.footer}>
           <TouchableOpacity
-            onPress={handleLogout}
+            onPress={() => setLogoutModalVisible(true)}
             style={[styles.logoutBtn, { borderColor: `${Colors.destructive}35`, backgroundColor: `${Colors.destructive}08` }]}
             activeOpacity={0.8}
           >
@@ -209,6 +199,18 @@ export default function ProfileScreen() {
           onClose={(updated) => { if (updated) updateUser(updated); setActiveSheet(null) }}
         />
       )}
+
+      <ConfirmModal
+        visible={logoutModalVisible}
+        icon="log-out-outline"
+        title="Cerrar sesión"
+        message="¿Seguro que querés salir de tu cuenta?"
+        confirmLabel="Salir"
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={confirmLogout}
+        onCancel={() => setLogoutModalVisible(false)}
+      />
     </View>
   )
 }

@@ -135,6 +135,7 @@ export interface OrganizationRow {
   plan_name: string
   is_verified: boolean
   logo_url: string | null
+  events_organizer_slug?: string | null
 }
 
 export const CATEGORY_LABELS: Record<NewsCategory, string> = {

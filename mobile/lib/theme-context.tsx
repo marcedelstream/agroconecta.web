@@ -62,7 +62,7 @@ export const LightPalette = {
 } satisfies ColorPalette
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<AppTheme>('dark')
+  const [theme, setThemeState] = useState<AppTheme>('light')
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then((stored) => {

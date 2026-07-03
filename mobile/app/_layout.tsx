@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as Notifications from 'expo-notifications'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import {
   useFonts,
   Poppins_300Light,
@@ -18,8 +20,10 @@ import {
 } from '@expo-google-fonts/dm-sans'
 import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
-import { registerPushToken } from '@/lib/push-notifications'
+import { registerPushToken, getNotificationPermissionStatus } from '@/lib/push-notifications'
 import '../global.css'
+
+const NOTIF_PROMPT_KEY = '@agroconecta:notif_prompt_shown'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -56,13 +60,40 @@ function ThemedRoot() {
   const { user, isLoading } = useApp()
   const bg = isDark ? '#0A0A13' : '#FAFAFA'
   const tokenRegistered = useRef(false)
+  const [notifModalVisible, setNotifModalVisible] = useState(false)
 
-  // Registrar push token una vez que el usuario está disponible
+  // Al tener usuario disponible: si el permiso de notificaciones todavía no se pidió
+  // ni se le mostró el aviso propio, mostramos un explicador antes del prompt nativo.
   useEffect(() => {
     if (isLoading || !user?.id || tokenRegistered.current) return
     tokenRegistered.current = true
-    registerPushToken(user.id).catch(() => null)
+
+    ;(async () => {
+      const [status, alreadyShown] = await Promise.all([
+        getNotificationPermissionStatus(),
+        AsyncStorage.getItem(NOTIF_PROMPT_KEY),
+      ])
+
+      if (status === 'granted') {
+        registerPushToken(user.id).catch(() => null)
+        return
+      }
+      if (status === 'denied' || alreadyShown) return
+
+      setNotifModalVisible(true)
+    })()
   }, [user?.id, isLoading])
+
+  async function acceptNotifications() {
+    setNotifModalVisible(false)
+    await AsyncStorage.setItem(NOTIF_PROMPT_KEY, '1')
+    if (user?.id) registerPushToken(user.id).catch(() => null)
+  }
+
+  async function declineNotifications() {
+    setNotifModalVisible(false)
+    await AsyncStorage.setItem(NOTIF_PROMPT_KEY, '1')
+  }
 
   // Navegar al artículo cuando el usuario toca una notificación (app en background/cerrada)
   useEffect(() => {
@@ -93,6 +124,17 @@ function ThemedRoot() {
         <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="publisher/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack>
+
+      <ConfirmModal
+        visible={notifModalVisible}
+        icon="notifications-outline"
+        title="Activar notificaciones"
+        message="Te avisamos cuando haya noticias importantes, precios que cambian fuerte o eventos que te pueden interesar. Podés desactivarlas cuando quieras desde tu perfil."
+        confirmLabel="Activar"
+        cancelLabel="Ahora no"
+        onConfirm={acceptNotifications}
+        onCancel={declineNotifications}
+      />
     </>
   )
 }

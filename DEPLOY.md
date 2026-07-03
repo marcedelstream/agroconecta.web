@@ -67,9 +67,13 @@ En GitHub → **Settings → Secrets and variables → Actions**, agregar:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key de Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase → Settings → API (¡nunca subir a un `.env` versionado!) |
 | `NEXT_PUBLIC_SITE_URL` | `https://agroconecta.com.py` |
+| `RESEND_API_KEY` | API key de resend.com — para el envío de emails de los formularios de servicio |
+| `SERVICE_LEAD_EMAIL_TO` | Correo interno de Agroconecta donde llegan las consultas de servicio |
 
-**Importante:** estos 4 últimos secrets son nuevos con el flujo de build-en-CI. Si no están cargados en GitHub,
-el próximo deploy va a compilar la web con las variables de Supabase vacías y el sitio va a romper.
+**Importante:** los 4 secrets de Supabase/sitio son necesarios desde que se movió el build a CI — si no están
+cargados en GitHub, el próximo deploy compila la web con las variables de Supabase vacías y el sitio rompe.
+Los 2 de Resend son opcionales: sin ellos, el endpoint `/api/service-lead` responde 503 sin romper el resto del
+sitio (el formulario de la app sigue guardando la consulta en Supabase igual, solo no se manda el email).
 
 ### Generar clave SSH para el deploy
 

@@ -4,8 +4,9 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
+import { NewsCardGridSkeleton } from '@/components/ui/Skeleton'
 import { FeaturedGrid } from '@/components/home/FeaturedGrid'
-import { NewsCard } from '@/components/home/NewsCard'
+import { NewsCardGrid } from '@/components/home/NewsCardGrid'
 import { SectionHeader } from '@/components/home/SectionHeader'
 import { EventsSection } from '@/components/home/EventsSection'
 import { EcosistemaSection } from '@/components/home/EcosistemaSection'
@@ -26,13 +27,15 @@ export default function HomeScreen() {
   const { user } = useApp()
   const C = useColors()
   const [search, setSearch] = useState('')
-  const [posts, setPosts] = useState<Post[]>(mockNews)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
     fetchPublishedPosts()
       .then((remote) => { if (mounted && remote.length > 0) setPosts(remote) })
       .catch(() => { if (mounted) setPosts(mockNews) })
+      .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [])
 
@@ -83,41 +86,51 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* Noticias destacadas */}
-      <FeaturedGrid posts={featuredPosts} onPress={goToArticle} />
-
-      {/* Banner publicitario (posición 3) */}
-      <AdBanner segment={segment} style={styles.adBanner} />
-
-      {/* ── Más Noticias (posición 4, antes de eventos) ── */}
-      {previewPosts.length > 0 && (
+      {loading ? (
         <View style={styles.section}>
-          <SectionHeader
-            title="Más Noticias"
-            action={{ label: 'Ver todas', onPress: () => router.push('/(main)/noticias' as any) }}
-          />
-          <View style={styles.newsList}>
-            {previewPosts.map((item) => (
-              <NewsCard key={item.id} article={item} onPress={() => goToArticle(item.id)} />
-            ))}
+          <View style={styles.newsGrid}>
+            {Array.from({ length: 6 }).map((_, i) => <NewsCardGridSkeleton key={i} />)}
           </View>
-          {latestPosts.length > NEWS_PREVIEW && (
-            <TouchableOpacity
-              style={[styles.verMasBtn, { borderColor: C.border }]}
-              onPress={() => router.push('/(main)/noticias' as any)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="newspaper-outline" size={16} color={C.muted} />
-              <Text variant="caption" weight="semibold" style={{ color: C.muted }}>
-                Ver todas las noticias
-              </Text>
-              <Ionicons name="chevron-forward" size={14} color={C.muted} />
-            </TouchableOpacity>
-          )}
         </View>
+      ) : (
+        <>
+          {/* Noticias destacadas */}
+          <FeaturedGrid posts={featuredPosts} onPress={goToArticle} />
+
+          {/* Banner publicitario (posición 3) */}
+          <AdBanner segment={segment} style={styles.adBanner} />
+
+          {/* ── Más Noticias (posición 4, antes de eventos) ── */}
+          {previewPosts.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeader
+                title="Más Noticias"
+                action={{ label: 'Ver todas', onPress: () => router.push('/(main)/noticias' as any) }}
+              />
+              <View style={styles.newsGrid}>
+                {previewPosts.map((item) => (
+                  <NewsCardGrid key={item.id} article={item} onPress={() => goToArticle(item.id)} />
+                ))}
+              </View>
+              {latestPosts.length > NEWS_PREVIEW && (
+                <TouchableOpacity
+                  style={[styles.verMasBtn, { borderColor: C.border }]}
+                  onPress={() => router.push('/(main)/noticias' as any)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="newspaper-outline" size={16} color={C.muted} />
+                  <Text variant="caption" weight="semibold" style={{ color: C.muted }}>
+                    Ver todas las noticias
+                  </Text>
+                  <Ionicons name="chevron-forward" size={14} color={C.muted} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </>
       )}
 
-      {search.trim() !== '' && previewPosts.length === 0 && (
+      {!loading && search.trim() !== '' && previewPosts.length === 0 && (
         <View style={styles.empty}>
           <Ionicons name="search-outline" size={40} color={C.muted} />
           <Text variant="body" style={{ color: C.muted, textAlign: 'center', marginTop: 12 }}>
@@ -153,7 +166,7 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 15 },
   section: { gap: Spacing[3] },
-  newsList: { gap: Spacing[3] },
+  newsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },
   adBanner: { marginVertical: Spacing[1] },
   empty: { alignItems: 'center', paddingTop: Spacing[8] },
   verMasBtn: {

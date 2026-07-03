@@ -228,7 +228,7 @@ Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya
 
 ## Reglas de desarrollo
 
-1. **Dark theme como default**; el tema claro existe vía `theme-context`.
+1. **Light theme como default** (cambiado 2026-07-03); el tema oscuro sigue disponible vía `theme-context` y el usuario puede activarlo desde su perfil.
 2. **TypeScript estricto** — sin `any` en código nuevo (los repos legacy usan `any` en el mapeo de filas; no copiar ese patrón fuera de ahí).
 3. **Español** — toda la UI en español, contexto paraguayo.
 4. **Mobile-first** — referencia 390px (iPhone 14 Pro).

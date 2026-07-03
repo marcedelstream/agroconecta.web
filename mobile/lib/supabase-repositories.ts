@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
+import type { AdCampaign, AgroEvent, EcosystemSite, EventScheduleItem, MarketPrice, Organization, Post } from './types'
 
 function mapPost(row: any): Post {
   return {
@@ -74,6 +74,7 @@ function mapOrganization(row: any): Organization {
     planStartedAt: row.plan_started_at ? new Date(row.plan_started_at) : undefined,
     billingNotes: row.billing_notes,
     logoUrl: row.logo_url,
+    eventsOrganizerSlug: row.events_organizer_slug ?? undefined,
   }
 }
 
@@ -166,6 +167,45 @@ export async function fetchEventBySlug(slug: string): Promise<AgroEvent | null> 
   return mapEvent(data)
 }
 
+export async function fetchEventsByOrganizerSlug(organizerSlug: string): Promise<AgroEvent[]> {
+  const { data: org, error: orgError } = await supabaseEvents
+    .from('organizations')
+    .select('id')
+    .eq('slug', organizerSlug)
+    .maybeSingle()
+
+  if (orgError || !org) return []
+
+  const { data, error } = await supabaseEvents
+    .from('events')
+    .select('*')
+    .eq('organization_id', org.id)
+    .eq('is_approved', true)
+    .order('date', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map(mapEvent)
+}
+
+export async function fetchSubscriptionNotify(userId: string, organizationId: string): Promise<boolean | null> {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select('notify')
+    .eq('user_id', userId)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data.notify
+}
+
+export async function upsertSubscriptionNotify(userId: string, organizationId: string, notify: boolean): Promise<void> {
+  await supabase.from('user_subscriptions').upsert(
+    { user_id: userId, organization_id: organizationId, notify },
+    { onConflict: 'user_id,organization_id' }
+  )
+}
+
 export async function fetchActiveBanners(): Promise<AdCampaign[]> {
   const { data, error } = await supabase
     .from('ad_campaigns')
@@ -219,6 +259,46 @@ export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
 
   if (error) throw error
   return (data ?? []).map(mapPost)
+}
+
+export async function fetchEcosystemSites(): Promise<EcosystemSite[]> {
+  const { data, error } = await supabase
+    .from('ecosystem_sites')
+    .select('*')
+    .order('order_index', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    description: row.description ?? '',
+    url: row.url ?? '',
+    logoUrl: row.logo_url ?? undefined,
+    category: row.category,
+    isAvailable: row.is_available,
+    tags: row.tags ?? [],
+  }))
+}
+
+export async function fetchEcosystemSiteById(id: string): Promise<EcosystemSite | null> {
+  const { data, error } = await supabase
+    .from('ecosystem_sites')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description ?? '',
+    url: data.url ?? '',
+    logoUrl: data.logo_url ?? undefined,
+    category: data.category,
+    isAvailable: data.is_available,
+    tags: data.tags ?? [],
+  }
 }
 
 export async function fetchMarketPrices(): Promise<MarketPrice[]> {

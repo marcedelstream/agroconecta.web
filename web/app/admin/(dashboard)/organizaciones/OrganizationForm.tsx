@@ -130,6 +130,20 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         </div>
       </div>
 
+      <div>
+        <label className={labelClass}>Slug de organizador en eventosagropy.com (opcional)</label>
+        <input
+          name="events_organizer_slug"
+          defaultValue={organization?.events_organizer_slug ?? ''}
+          className={inputClass}
+          placeholder="fca-una"
+        />
+        <p className="text-xs text-muted mt-1">
+          Si esta organización también carga eventos en eventosagropy.com, pegá acá su slug para que sus
+          eventos aparezcan en su perfil dentro de la app.
+        </p>
+      </div>
+
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <input
           type="checkbox"

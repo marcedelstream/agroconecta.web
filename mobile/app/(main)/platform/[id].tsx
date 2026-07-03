@@ -1,4 +1,5 @@
-import { View, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native'
+import { useEffect, useState } from 'react'
+import { View, ScrollView, TouchableOpacity, Image, StyleSheet, Linking, ActivityIndicator } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -6,60 +7,31 @@ import { Text } from '@/components/ui/Text'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
-
-type IoniconName = React.ComponentProps<typeof Ionicons>['name']
-
-interface PlatformInfo {
-  label: string
-  icon: IoniconName
-  tagline: string
-  description: string
-  available: boolean
-  url?: string
-  features: string[]
-}
-
-const PLATFORM_DATA: Record<string, PlatformInfo> = {
-  agrojuego: {
-    label: 'AgroJuego',
-    icon: 'game-controller-outline',
-    tagline: 'Aprendé el agro jugando',
-    description: 'El primer juego educativo del sector agropecuario paraguayo. Poné a prueba tus conocimientos sobre ganadería, agricultura, clima y mercados de forma dinámica e interactiva.',
-    available: true,
-    url: 'https://agrojuego.com',
-    features: ['Trivia agropecuaria', 'Rankings semanales', 'Modo multijugador', 'Temáticas por categoría'],
-  },
-  agrostore: {
-    label: 'AgroStore',
-    icon: 'storefront-outline',
-    tagline: 'El marketplace del campo paraguayo',
-    description: 'Plataforma de comercio electrónico especializada en insumos, maquinaria y productos agropecuarios.',
-    available: false,
-    features: ['Insumos agrícolas', 'Maquinaria', 'Semillas', 'Agroquímicos'],
-  },
-  agrojobs: {
-    label: 'Agro Jobs',
-    icon: 'briefcase-outline',
-    tagline: 'Empleo agropecuario en un solo lugar',
-    description: 'Bolsa de trabajo especializada en el sector agro. Conectamos talento con empresas del campo.',
-    available: false,
-    features: ['Ofertas laborales', 'Perfiles profesionales', 'Empresas del sector', 'Postulaciones online'],
-  },
-  inmuebles: {
-    label: 'Inmuebles',
-    icon: 'home-outline',
-    tagline: 'Propiedades rurales del Paraguay',
-    description: 'Portal de compra, venta y alquiler de campos, estancias y propiedades rurales en todo el país.',
-    available: false,
-    features: ['Campos y estancias', 'Propiedades rurales', 'Búsqueda por departamento', 'Contacto directo'],
-  },
-}
+import { fetchEcosystemSiteById } from '@/lib/supabase-repositories'
+import type { EcosystemSite } from '@/lib/types'
 
 export default function PlatformScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const C = useColors()
   const insets = useSafeAreaInsets()
-  const platform = PLATFORM_DATA[id ?? '']
+  const [platform, setPlatform] = useState<EcosystemSite | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!id) return
+    fetchEcosystemSiteById(id)
+      .then(setPlatform)
+      .catch(() => setPlatform(null))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  if (loading) {
+    return (
+      <View style={[styles.center, { backgroundColor: C.background }]}>
+        <ActivityIndicator color={Colors.lime} size="large" />
+      </View>
+    )
+  }
 
   if (!platform) {
     return (
@@ -79,7 +51,7 @@ export default function PlatformScreen() {
         <TouchableOpacity onPress={() => router.navigate('/(main)/ecosystem' as any)} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={C.foreground} />
         </TouchableOpacity>
-        <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{platform.label}</Text>
+        <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{platform.name}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -89,16 +61,17 @@ export default function PlatformScreen() {
       >
         {/* Icono + nombre */}
         <View style={styles.heroSection}>
-          <View style={[styles.bigIcon, { backgroundColor: platform.available ? `${Colors.lime}18` : `${C.muted}10` }]}>
-            <Ionicons name={platform.icon} size={52} color={platform.available ? Colors.lime : C.muted} />
+          <View style={[styles.bigIcon, { backgroundColor: platform.isAvailable ? `${Colors.lime}18` : `${C.muted}10` }]}>
+            {platform.isAvailable && platform.logoUrl ? (
+              <Image source={{ uri: platform.logoUrl }} style={styles.bigLogo} resizeMode="contain" />
+            ) : (
+              <Ionicons name={platform.isAvailable ? 'apps-outline' : 'sparkles-outline'} size={52} color={platform.isAvailable ? Colors.lime : C.muted} />
+            )}
           </View>
           <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground, textAlign: 'center' }}>
-            {platform.label}
+            {platform.isAvailable ? platform.name : 'Próximamente nuevas soluciones'}
           </Text>
-          <Text variant="body" style={{ color: C.muted, textAlign: 'center' }}>
-            {platform.tagline}
-          </Text>
-          {!platform.available && (
+          {!platform.isAvailable && (
             <View style={styles.proximoBadge}>
               <Text style={styles.proximoText}>PRÓXIMAMENTE</Text>
             </View>
@@ -106,31 +79,22 @@ export default function PlatformScreen() {
         </View>
 
         {/* Descripción */}
-        <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
-          {platform.description}
-        </Text>
-
-        {/* Features */}
-        <View style={[styles.featuresCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-          <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Características</Text>
-          {platform.features.map((f) => (
-            <View key={f} style={styles.featureRow}>
-              <Ionicons name="checkmark-circle" size={16} color={Colors.lime} />
-              <Text variant="body" style={{ color: C.foreground }}>{f}</Text>
-            </View>
-          ))}
-        </View>
+        {platform.isAvailable && platform.description ? (
+          <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
+            {platform.description}
+          </Text>
+        ) : null}
 
         {/* CTA */}
-        {platform.available && platform.url ? (
+        {platform.isAvailable && platform.url ? (
           <TouchableOpacity
             style={styles.ctaBtn}
             activeOpacity={0.85}
-            onPress={() => Linking.openURL(platform.url!)}
+            onPress={() => Linking.openURL(platform.url)}
           >
             <Ionicons name="open-outline" size={20} color="#0A0A13" />
             <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
-              Abrir {platform.label}
+              Abrir {platform.name}
             </Text>
           </TouchableOpacity>
         ) : (
@@ -166,6 +130,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bigLogo: { width: 60, height: 60 },
   proximoBadge: {
     backgroundColor: 'rgba(139,139,154,0.15)',
     borderRadius: Radius.sm,
@@ -173,13 +138,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[1],
   },
   proximoText: { fontSize: 11, color: '#8B8B9A', fontWeight: '700', letterSpacing: 1 },
-  featuresCard: {
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    padding: Spacing[4],
-    gap: Spacing[3],
-  },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3] },
   ctaBtn: {
     flexDirection: 'row',
     alignItems: 'center',

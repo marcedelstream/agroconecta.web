@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   View, FlatList, TextInput, TouchableOpacity,
-  ScrollView, StyleSheet, ActivityIndicator,
+  ScrollView, StyleSheet,
 } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { NewsCard } from '@/components/home/NewsCard'
+import { NewsCardGrid } from '@/components/home/NewsCardGrid'
+import { NewsCardGridSkeleton } from '@/components/ui/Skeleton'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
@@ -28,7 +29,7 @@ const CATEGORIES: { value: NewsCategory; label: string }[] = [
 export default function NoticiasScreen() {
   const C = useColors()
   const insets = useSafeAreaInsets()
-  const [posts, setPosts] = useState<Post[]>(mockNews)
+  const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<NewsCategory | null>(null)
@@ -136,18 +137,20 @@ export default function NoticiasScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={Colors.lime} size="large" />
+        <View style={[styles.list, styles.skeletonGrid, { paddingBottom: insets.bottom + Spacing[8] }]}>
+          {Array.from({ length: 8 }).map((_, i) => <NewsCardGridSkeleton key={i} />)}
         </View>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => (
-            <NewsCard article={item} onPress={() => goToArticle(item.id)} />
+            <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} />
           )}
           ListEmptyComponent={
             <View style={styles.center}>
@@ -200,4 +203,6 @@ const styles = StyleSheet.create({
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: Spacing[10] },
   list: { padding: Spacing[4], gap: Spacing[3] },
+  row: { gap: Spacing[3] },
+  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap' },
 })

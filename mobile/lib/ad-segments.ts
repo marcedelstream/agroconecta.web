@@ -55,9 +55,9 @@ const ADS: Record<string, MockAd> = {
   },
   'precision-ag': {
     id: 'precision-ag',
-    headline: 'Agricultura de precision',
-    subline: 'Tecnologia para rendir mas con menos insumos',
-    ctaLabel: 'Conocer mas',
+    headline: 'Agricultura de precisión',
+    subline: 'Tecnología para rendir más con menos insumos',
+    ctaLabel: 'Conocer más',
     iconName: 'hardware-chip-outline',
     accentColor: Colors.category.tecnologia,
     imageUrl: 'https://ukodavvtmrrqnfgyvqql.supabase.co/storage/v1/object/public/banners/demo/precision-agro.png',

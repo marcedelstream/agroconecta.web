@@ -58,16 +58,16 @@ export const newsCategories: { value: NewsCategory; label: string; icon: string 
 
 // Organizations / cuentas verificadas
 export const mockOrganizations: Organization[] = [
-  { id: 'poder-agropecuario', name: 'Poder Agropecuario', description: 'Medio especializado en noticias y analisis del sector agropecuario paraguayo.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
+  { id: 'poder-agropecuario', name: 'Poder Agropecuario', description: 'Medio especializado en noticias y análisis del sector agropecuario paraguayo.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
   { id: 'campo-agropecuario', name: 'Campo Agropecuario', description: 'El referente digital del campo paraguayo con cobertura nacional.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
-  { id: 'agroconecta-medios', name: 'Agroconecta Medios', description: 'Noticias, analisis y tendencias del agro desde el ecosistema Agroconecta.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Interno' },
-  { id: 'abc-rural', name: 'ABC Rural', description: 'Seccion agropecuaria de ABC Color, el diario de mayor circulacion del pais.', isVerified: true, category: 'media', commercialStatus: 'trial', planName: 'Piloto' },
-  { id: 'asociacion-brangus', name: 'Asociacion Paraguaya de Brangus', description: 'Comunicados, remates, jornadas tecnicas y novedades oficiales de la raza Brangus.', isVerified: true, category: 'asociacion', commercialStatus: 'active', planName: 'Asociacion Pro' },
-  { id: 'arp', name: 'Asociacion Rural del Paraguay', description: 'Gremio referente de la produccion ganadera y exposiciones rurales del Paraguay.', isVerified: true, category: 'gremio', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'agroconecta-medios', name: 'Agroconecta Medios', description: 'Noticias, análisis y tendencias del agro desde el ecosistema Agroconecta.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Interno' },
+  { id: 'abc-rural', name: 'ABC Rural', description: 'Sección agropecuaria de ABC Color, el diario de mayor circulación del país.', isVerified: true, category: 'media', commercialStatus: 'trial', planName: 'Piloto' },
+  { id: 'asociacion-brangus', name: 'Asociación Paraguaya de Brangus', description: 'Comunicados, remates, jornadas técnicas y novedades oficiales de la raza Brangus.', isVerified: true, category: 'asociacion', commercialStatus: 'active', planName: 'Asociación Pro' },
+  { id: 'arp', name: 'Asociación Rural del Paraguay', description: 'Gremio referente de la producción ganadera y exposiciones rurales del Paraguay.', isVerified: true, category: 'gremio', commercialStatus: 'active', planName: 'Institucional' },
   { id: 'senacsa', name: 'SENACSA', description: 'Servicio Nacional de Calidad y Salud Animal. Organismo oficial del Estado.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'mag', name: 'MAG', description: 'Ministerio de Agricultura y Ganaderia de la Republica del Paraguay.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'mag', name: 'MAG', description: 'Ministerio de Agricultura y Ganadería de la República del Paraguay.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
   { id: 'senave', name: 'SENAVE', description: 'Servicio Nacional de Calidad y Sanidad Vegetal y de Semillas.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'remates-paraguay', name: 'Remates Paraguay', description: 'Agenda y transmision de remates ganaderos en vivo desde todo el pais.', isVerified: true, category: 'rematadora', commercialStatus: 'trial', planName: 'Remates' },
+  { id: 'remates-paraguay', name: 'Remates Paraguay', description: 'Agenda y transmisión de remates ganaderos en vivo desde todo el país.', isVerified: true, category: 'rematadora', commercialStatus: 'trial', planName: 'Remates' },
 ];
 
 export const mockPublishers = mockOrganizations;
@@ -76,9 +76,9 @@ export const mockPublishers = mockOrganizations;
 export const mockNews: NewsArticle[] = [
   {
     id: '1',
-    title: 'Paraguay registra record historico en exportacion de carne bovina',
-    summary: 'El pais alcanzo cifras sin precedentes en el primer trimestre del 2026, consolidandose como uno de los principales exportadores de la region.',
-    content: 'El sector ganadero paraguayo continua su expansion...',
+    title: 'Paraguay registra récord histórico en exportación de carne bovina',
+    summary: 'El país alcanzó cifras sin precedentes en el primer trimestre del 2026, consolidándose como uno de los principales exportadores de la región.',
+    content: 'El sector ganadero paraguayo continúa su expansión...',
     category: 'ganaderia',
     imageUrl: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800',
     source: 'Agroconecta Medios',
@@ -110,7 +110,7 @@ export const mockNews: NewsArticle[] = [
   {
     id: '3',
     title: 'Alerta climatica: Pronostican lluvias intensas para la region Oriental',
-    summary: 'El Servicio Meteorologico Nacional advierte sobre precipitaciones abundantes para los proximos dias.',
+    summary: 'El Servicio Meteorológico Nacional advierte sobre precipitaciones abundantes para los próximos días.',
     content: 'Las condiciones meteorologicas indican...',
     category: 'clima',
     imageUrl: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800',
@@ -158,7 +158,7 @@ export const mockNews: NewsArticle[] = [
   {
     id: '6',
     title: 'SENACSA habilita nuevos frigorificos para exportacion a la UE',
-    summary: 'Tres establecimientos mas cumplen con los estandares requeridos por el mercado europeo.',
+    summary: 'Tres establecimientos más cumplen con los estándares requeridos por el mercado europeo.',
     content: 'El Servicio Nacional de Calidad y Salud Animal...',
     category: 'institucional',
     imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=800',
@@ -311,20 +311,22 @@ export const mockEcosystemSites: EcosystemSite[] = [
   {
     id: '1',
     name: 'Eventosagropy',
-    description: 'El primer y unico calendario digital del sector agropecuario paraguayo. Ferias, congresos, remates y eventos del agro en una sola plataforma.',
+    description: 'El primer y único calendario digital del sector agropecuario paraguayo. Ferias, congresos, remates y eventos del agro en una sola plataforma.',
     url: 'https://eventosagropy.com',
     logoUrl: '/ecosystem/eventosagropy.png',
     category: 'eventos',
+    isAvailable: true,
     tags: ['Calendario', 'Eventos', 'Ferias', 'Remates'],
   },
   {
     id: '2',
     name: 'Agrojuego',
-    description: 'El primer juego educativo del sector agropecuario. Aprende sobre el agro de forma divertida y dinamica.',
+    description: 'El primer juego educativo del sector agropecuario. Aprende sobre el agro de forma divertida y dinámica.',
     url: 'https://agrojuego.com',
     logoUrl: '/ecosystem/agrojuego.png',
     category: 'juegos',
-    tags: ['Educacion', 'Juegos', 'Gamificacion', 'Interactivo'],
+    isAvailable: true,
+    tags: ['Educación', 'Juegos', 'Gamificación', 'Interactivo'],
   },
   {
     id: '3',
@@ -333,6 +335,7 @@ export const mockEcosystemSites: EcosystemSite[] = [
     url: 'https://new.agroconecta.com.py',
     logoUrl: '/ecosystem/agroconecta.png',
     category: 'institucional',
+    isAvailable: true,
     tags: ['Institucional', 'Ecosistema', 'Digital', 'Agro'],
   },
 ];
@@ -406,7 +409,7 @@ export const mockVideos: VideoItem[] = [
   },
   {
     id: 'v2',
-    title: 'Soja 2026: Perspectivas de la cosecha en el Este del pais',
+    title: 'Soja 2026: Perspectivas de la cosecha en el Este del país',
     thumbnailUrl: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600',
     duration: '12:10',
     channel: 'Poder Agropecuario',

@@ -15,7 +15,7 @@ async function loadOrg(id: string) {
   const [orgRes, postsRes] = await Promise.all([
     supabase
       .from('organizations')
-      .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url')
+      .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url,events_organizer_slug')
       .eq('id', id)
       .single(),
     supabase

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { View, FlatList, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -7,13 +7,20 @@ import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/Badge'
+import { EventCard } from '@/components/home/EventCard'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
 import { mockPublishers, mockNews } from '@/lib/mock-data'
-import { fetchPostsByOrganization, fetchOrganizationById } from '@/lib/supabase-repositories'
-import type { NewsArticle, Organization } from '@/lib/types'
+import {
+  fetchPostsByOrganization,
+  fetchOrganizationById,
+  fetchEventsByOrganizerSlug,
+  fetchSubscriptionNotify,
+  upsertSubscriptionNotify,
+} from '@/lib/supabase-repositories'
+import type { AgroEvent, NewsArticle, Organization } from '@/lib/types'
 
 function timeAgo(date: Date): string {
   const diff = Date.now() - date.getTime()
@@ -47,6 +54,7 @@ export default function PublisherScreen() {
   const [articles, setArticles] = useState<NewsArticle[]>(
     mockNews.filter((n) => n.publisherId === id)
   )
+  const [organizedEvents, setOrganizedEvents] = useState<AgroEvent[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -68,6 +76,22 @@ export default function PublisherScreen() {
     return () => { mounted = false }
   }, [id])
 
+  // Eventos organizados por este medio (si tiene el mapeo a eventosagropy.com cargado)
+  useEffect(() => {
+    if (!publisher?.eventsOrganizerSlug) { setOrganizedEvents([]); return }
+    fetchEventsByOrganizerSlug(publisher.eventsOrganizerSlug)
+      .then(setOrganizedEvents)
+      .catch(() => setOrganizedEvents([]))
+  }, [publisher?.eventsOrganizerSlug])
+
+  // Estado real de la campanita, guardado en user_subscriptions
+  useEffect(() => {
+    if (!user?.id || !id) return
+    fetchSubscriptionNotify(user.id, id)
+      .then((notify) => setNotifOn(notify ?? false))
+      .catch(() => {})
+  }, [user?.id, id])
+
   async function toggleFollow() {
     if (!user || !id) return
     const current = user.organizationSubscriptions ?? []
@@ -76,13 +100,17 @@ export default function PublisherScreen() {
   }
 
   async function toggleNotif() {
+    if (!user?.id || !id) return
     const { status } = await Notifications.requestPermissionsAsync()
     if (status !== 'granted') {
       Alert.alert('Permisos necesarios', 'Activá las notificaciones en los ajustes del dispositivo.')
       return
     }
-    setNotifOn((v) => !v)
-    // TODO: registrar push token para este publisher en el backend
+    const next = !notifOn
+    setNotifOn(next)
+    await upsertSubscriptionNotify(user.id, id, next)
+    // Tocar la campanita sin estar siguiendo la organización también la sigue
+    if (!isFollowed) await toggleFollow()
   }
 
   if (loading) {
@@ -179,6 +207,19 @@ export default function PublisherScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {organizedEvents.length > 0 && (
+          <View style={{ gap: Spacing[3] }}>
+            <Text variant="body" weight="semibold" style={styles.sectionTitle}>
+              Eventos organizados
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.eventsRow}>
+              {organizedEvents.map((event) => (
+                <EventCard key={event.id} event={event} onPress={() => router.push(`/event/${event.slug}`)} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {articles.length > 0 && (
           <Text variant="body" weight="semibold" style={styles.sectionTitle}>
@@ -281,6 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sectionTitle: {},
+  eventsRow: { gap: Spacing[3] },
   articleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing[2], padding: Spacing[4] },
   articleLeft: { flex: 1, gap: Spacing[1.5] },
   articleTitle: { lineHeight: 21 },

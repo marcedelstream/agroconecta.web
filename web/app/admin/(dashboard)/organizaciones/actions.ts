@@ -82,6 +82,7 @@ async function extractPayload(formData: FormData, supabase: ReturnType<typeof cr
     plan_name: ((formData.get('plan_name') as string) || 'Piloto').trim(),
     is_verified: formData.get('is_verified') === 'on',
     logo_url: await uploadLogo(formData, supabase),
+    events_organizer_slug: ((formData.get('events_organizer_slug') as string) || '').trim() || null,
   }
 }
 

@@ -68,6 +68,16 @@ export interface PostRow {
   created_at: string
   organization_id?: string | null
   organizations?: { name: string; logo_url: string | null; slug: string; is_verified: boolean } | null
+  event_tag?: string | null
+}
+
+export type AdLinkType = 'event' | 'post' | 'url' | 'course'
+
+export const LINK_TYPE_LABELS: Record<AdLinkType, string> = {
+  event: 'Evento (por slug)',
+  post: 'Publicación (por id)',
+  url: 'URL externa',
+  course: 'Curso (por id)',
 }
 
 export interface AdCampaignRow {
@@ -80,6 +90,19 @@ export interface AdCampaignRow {
   starts_at: string
   ends_at: string | null
   is_active: boolean
+  link_type: AdLinkType | null
+  link_target: string | null
+}
+
+export interface EventScheduleItemRow {
+  id: string
+  event_slug: string
+  day_label: string | null
+  time: string | null
+  title: string
+  description: string | null
+  speaker: string | null
+  order_index: number
 }
 
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {

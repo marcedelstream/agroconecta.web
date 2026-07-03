@@ -9,11 +9,14 @@ import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
 import { ReminderModal } from '@/components/ui/ReminderModal'
-import { fetchEventBySlug } from '@/lib/supabase-repositories'
+import { NewsCard } from '@/components/home/NewsCard'
+import { fetchEventBySlug, fetchEventSchedule, fetchPostsByEventTag } from '@/lib/supabase-repositories'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
-import type { AgroEvent } from '@/lib/types'
+import type { AgroEvent, EventScheduleItem, Post } from '@/lib/types'
+
+type HubTab = 'info' | 'programa' | 'noticias'
 
 function formatFullDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -59,17 +62,32 @@ export default function EventDetailScreen() {
   const [reminding, setReminding] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [modalDateLabel, setModalDateLabel] = useState('')
+  const [schedule, setSchedule] = useState<EventScheduleItem[]>([])
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
+  const [tab, setTab] = useState<HubTab>('info')
 
   // Limpiar estado anterior al cambiar slug para evitar pestañeo
   useEffect(() => {
     if (!slug) return
     setEvent(null)
+    setSchedule([])
+    setRelatedPosts([])
+    setTab('info')
     setLoading(true)
     fetchEventBySlug(slug)
       .then(setEvent)
       .catch(() => setEvent(null))
       .finally(() => setLoading(false))
+    fetchEventSchedule(slug).then(setSchedule).catch(() => setSchedule([]))
+    fetchPostsByEventTag(slug).then(setRelatedPosts).catch(() => setRelatedPosts([]))
   }, [slug])
+
+  const tabs: { key: HubTab; label: string }[] = [
+    { key: 'info', label: 'Info' },
+    ...(schedule.length > 0 ? [{ key: 'programa' as HubTab, label: 'Programa' }] : []),
+    ...(relatedPosts.length > 0 ? [{ key: 'noticias' as HubTab, label: 'Noticias' }] : []),
+  ]
+  const showTabs = tabs.length > 1
 
   const handleReminder = async () => {
     if (!event) return
@@ -172,75 +190,137 @@ export default function EventDetailScreen() {
             />
           </View>
 
-          {/* Descripción */}
-          {(event.longDescription ?? event.description) ? (
-            <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
-              {event.longDescription ?? event.description}
-            </Text>
-          ) : null}
-
-          {/* Recordar evento — solo si faltan 2+ días */}
-          {showReminder && (
-            <TouchableOpacity
-              style={[styles.remindBtn, reminding && { opacity: 0.6 }]}
-              activeOpacity={0.85}
-              onPress={handleReminder}
-              disabled={reminding}
-            >
-              {reminding
-                ? <ActivityIndicator color="#0A0A13" size="small" />
-                : <Ionicons name="notifications-outline" size={20} color="#0A0A13" />
-              }
-              <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
-                {reminding ? 'Programando…' : 'Recordar este evento'}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Links importantes */}
-          {event.importantLinks && event.importantLinks.length > 0 && (
-            <View style={{ gap: Spacing[2] }}>
-              <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Links de interés</Text>
-              {event.importantLinks.map((link, i) => (
+          {/* Tabs — solo aparecen si hay cobertura extra cargada para este evento */}
+          {showTabs && (
+            <View style={[styles.tabBar, { backgroundColor: C.surface, borderColor: C.border }]}>
+              {tabs.map((t) => (
                 <TouchableOpacity
-                  key={i}
-                  style={[styles.linkRow, { borderColor: C.border }]}
-                  onPress={() => Linking.openURL(link.url)}
+                  key={t.key}
+                  style={[styles.tabItem, tab === t.key && { backgroundColor: Colors.lime }]}
+                  onPress={() => setTab(t.key)}
                 >
-                  <Ionicons name="link-outline" size={16} color={Colors.lime} />
-                  <Text variant="body" style={{ color: Colors.lime, flex: 1 }} numberOfLines={1}>{link.label}</Text>
-                  <Ionicons name="open-outline" size={14} color={C.muted} />
+                  <Text
+                    variant="body"
+                    weight="semibold"
+                    style={{ color: tab === t.key ? '#0A0A13' : C.muted }}
+                  >
+                    {t.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
-          {/* Contacto */}
-          {(event.contactEmail || event.contactPhone) && (
-            <View style={[styles.contactCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-              <Text variant="caption" weight="semibold" style={{ color: C.muted }}>CONTACTO</Text>
-              {event.contactEmail && (
-                <TouchableOpacity onPress={() => Linking.openURL(`mailto:${event.contactEmail}`)}>
-                  <Text variant="body" style={{ color: Colors.lime }}>{event.contactEmail}</Text>
+          {tab === 'info' && (
+            <>
+              {/* Descripción */}
+              {(event.longDescription ?? event.description) ? (
+                <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
+                  {event.longDescription ?? event.description}
+                </Text>
+              ) : null}
+
+              {/* Recordar evento — solo si faltan 2+ días */}
+              {showReminder && (
+                <TouchableOpacity
+                  style={[styles.remindBtn, reminding && { opacity: 0.6 }]}
+                  activeOpacity={0.85}
+                  onPress={handleReminder}
+                  disabled={reminding}
+                >
+                  {reminding
+                    ? <ActivityIndicator color="#0A0A13" size="small" />
+                    : <Ionicons name="notifications-outline" size={20} color="#0A0A13" />
+                  }
+                  <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
+                    {reminding ? 'Programando…' : 'Recordar este evento'}
+                  </Text>
                 </TouchableOpacity>
               )}
-              {event.contactPhone && (
-                <TouchableOpacity onPress={() => Linking.openURL(`tel:${event.contactPhone}`)}>
-                  <Text variant="body" style={{ color: C.foreground }}>{event.contactPhone}</Text>
+
+              {/* Links importantes */}
+              {event.importantLinks && event.importantLinks.length > 0 && (
+                <View style={{ gap: Spacing[2] }}>
+                  <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Links de interés</Text>
+                  {event.importantLinks.map((link, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      style={[styles.linkRow, { borderColor: C.border }]}
+                      onPress={() => Linking.openURL(link.url)}
+                    >
+                      <Ionicons name="link-outline" size={16} color={Colors.lime} />
+                      <Text variant="body" style={{ color: Colors.lime, flex: 1 }} numberOfLines={1}>{link.label}</Text>
+                      <Ionicons name="open-outline" size={14} color={C.muted} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* Contacto */}
+              {(event.contactEmail || event.contactPhone) && (
+                <View style={[styles.contactCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+                  <Text variant="caption" weight="semibold" style={{ color: C.muted }}>CONTACTO</Text>
+                  {event.contactEmail && (
+                    <TouchableOpacity onPress={() => Linking.openURL(`mailto:${event.contactEmail}`)}>
+                      <Text variant="body" style={{ color: Colors.lime }}>{event.contactEmail}</Text>
+                    </TouchableOpacity>
+                  )}
+                  {event.contactPhone && (
+                    <TouchableOpacity onPress={() => Linking.openURL(`tel:${event.contactPhone}`)}>
+                      <Text variant="body" style={{ color: C.foreground }}>{event.contactPhone}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+
+              {/* Ver en mapa */}
+              {event.mapsUrl && (
+                <TouchableOpacity
+                  style={[styles.mapBtn, { borderColor: C.border }]}
+                  onPress={() => Linking.openURL(event.mapsUrl!)}
+                >
+                  <Ionicons name="map-outline" size={18} color={C.foreground} />
+                  <Text variant="body" weight="medium" style={{ color: C.foreground }}>Ver en el mapa</Text>
                 </TouchableOpacity>
               )}
+            </>
+          )}
+
+          {tab === 'programa' && (
+            <View style={{ gap: Spacing[3] }}>
+              {schedule.map((item, i) => {
+                const showDayLabel = item.dayLabel && (i === 0 || schedule[i - 1].dayLabel !== item.dayLabel)
+                return (
+                  <View key={item.id}>
+                    {showDayLabel && (
+                      <Text variant="label" weight="semibold" style={{ color: Colors.lime, marginBottom: Spacing[1.5] }}>
+                        {item.dayLabel!.toUpperCase()}
+                      </Text>
+                    )}
+                    <View style={[styles.scheduleCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+                      {item.time && (
+                        <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>{item.time}</Text>
+                      )}
+                      <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{item.title}</Text>
+                      {item.speaker && (
+                        <Text variant="caption" style={{ color: C.muted }}>{item.speaker}</Text>
+                      )}
+                      {item.description && (
+                        <Text variant="body" style={{ color: C.muted, lineHeight: 20 }}>{item.description}</Text>
+                      )}
+                    </View>
+                  </View>
+                )
+              })}
             </View>
           )}
 
-          {/* Ver en mapa */}
-          {event.mapsUrl && (
-            <TouchableOpacity
-              style={[styles.mapBtn, { borderColor: C.border }]}
-              onPress={() => Linking.openURL(event.mapsUrl!)}
-            >
-              <Ionicons name="map-outline" size={18} color={C.foreground} />
-              <Text variant="body" weight="medium" style={{ color: C.foreground }}>Ver en el mapa</Text>
-            </TouchableOpacity>
+          {tab === 'noticias' && (
+            <View style={{ gap: Spacing[3] }}>
+              {relatedPosts.map((post) => (
+                <NewsCard key={post.id} article={post} onPress={() => router.push(`/article/${post.id}`)} />
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>
@@ -333,5 +413,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.xl,
     paddingVertical: Spacing[3.5],
+  },
+  tabBar: {
+    flexDirection: 'row',
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    padding: Spacing[1],
+    gap: Spacing[1],
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing[2.5],
+    borderRadius: Radius.lg,
+  },
+  scheduleCard: {
+    gap: Spacing[1],
+    padding: Spacing[4],
+    borderRadius: Radius.xl,
+    borderWidth: 1,
   },
 })

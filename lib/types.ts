@@ -101,6 +101,7 @@ export interface Post {
   youtubeUrl?: string;
   auctionStatus?: AuctionStatus;
   startsAt?: Date;
+  eventTag?: string;
 }
 
 export type NewsArticle = Post;
@@ -216,6 +217,8 @@ export interface MockAd {
   targetCategories?: NewsCategory[];
 }
 
+export type AdLinkType = 'event' | 'post' | 'url' | 'course';
+
 export interface AdCampaign {
   id: string;
   title: string;
@@ -226,6 +229,8 @@ export interface AdCampaign {
   startsAt: Date;
   endsAt?: Date;
   isActive: boolean;
+  linkType?: AdLinkType;
+  linkTarget?: string;
 }
 
 // Notification preferences
@@ -260,6 +265,18 @@ export interface AgroEvent {
   contactPhone?: string
   organizationId?: string
   createdAt: string
+}
+
+// Programa de un evento (gestionado en Agroconecta, asociado por slug al evento externo)
+export interface EventScheduleItem {
+  id: string
+  eventSlug: string
+  dayLabel?: string
+  time?: string
+  title: string
+  description?: string
+  speaker?: string
+  orderIndex: number
 }
 
 // Onboarding state

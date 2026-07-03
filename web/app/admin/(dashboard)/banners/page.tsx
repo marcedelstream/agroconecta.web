@@ -1,13 +1,13 @@
 import Image from 'next/image'
 import { createSupabaseServer } from '@/lib/supabase-server'
-import { CATEGORY_LABELS, DEPARTMENT_LABELS, type AdCampaignRow, type Department, type NewsCategory } from '@/lib/types'
+import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, type AdCampaignRow, type Department, type NewsCategory } from '@/lib/types'
 import { createBanner, deleteBanner, toggleBanner } from './actions'
 
 async function loadBanners() {
   const supabase = await createSupabaseServer()
   const { data, error } = await supabase
     .from('ad_campaigns')
-    .select('id,title,image_url,target_professions,target_departments,target_categories,starts_at,ends_at,is_active')
+    .select('id,title,image_url,target_professions,target_departments,target_categories,starts_at,ends_at,is_active,link_type,link_target')
     .order('created_at', { ascending: false })
   return {
     banners: (data ?? []) as AdCampaignRow[],
@@ -73,6 +73,25 @@ export default async function BannersPage() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Destino del banner (opcional)</label>
+            <select name="link_type" className="input" defaultValue="">
+              <option value="">Sin destino — solo visual</option>
+              {(Object.entries(LINK_TYPE_LABELS) as [string, string][]).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <input
+              name="link_target"
+              className="input mt-2"
+              placeholder="Ej: slug del evento, id de la publicación o URL completa"
+            />
+            <p className="text-xs text-muted mt-1">
+              Para un evento, pegá el slug de eventosagropy.com (ej: <code>expo-agro-2026</code>). El programa y las
+              noticias asociadas se cargan en <a href="/admin/eventos" className="text-lime">Eventos</a>.
+            </p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Profesiones (opcional)</label>
             <input name="target_professions" className="input" placeholder="productor, veterinario" />
             <p className="text-xs text-muted mt-1">Separadas por coma. Vacío = todas.</p>
@@ -118,6 +137,7 @@ export default async function BannersPage() {
                 <tr>
                   <th>Imagen</th>
                   <th>Campaña</th>
+                  <th>Destino</th>
                   <th>Segmentación</th>
                   <th>Estado</th>
                   <th></th>
@@ -126,7 +146,7 @@ export default async function BannersPage() {
               <tbody>
                 {banners.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center py-10 text-muted">
+                    <td colSpan={6} className="text-center py-10 text-muted">
                       No hay banners cargados.
                     </td>
                   </tr>
@@ -140,6 +160,11 @@ export default async function BannersPage() {
                     </td>
                     <td>
                       <p className="font-medium">{banner.title}</p>
+                    </td>
+                    <td className="text-xs text-muted">
+                      {banner.link_type
+                        ? <span>{LINK_TYPE_LABELS[banner.link_type]}: <code>{banner.link_target}</code></span>
+                        : <span>—</span>}
                     </td>
                     <td className="text-xs text-muted max-w-sm">
                       <SegmentText banner={banner} />

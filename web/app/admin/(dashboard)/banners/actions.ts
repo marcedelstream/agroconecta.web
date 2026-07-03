@@ -69,6 +69,9 @@ export async function createBanner(formData: FormData) {
     return
   }
 
+  const linkType = String(formData.get('link_type') ?? '') || null
+  const linkTarget = String(formData.get('link_target') ?? '').trim() || null
+
   const supabase = createSupabaseAdmin()
   await supabase.from('ad_campaigns').insert({
     title: String(formData.get('title') ?? ''),
@@ -77,6 +80,8 @@ export async function createBanner(formData: FormData) {
     target_departments: formData.getAll('target_departments').map(String).filter(Boolean),
     target_categories: formData.getAll('target_categories').map(String).filter(Boolean),
     is_active: formData.get('is_active') === 'on',
+    link_type: linkType && linkTarget ? linkType : null,
+    link_target: linkType && linkTarget ? linkTarget : null,
   })
 
   revalidatePath('/admin/banners')

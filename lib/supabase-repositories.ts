@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AgroEvent, MarketPrice, Organization, Post } from './types'
+import type { AdCampaign, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
 
 function mapPost(row: any): Post {
   return {
@@ -184,7 +184,41 @@ export async function fetchActiveBanners(): Promise<AdCampaign[]> {
     startsAt: new Date(row.starts_at ?? row.created_at),
     endsAt: row.ends_at ? new Date(row.ends_at) : undefined,
     isActive: row.is_active,
+    linkType: row.link_type ?? undefined,
+    linkTarget: row.link_target ?? undefined,
   }))
+}
+
+export async function fetchEventSchedule(eventSlug: string): Promise<EventScheduleItem[]> {
+  const { data, error } = await supabase
+    .from('event_schedule_items')
+    .select('*')
+    .eq('event_slug', eventSlug)
+    .order('order_index', { ascending: true })
+
+  if (error) throw error
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    eventSlug: row.event_slug,
+    dayLabel: row.day_label ?? undefined,
+    time: row.time ?? undefined,
+    title: row.title,
+    description: row.description ?? undefined,
+    speaker: row.speaker ?? undefined,
+    orderIndex: row.order_index,
+  }))
+}
+
+export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, organizations(name)')
+    .eq('editorial_status', 'published')
+    .eq('event_tag', eventSlug)
+    .order('published_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map(mapPost)
 }
 
 export async function fetchMarketPrices(): Promise<MarketPrice[]> {

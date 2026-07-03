@@ -1,12 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
-import { View, FlatList, TouchableOpacity, useWindowDimensions, StyleSheet, type ViewStyle } from 'react-native'
+import { View, FlatList, TouchableOpacity, useWindowDimensions, StyleSheet, Linking, type ViewStyle } from 'react-native'
 import { Image } from 'expo-image'
+import { router } from 'expo-router'
 import { Text } from './Text'
 import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Colors } from '@/constants/colors'
 import { fetchActiveBanners } from '@/lib/supabase-repositories'
 import type { AdCampaign } from '@/lib/types'
+
+function openBanner(banner: AdCampaign) {
+  if (!banner.linkType || !banner.linkTarget) return
+  switch (banner.linkType) {
+    case 'event':
+      router.push(`/event/${banner.linkTarget}`)
+      return
+    case 'post':
+      router.push(`/article/${banner.linkTarget}`)
+      return
+    case 'url':
+      Linking.openURL(banner.linkTarget).catch(() => {})
+      return
+    case 'course':
+      // Cursos todavía no tiene pantalla propia — se agrega cuando se construya esa feature.
+      return
+  }
+}
 
 const SLIDE_INTERVAL = 4000
 
@@ -76,7 +95,12 @@ export function AdBanner({ style }: Props) {
         }}
         getItemLayout={(_, i) => ({ length: bannerWidth, offset: bannerWidth * i, index: i })}
         renderItem={({ item }) => (
-          <TouchableOpacity activeOpacity={0.92} style={{ width: bannerWidth }}>
+          <TouchableOpacity
+            activeOpacity={0.92}
+            style={{ width: bannerWidth }}
+            disabled={!item.linkType || !item.linkTarget}
+            onPress={() => openBanner(item)}
+          >
             <Image
               source={{ uri: item.imageUrl }}
               style={[styles.image, { width: bannerWidth }]}

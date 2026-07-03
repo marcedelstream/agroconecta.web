@@ -1,7 +1,11 @@
 # Agroconecta — Documento Oficial de Estructura y Roadmap
 
-> Última actualización: 2026-07-02
+> Última actualización: 2026-07-03
 > Este documento es la fuente de verdad para planificar el trabajo pendiente. Se actualiza cada vez que se cierra o se agrega una fase. Complementa a `CLAUDE.md` (que describe el stack y las convenciones) — acá va el **plan**, no las convenciones.
+>
+> **Nota de rutas:** las secciones de abajo se escribieron antes de la reorganización del 2026-07-03. Todas las
+> rutas de la app móvil (`app/...`, `components/...`, `lib/...`) mencionadas acá son relativas a `mobile/` —
+> por ejemplo `lib/types.ts` es hoy `mobile/lib/types.ts`.
 
 ---
 
@@ -175,25 +179,21 @@ No recomiendo meter las tres en una sola sesión — cada una toca schema + pant
 
 ## 6. Camino a la primera APK
 
-Se decidió **no** usar EAS por ahora (requiere cuenta Expo + login interactivo que no puedo hacer por vos). Alternativa: **build local con Android Studio**.
+**Actualizado 2026-07-03:** se decidió usar **EAS Build** después de todo (en vez del build local con Android Studio que se había planteado antes). Ya está configurado: `mobile/eas.json` existe con perfiles `development`/`preview`/`production`, y el proyecto está linkeado a una cuenta de Expo (`eas build:configure` ya se corrió).
 
-### Prerrequisitos en tu PC
-- [ ] Android Studio instalado
-- [ ] Android SDK (API 34+) instalado vía SDK Manager
-- [ ] Variable de entorno `ANDROID_HOME` apuntando al SDK
-- [ ] JDK 17 (Android Studio suele traerlo embebido)
-
-### Pasos
+### Comandos (desde `mobile/`, correrlos en tu propia terminal — `eas login` es interactivo)
 ```bash
-npx expo prebuild -p android   # genera la carpeta android/ nativa
-npx expo run:android --variant release   # compila e instala el APK release
+# Development build (incluye expo-dev-client, para seguir developando con hot reload)
+eas build --profile development --platform android
+eas build --profile development --platform ios   # necesita cuenta Apple Developer paga
+
+# Build de producción (el que se comparte/sube a las stores)
+eas build --profile production --platform android
 ```
-El APK release firmado queda en `android/app/build/outputs/apk/release/app-release.apk`.
 
-> Nota: `expo run:android --variant release` firma con un keystore de debug por defecto si no configurás uno propio. Para publicar en Play Store más adelante vas a necesitar un keystore de release real — para probar el APK en dispositivos propios esta noche no hace falta.
-
-### Bloqueo conocido
-No pude ejecutar esto en esta sesión porque requiere Android Studio/SDK corriendo en tu máquina de forma interactiva. Cuando quieras, lo corremos juntos paso a paso.
+### Pendiente
+- [ ] Correr el primer `eas build --profile development --platform android` y confirmar que instala y abre bien.
+- [ ] Cuando se quiera publicar de verdad: `eas build --profile production` + `eas submit` (Play Store / App Store).
 
 ---
 

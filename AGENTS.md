@@ -77,10 +77,13 @@ Usar múltiplos de 4. Base unit = 4px.
 
 ---
 
+> Nota 2026-07-03: la app móvil vive en `mobile/` (antes estaba suelta en la raíz). Todas las rutas de abajo son
+> relativas a `mobile/`. Ver `CLAUDE.md` para la estructura completa y actualizada.
+
 ## Estructura de carpetas (React Native / Expo Router)
 
 ```
-AGROCONECTA APP/
+mobile/
 ├── app/                          # Expo Router — rutas file-based
 │   ├── _layout.tsx               # Root layout (fonts, providers)
 │   ├── index.tsx                 # Entry → redirige a splash
@@ -272,6 +275,9 @@ interface AppState {
 ## Comandos útiles
 
 ```bash
+# Desde mobile/
+cd mobile
+
 # Iniciar servidor de desarrollo
 npx expo start
 

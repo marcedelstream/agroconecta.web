@@ -15,64 +15,41 @@ git push -u origin main
 
 ---
 
-## 2. Deploy inicial en Hostinger (una sola vez)
+## 2. Cómo se despliega hoy (build en GitHub Actions, no en el servidor)
 
-Conectarte por SSH al servidor de Hostinger:
+El repo es un **monorepo** (app móvil + web). El workflow (`.github/workflows/deploy-web.yml`) solo se dispara
+cuando cambia algo en `web/`, y **el build corre en el runner de GitHub, no en Hostinger**:
 
-```bash
-ssh u[USUARIO]@agroconecta.com.py
-```
+1. Compila `web/` con `next build` (que usa `output: 'standalone'` — genera un servidor autocontenido con su
+   propio `node_modules` mínimo).
+2. Arma un `.tar.gz` con `server.js` + `.next/standalone` + `public/` + `.next/static` + un `.env` con las
+   variables de producción.
+3. Sube ese único paquete por SSH a `~/domains/agroconecta.com.py/nodejs` y lo extrae ahí.
+4. Toca `tmp/restart.txt` para que Passenger reinicie la app.
 
-Clonar el repo y configurar la app:
+**Ni el código de la app móvil ni el resto del monorepo tocan el servidor** — solo el build final de `web/`.
+No hace falta `git clone`, `npm install` ni PM2 en Hostinger; Passenger corre directo `node server.js`.
 
-```bash
-cd ~/domains/agroconecta.com.py/public_html
-git clone https://github.com/TU_USUARIO/agroconecta.git .
-cd web
+### Configuración inicial en hPanel (una sola vez)
 
-# Crear las variables de entorno en el servidor
-nano .env.production
-```
+En hPanel → **Websites → Node.js** (o "Setup Node.js App"), crear/editar la app con:
 
-Contenido de `.env.production` en el servidor:
+| Campo | Valor |
+|---|---|
+| Application root | `domains/agroconecta.com.py/nodejs` |
+| Application startup file | `server.js` |
+| Application URL | `agroconecta.com.py` |
+| Node.js version | 20.x |
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://ukodavvtmrrqnfgyvqql.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY=TU_SERVICE_ROLE_KEY
-```
+No hace falta tocar nginx a mano ni instalar dependencias — Hostinger maneja el proxy interno para las apps
+Node.js registradas ahí.
 
-Obtener el Service Role Key desde: **Supabase → Settings → API → service_role**
-
-Luego instalar dependencias, buildear y levantar con PM2:
-
-```bash
-npm install
-npm run build
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup   # Para que PM2 arranque automáticamente al reiniciar el servidor
-```
+> `ecosystem.config.js` (PM2) queda obsoleto con este flujo — se puede borrar cuando se confirme que el deploy
+> automático funciona sin él.
 
 ---
 
-## 3. Configurar nginx en Hostinger (hPanel)
-
-En hPanel → **Websites → Manage → Advanced → .htaccess / Proxy**, agregar:
-
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_cache_bypass $http_upgrade;
-    proxy_set_header X-Real-IP $remote_addr;
-}
-```
-
-Alternativamente, en hPanel ir a **Websites → Node.js** y activar el proceso apuntando al directorio `/web`.
+## 3. (Reemplazado por la sección 2 — ya no aplica el proxy manual de nginx)
 
 ---
 
@@ -85,6 +62,14 @@ En GitHub → **Settings → Secrets and variables → Actions**, agregar:
 | `HOSTINGER_HOST` | `agroconecta.com.py` |
 | `HOSTINGER_USER` | Tu usuario SSH de Hostinger (empieza con `u...`) |
 | `HOSTINGER_SSH_KEY` | Tu clave SSH privada (ver abajo) |
+| `HOSTINGER_PORT` | Puerto SSH de Hostinger (normalmente `65002`, revisar en hPanel) |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://ukodavvtmrrqnfgyvqql.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key de Supabase → Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase → Settings → API (¡nunca subir a un `.env` versionado!) |
+| `NEXT_PUBLIC_SITE_URL` | `https://agroconecta.com.py` |
+
+**Importante:** estos 4 últimos secrets son nuevos con el flujo de build-en-CI. Si no están cargados en GitHub,
+el próximo deploy va a compilar la web con las variables de Supabase vacías y el sitio va a romper.
 
 ### Generar clave SSH para el deploy
 

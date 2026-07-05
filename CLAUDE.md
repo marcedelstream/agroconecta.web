@@ -277,17 +277,21 @@ npm run start          # next start -p 3000
 - [x] Tema claro/oscuro
 - [x] `npm run tsc` pasa sin errores
 - [x] EAS configurado (`mobile/eas.json`) — falta generar el primer build
+- [x] Tema claro por defecto, grid de noticias 2 columnas + skeleton, legales, páginas de servicio, ecosistema editable desde admin, campanita persistida, eventos por organizador (2026-07-03)
 
 ### Web — ✅ funcional
 - [x] Páginas públicas: home, noticias/[id] (SSR+OG), precios, ecosistema, quiénes-somos
-- [x] Panel admin: login, publicaciones (aprobar/rechazar), organizaciones, precios, banners, eventos (programa + tagging de noticias)
+- [x] Panel admin: login, publicaciones (aprobar/rechazar), organizaciones, precios, banners, eventos (programa + tagging de noticias), ecosistema (logos + disponibilidad)
 - [x] SEO: robots.ts, sitemap.ts
 - [x] Deploy Hostinger — build corre en GitHub Actions (no en el servidor), solo se sube el resultado compilado de `web/` en modo standalone
+- [x] Endpoint `POST /api/service-lead` listo para enviar los leads de servicio por email vía Resend (falta cargar `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO`)
 
 ### Pendiente
 - [ ] Cursos (listado + inscripción) — diseño en `docs/ESTRUCTURA-Y-ROADMAP.md`
 - [ ] Biblioteca digital tipo Netflix (colección de libros) — diseño en `docs/ESTRUCTURA-Y-ROADMAP.md`
 - [ ] Generar el primer development/production build con EAS
+- [ ] Correr `supabase/fix-ecosystem-sites.sql` y `supabase/fix-organizer-events-and-notify.sql` en Supabase, y cargar el ecosistema desde `/admin/ecosistema`
+- [ ] Cuenta de Resend + secrets `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO` para que el email de leads funcione de punta a punta
 - [ ] Próximas plataformas del ecosistema: AgroClima, AgroMercado, AgroTV
 - [ ] Formularios de publicación desde la app móvil (hoy solo desde web admin)
 - [ ] Tests (no hay suite todavía)

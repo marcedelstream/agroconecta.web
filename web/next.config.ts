@@ -5,7 +5,6 @@ import type { NextConfig } from 'next'
 const root = dirname(fileURLToPath(import.meta.url))
 
 const config: NextConfig = {
-  output: 'standalone',
   turbopack: {
     root,
   },

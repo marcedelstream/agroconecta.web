@@ -1,11 +1,11 @@
-name: Deploy Web a Hostinger
+name: Deploy Web a Hostinger (desactivado — migrado a Vercel)
 
+# Desactivado el 2026-07-03: la web se despliega ahora vía Vercel (build y deploy
+# automático propio al conectar el repo, Root Directory = web). Este workflow queda
+# solo para referencia — se puede correr a mano desde la pestaña Actions si hiciera
+# falta volver a Hostinger.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'web/**'
+  workflow_dispatch:
 
 jobs:
   deploy:

@@ -51,6 +51,6 @@ export function NewsCardGridSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  card: { flexBasis: '48%', flexGrow: 1, borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1 },
+  card: { flexBasis: '48%', borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1 },
   content: { padding: 10, gap: 6 },
 })

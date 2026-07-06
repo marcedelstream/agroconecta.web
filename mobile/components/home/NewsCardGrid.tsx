@@ -52,7 +52,6 @@ export function NewsCardGrid({ article, onPress }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexBasis: '48%',
-    flexGrow: 1,
     borderRadius: Radius.base,
     overflow: 'hidden',
     borderWidth: 1,

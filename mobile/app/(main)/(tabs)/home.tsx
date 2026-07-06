@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, ScrollView, FlatList, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -21,7 +21,7 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import type { Post } from '@/lib/types'
 
-const NEWS_PREVIEW = 5
+const NEWS_PREVIEW = 10
 
 export default function HomeScreen() {
   const { user } = useApp()
@@ -88,8 +88,8 @@ export default function HomeScreen() {
 
       {loading ? (
         <View style={styles.section}>
-          <View style={styles.newsGrid}>
-            {Array.from({ length: 6 }).map((_, i) => <NewsCardGridSkeleton key={i} />)}
+          <View style={styles.newsCarouselRow}>
+            {Array.from({ length: 3 }).map((_, i) => <NewsCardGridSkeleton key={i} style={styles.newsCardWidth} />)}
           </View>
         </View>
       ) : (
@@ -100,31 +100,24 @@ export default function HomeScreen() {
           {/* Banner publicitario (posición 3) */}
           <AdBanner segment={segment} style={styles.adBanner} />
 
-          {/* ── Más Noticias (posición 4, antes de eventos) ── */}
+          {/* ── Más Noticias (posición 4, antes de eventos) — carrusel, igual que Próximos Eventos ── */}
           {previewPosts.length > 0 && (
             <View style={styles.section}>
               <SectionHeader
                 title="Más Noticias"
                 action={{ label: 'Ver todas', onPress: () => router.push('/(main)/noticias' as any) }}
               />
-              <View style={styles.newsGrid}>
-                {previewPosts.map((item) => (
-                  <NewsCardGrid key={item.id} article={item} onPress={() => goToArticle(item.id)} />
-                ))}
-              </View>
-              {latestPosts.length > NEWS_PREVIEW && (
-                <TouchableOpacity
-                  style={[styles.verMasBtn, { borderColor: C.border }]}
-                  onPress={() => router.push('/(main)/noticias' as any)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="newspaper-outline" size={16} color={C.muted} />
-                  <Text variant="caption" weight="semibold" style={{ color: C.muted }}>
-                    Ver todas las noticias
-                  </Text>
-                  <Ionicons name="chevron-forward" size={14} color={C.muted} />
-                </TouchableOpacity>
-              )}
+              <FlatList
+                data={previewPosts}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.newsCarouselList}
+                ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
+                renderItem={({ item }) => (
+                  <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} style={styles.newsCardWidth} />
+                )}
+              />
             </View>
           )}
         </>
@@ -166,16 +159,9 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 15 },
   section: { gap: Spacing[3] },
-  newsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },
+  newsCarouselList: { paddingBottom: Spacing[2] },
+  newsCarouselRow: { flexDirection: 'row', gap: Spacing[3] },
+  newsCardWidth: { width: 160 },
   adBanner: { marginVertical: Spacing[1] },
   empty: { alignItems: 'center', paddingTop: Spacing[8] },
-  verMasBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing[2],
-    paddingVertical: Spacing[4],
-    marginTop: Spacing[1],
-    borderTopWidth: 1,
-  },
 })

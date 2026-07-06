@@ -1,4 +1,4 @@
-import { TouchableOpacity, Image, View, StyleSheet } from 'react-native'
+import { TouchableOpacity, Image, View, StyleSheet, type ViewStyle } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
 import { useColors } from '@/lib/theme-context'
@@ -20,14 +20,15 @@ function categoryLabel(cat: string) {
 interface Props {
   article: NewsArticle
   onPress: () => void
+  style?: ViewStyle
 }
 
-export function NewsCardGrid({ article, onPress }: Props) {
+export function NewsCardGrid({ article, onPress, style }: Props) {
   const C = useColors()
 
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: C.surface, borderColor: C.border }]}
+      style={[styles.container, { backgroundColor: C.surface, borderColor: C.border }, style]}
       activeOpacity={0.85}
       onPress={onPress}
     >

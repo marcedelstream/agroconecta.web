@@ -36,10 +36,10 @@ export function Skeleton({ width = '100%', height = 16, radius = Radius.sm, styl
 }
 
 // Placeholder de una tarjeta de noticia en grid (imagen arriba + 2 líneas de texto)
-export function NewsCardGridSkeleton() {
+export function NewsCardGridSkeleton({ style }: { style?: ViewStyle }) {
   const C = useColors()
   return (
-    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}>
+    <View style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }, style]}>
       <Skeleton height={140} radius={0} />
       <View style={styles.content}>
         <Skeleton height={13} width="90%" />

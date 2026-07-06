@@ -53,7 +53,7 @@ export function EventCard({ event, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: { width: 152, borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1 },
-  image: { width: '100%', height: 90 },
+  image: { width: '100%', aspectRatio: 1 },
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   dateBadge: {
     position: 'absolute',

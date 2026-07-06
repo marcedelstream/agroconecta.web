@@ -16,7 +16,7 @@ export function AppHeaderBar({ onMenuPress }: Props) {
   const { isDark } = useTheme()
   return (
     <View style={[styles.header, { backgroundColor: C.surface, borderBottomColor: C.border }]}>
-      <TouchableOpacity onPress={() => router.push('/(main)/home')} activeOpacity={0.75}>
+      <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/home')} activeOpacity={0.75}>
         <Image
           source={isDark ? darkLogo : lightLogo}
           style={styles.logo}

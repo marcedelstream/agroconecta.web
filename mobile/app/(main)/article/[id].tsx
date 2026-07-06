@@ -13,8 +13,8 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { mockNews, mockPublishers } from '@/lib/mock-data'
-import { fetchPublishedPostById } from '@/lib/supabase-repositories'
-import type { Post } from '@/lib/types'
+import { fetchPublishedPostById, fetchOrganizationById } from '@/lib/supabase-repositories'
+import type { Organization, Post } from '@/lib/types'
 
 const MOCK_CONTENT = `El sector agropecuario paraguayo continúa consolidándose como uno de los motores de la economía nacional. Los datos más recientes reflejan un crecimiento sostenido que posiciona al país entre los principales referentes de la región.
 
@@ -41,6 +41,7 @@ function categoryLabel(cat: string) {
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [article, setArticle] = useState<Post | null>(null)
+  const [publisher, setPublisher] = useState<Organization | null>(null)
   const C = useColors()
   const insets = useSafeAreaInsets()
 
@@ -55,6 +56,16 @@ export default function ArticleScreen() {
     return () => { mounted = false }
   }, [id])
 
+  useEffect(() => {
+    setPublisher(null)
+    if (!article?.publisherId) return
+    let mounted = true
+    fetchOrganizationById(article.publisherId)
+      .then((org) => { if (mounted) setPublisher(org ?? mockPublishers.find((p) => p.id === article.publisherId) ?? null) })
+      .catch(() => { if (mounted) setPublisher(mockPublishers.find((p) => p.id === article.publisherId) ?? null) })
+    return () => { mounted = false }
+  }, [article?.publisherId])
+
   if (!article) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.background }}>
@@ -63,7 +74,6 @@ export default function ArticleScreen() {
     )
   }
 
-  const publisher = article.publisherId ? mockPublishers.find((p) => p.id === article.publisherId) : null
   const shareText = `${article.title}\n\nLeé más en Agroconecta`
   const shareUrl = `https://agroconecta.com.py/noticias/${article.id}`
 

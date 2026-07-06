@@ -8,6 +8,7 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { supabase } from '@/lib/supabase'
 import { SERVICES } from '@/lib/services-data'
+import { useApp } from '@/lib/app-context'
 
 interface Props {
   initialServiceId: string
@@ -15,6 +16,7 @@ interface Props {
 
 export function ServiceLeadForm({ initialServiceId }: Props) {
   const C = useColors()
+  const { user } = useApp()
   const [selectedService, setSelectedService] = useState(initialServiceId)
   const [phone, setPhone] = useState('')
   const [info, setInfo] = useState('')
@@ -29,13 +31,14 @@ export function ServiceLeadForm({ initialServiceId }: Props) {
     setLoading(true)
     try {
       await supabase.from('service_leads').insert({
+        user_id: user?.id ?? null,
         service_type: selectedService,
         phone: phone.trim(),
         additional_info: info.trim(),
         created_at: new Date().toISOString(),
       })
     } catch {
-      // Silently fail — tabla pendiente de crear en Supabase
+      // Silently fail
     }
     try {
       await fetch('https://agroconecta.com.py/api/service-lead', {
@@ -60,6 +63,13 @@ export function ServiceLeadForm({ initialServiceId }: Props) {
         <Text variant="body" color={C.muted} style={{ textAlign: 'center' }}>
           Nos comunicaremos a la brevedad al número proporcionado.
         </Text>
+        <TouchableOpacity
+          style={[styles.submitBtn, { marginTop: Spacing[2] }]}
+          onPress={() => { setSent(false); setPhone(''); setInfo('') }}
+          activeOpacity={0.85}
+        >
+          <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviar otra consulta</Text>
+        </TouchableOpacity>
       </View>
     )
   }

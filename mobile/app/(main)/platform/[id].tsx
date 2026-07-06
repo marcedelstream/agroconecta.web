@@ -37,7 +37,7 @@ export default function PlatformScreen() {
     return (
       <View style={[styles.center, { backgroundColor: C.background }]}>
         <Text variant="body" style={{ color: C.muted }}>Plataforma no encontrada.</Text>
-        <TouchableOpacity onPress={() => router.navigate('/(main)/ecosystem' as any)} style={{ marginTop: Spacing[3] }}>
+        <TouchableOpacity onPress={() => router.navigate('/(main)/(tabs)/ecosystem' as any)} style={{ marginTop: Spacing[3] }}>
           <Text variant="body" style={{ color: Colors.lime }}>Volver</Text>
         </TouchableOpacity>
       </View>
@@ -48,7 +48,7 @@ export default function PlatformScreen() {
     <View style={[styles.root, { backgroundColor: C.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing[3], backgroundColor: C.surface, borderBottomColor: C.border }]}>
-        <TouchableOpacity onPress={() => router.navigate('/(main)/ecosystem' as any)} hitSlop={8}>
+        <TouchableOpacity onPress={() => router.navigate('/(main)/(tabs)/ecosystem' as any)} hitSlop={8}>
           <Ionicons name="arrow-back" size={24} color={C.foreground} />
         </TouchableOpacity>
         <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{platform.name}</Text>

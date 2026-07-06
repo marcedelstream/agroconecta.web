@@ -45,33 +45,31 @@ export default function PublisherScreen() {
   const C = useColors()
   const { user, updateUser } = useApp()
 
-  const [publisher, setPublisher] = useState<Organization | undefined>(
-    mockPublishers.find((p) => p.id === id)
-  )
-  const [loading, setLoading] = useState(!publisher)
+  const [publisher, setPublisher] = useState<Organization | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
   const isFollowed = user?.organizationSubscriptions?.includes(id ?? '') ?? false
   const [notifOn, setNotifOn] = useState(false)
-  const [articles, setArticles] = useState<NewsArticle[]>(
-    mockNews.filter((n) => n.publisherId === id)
-  )
+  const [articles, setArticles] = useState<NewsArticle[]>([])
   const [organizedEvents, setOrganizedEvents] = useState<AgroEvent[]>([])
 
   useEffect(() => {
     if (!id) return
     let mounted = true
 
-    // Si no está en el mock, buscamos en Supabase
-    if (!publisher) {
-      fetchOrganizationById(id)
-        .then((org) => { if (mounted) setPublisher(org ?? undefined) })
-        .catch(() => {})
-        .finally(() => { if (mounted) setLoading(false) })
-    } else {
-      setLoading(false)
-    }
+    // Limpiar estado de la organizacion anterior para no mezclar datos al navegar entre publishers
+    setPublisher(mockPublishers.find((p) => p.id === id))
+    setArticles(mockNews.filter((n) => n.publisherId === id))
+    setOrganizedEvents([])
+    setNotifOn(false)
+    setLoading(true)
+
+    fetchOrganizationById(id)
+      .then((org) => { if (mounted && org) setPublisher(org) })
+      .catch(() => {})
+      .finally(() => { if (mounted) setLoading(false) })
 
     fetchPostsByOrganization(id)
-      .then((remote) => { if (mounted && remote.length > 0) setArticles(remote as NewsArticle[]) })
+      .then((remote) => { if (mounted) setArticles(remote as NewsArticle[]) })
       .catch(() => {})
     return () => { mounted = false }
   }, [id])

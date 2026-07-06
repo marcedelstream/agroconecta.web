@@ -22,7 +22,7 @@ export default function SplashScreen() {
       if (!session) {
         router.replace('/(auth)/login')
       } else if (user) {
-        router.replace('/(main)/home')
+        router.replace('/(main)/(tabs)/home')
       } else {
         router.replace('/(onboarding)')
       }

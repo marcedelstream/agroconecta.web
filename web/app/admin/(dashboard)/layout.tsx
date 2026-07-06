@@ -18,6 +18,7 @@ const ADMIN_NAV = [
   { href: '/admin/banners', label: 'Banners', icon: '◎' },
   { href: '/admin/eventos', label: 'Eventos', icon: '📅' },
   { href: '/admin/ecosistema', label: 'Ecosistema', icon: '🌐' },
+  { href: '/admin/consultas', label: 'Consultas', icon: '✉️' },
   { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },
 ]
 

@@ -143,7 +143,7 @@ export default function HomeScreen() {
       <EventsSection search={search} />
 
       {/* Ecosistema */}
-      <EcosistemaSection onViewAll={() => router.navigate('/(main)/ecosystem' as any)} />
+      <EcosistemaSection onViewAll={() => router.navigate('/(main)/(tabs)/ecosystem' as any)} />
 
       {/* Organizaciones */}
       <OrganizationsSection />

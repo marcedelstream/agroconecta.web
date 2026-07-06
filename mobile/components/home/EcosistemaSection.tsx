@@ -1,4 +1,5 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { useEffect, useState } from 'react'
+import { View, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -6,14 +7,10 @@ import { SectionHeader } from './SectionHeader'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
+import { fetchEcosystemSites } from '@/lib/supabase-repositories'
+import type { EcosystemSite } from '@/lib/types'
 
-type IoniconName = React.ComponentProps<typeof Ionicons>['name']
-
-const PLATFORMS: { id: string; label: string; icon: IoniconName; available: boolean }[] = [
-  { id: 'agrojuego', label: 'AgroJuego', icon: 'game-controller-outline', available: true },
-  { id: 'agrostore', label: 'AgroStore', icon: 'storefront-outline',       available: false },
-  { id: 'agrojobs',  label: 'Agro Jobs', icon: 'briefcase-outline',        available: false },
-]
+const PREVIEW_COUNT = 3
 
 interface Props {
   onViewAll?: () => void
@@ -21,6 +18,14 @@ interface Props {
 
 export function EcosistemaSection({ onViewAll }: Props) {
   const C = useColors()
+  const [sites, setSites] = useState<EcosystemSite[]>([])
+
+  useEffect(() => {
+    fetchEcosystemSites().then(setSites).catch(() => setSites([]))
+  }, [])
+
+  if (sites.length === 0) return null
+
   return (
     <View>
       <SectionHeader
@@ -28,25 +33,34 @@ export function EcosistemaSection({ onViewAll }: Props) {
         action={onViewAll ? { label: 'Ver todo', onPress: onViewAll } : undefined}
       />
       <View style={styles.row}>
-        {PLATFORMS.map((p) => (
+        {sites.slice(0, PREVIEW_COUNT).map((site) => (
           <TouchableOpacity
-            key={p.id}
+            key={site.id}
             style={[styles.tile, { backgroundColor: C.surface, borderColor: C.border }]}
             activeOpacity={0.75}
-            onPress={() => router.push(`/(main)/platform/${p.id}` as any)}
+            onPress={() => router.push(`/(main)/platform/${site.id}` as any)}
           >
             <View style={[
               styles.iconWrap,
-              { backgroundColor: p.available ? `${Colors.lime}18` : `${C.muted}10` },
+              { backgroundColor: site.isAvailable ? `${Colors.lime}18` : `${C.muted}10` },
             ]}>
-              <Ionicons name={p.icon} size={24} color={p.available ? Colors.lime : C.muted} />
+              {site.isAvailable && site.logoUrl ? (
+                <Image source={{ uri: site.logoUrl }} style={styles.logo} resizeMode="contain" />
+              ) : (
+                <Ionicons
+                  name={site.isAvailable ? 'apps-outline' : 'sparkles-outline'}
+                  size={24}
+                  color={site.isAvailable ? Colors.lime : C.muted}
+                />
+              )}
             </View>
             <Text
               variant="caption"
               weight="semibold"
-              style={{ color: p.available ? C.foreground : C.muted, textAlign: 'center' }}
+              style={{ color: site.isAvailable ? C.foreground : C.muted, textAlign: 'center' }}
+              numberOfLines={2}
             >
-              {p.label}
+              {site.isAvailable ? site.name : 'Próximamente'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -73,4 +87,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  logo: { width: 28, height: 28 },
 })

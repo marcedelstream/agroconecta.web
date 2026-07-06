@@ -56,7 +56,7 @@ export default function LoginScreen() {
     setLoading(false)
     if (result) { setError(result); return }
     if (user) {
-      router.replace('/(main)/home')
+      router.replace('/(main)/(tabs)/home')
     } else {
       router.replace('/(onboarding)')
     }

@@ -51,7 +51,7 @@ export default function OnboardingScreen() {
 
   async function handleComplete() {
     await completeOnboarding()
-    router.replace('/(main)/home')
+    router.replace('/(main)/(tabs)/home')
   }
 
   const canProceed = () => {

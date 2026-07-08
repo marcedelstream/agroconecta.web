@@ -7,17 +7,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import {
   useFonts,
-  Poppins_300Light,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-} from '@expo-google-fonts/poppins'
-import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_700Bold,
-} from '@expo-google-fonts/dm-sans'
+  Lexend_400Regular,
+  Lexend_500Medium,
+  Lexend_600SemiBold,
+  Lexend_700Bold,
+} from '@expo-google-fonts/lexend'
 import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
 import { registerPushToken, getNotificationPermissionStatus } from '@/lib/push-notifications'
@@ -29,15 +23,10 @@ SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'Poppins-Light': Poppins_300Light,
-    'Poppins-Regular': Poppins_400Regular,
-    'Poppins-Medium': Poppins_500Medium,
-    'Poppins-SemiBold': Poppins_600SemiBold,
-    'Poppins-Bold': Poppins_700Bold,
-    'DMSans-Regular': DMSans_400Regular,
-    'DMSans-Medium': DMSans_500Medium,
-    'DMSans-SemiBold': DMSans_700Bold,
-    'DMSans-Bold': DMSans_700Bold,
+    'Lexend-Regular': Lexend_400Regular,
+    'Lexend-Medium': Lexend_500Medium,
+    'Lexend-SemiBold': Lexend_600SemiBold,
+    'Lexend-Bold': Lexend_700Bold,
   })
 
   useEffect(() => {
@@ -115,14 +104,15 @@ function ThemedRoot() {
           contentStyle: { backgroundColor: bg },
           gestureEnabled: true,
           fullScreenGestureEnabled: true,
+          animation: 'none',
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
-        <Stack.Screen name="(onboarding)" options={{ animation: 'fade' }} />
-        <Stack.Screen name="(main)" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="publisher/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="article/[id]" />
+        <Stack.Screen name="publisher/[id]" />
       </Stack>
 
       <ConfirmModal

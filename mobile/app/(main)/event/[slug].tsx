@@ -11,6 +11,7 @@ import { Text } from '@/components/ui/Text'
 import { ReminderModal } from '@/components/ui/ReminderModal'
 import { NewsCard } from '@/components/home/NewsCard'
 import { fetchEventBySlug, fetchEventSchedule, fetchPostsByEventTag } from '@/lib/supabase-repositories'
+import { isNewsContent } from '@/lib/feed-utils'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
@@ -79,7 +80,7 @@ export default function EventDetailScreen() {
       .catch(() => setEvent(null))
       .finally(() => setLoading(false))
     fetchEventSchedule(slug).then(setSchedule).catch(() => setSchedule([]))
-    fetchPostsByEventTag(slug).then(setRelatedPosts).catch(() => setRelatedPosts([]))
+    fetchPostsByEventTag(slug).then((posts) => setRelatedPosts(posts.filter(isNewsContent))).catch(() => setRelatedPosts([]))
   }, [slug])
 
   const tabs: { key: HubTab; label: string }[] = [

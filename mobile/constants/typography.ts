@@ -1,12 +1,14 @@
+// Una sola familia (Lexend) para toda la app. Se mantienen las claves poppins*/dmSans*
+// para no tener que tocar los ~30 componentes que usan family="poppins"/"dm-sans".
 export const Fonts = {
-  poppins: 'Poppins-Regular',
-  poppinsMedium: 'Poppins-Medium',
-  poppinsSemiBold: 'Poppins-SemiBold',
-  poppinsBold: 'Poppins-Bold',
-  dmSans: 'DMSans-Regular',
-  dmSansMedium: 'DMSans-Medium',
-  dmSansSemiBold: 'DMSans-SemiBold',
-  dmSansBold: 'DMSans-Bold',
+  poppins: 'Lexend-Regular',
+  poppinsMedium: 'Lexend-Medium',
+  poppinsSemiBold: 'Lexend-SemiBold',
+  poppinsBold: 'Lexend-Bold',
+  dmSans: 'Lexend-Regular',
+  dmSansMedium: 'Lexend-Medium',
+  dmSansSemiBold: 'Lexend-SemiBold',
+  dmSansBold: 'Lexend-Bold',
 } as const
 
 export const FontSizes = {

@@ -12,7 +12,7 @@ import { EventsSection } from '@/components/home/EventsSection'
 import { EcosistemaSection } from '@/components/home/EcosistemaSection'
 import { OrganizationsSection } from '@/components/home/OrganizationsSection'
 import { useColors } from '@/lib/theme-context'
-import { buildSegment } from '@/lib/feed-utils'
+import { buildSegment, isNewsContent } from '@/lib/feed-utils'
 import { mockNews } from '@/lib/mock-data'
 import { fetchPublishedPosts } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
@@ -33,7 +33,10 @@ export default function HomeScreen() {
   useEffect(() => {
     let mounted = true
     fetchPublishedPosts()
-      .then((remote) => { if (mounted && remote.length > 0) setPosts(remote) })
+      .then((remote) => {
+        const news = remote.filter(isNewsContent)
+        if (mounted && news.length > 0) setPosts(news)
+      })
       .catch(() => { if (mounted) setPosts(mockNews) })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }

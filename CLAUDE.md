@@ -38,7 +38,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 | Persistencia | AsyncStorage (`@agroconecta:user`) |
 | Tipos | TypeScript estricto (`npm run tsc` pasa limpio) |
 | Íconos | `@expo/vector-icons` (Ionicons) |
-| Fuentes | Poppins + DM Sans (`@expo-google-fonts`) |
+| Fuentes | Lexend (`@expo-google-fonts/lexend`) — única familia para toda la app (2026-07) |
 | Validación | Zod + React Hook Form |
 | Extras | expo-haptics, expo-image, expo-linear-gradient, expo-notifications, react-native-webview, react-native-reanimated 4 |
 
@@ -178,8 +178,10 @@ const colors = {
 
 ### Tipografía
 
-- **Display / Títulos:** Poppins (300–700)
-- **Body / UI:** DM Sans (400–700)
+- **Una sola familia: Lexend** (400–700), tanto en mobile como en web.
+- `constants/typography.ts` (mobile) y `app/layout.tsx` (web) mantienen las claves/variables viejas
+  (`poppins`/`dmSans`, `--font-poppins`/`--font-dm-sans`) apuntando a Lexend, para no tener que tocar
+  los componentes que usan `family="poppins"` o las clases `font-display`/`font-sans`.
 
 ### Border radius
 

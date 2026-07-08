@@ -1,6 +1,11 @@
 import type { NewsArticle, UserProfile, AdSegment } from './types'
 import type { FeedItem } from './feed-types'
 
+// Videos y remates tienen su propia pestaña (Galería) — no deben aparecer en las secciones de noticias
+export function isNewsContent(post: { contentType?: string }): boolean {
+  return post.contentType !== 'video' && post.contentType !== 'auction'
+}
+
 export function buildSegment(user: UserProfile): AdSegment {
   return {
     profession: user.profession,

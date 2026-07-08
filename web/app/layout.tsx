@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
-import { DM_Sans, Poppins } from 'next/font/google'
+import { Lexend } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { SplashScreen } from '@/components/SplashScreen'
 import { siteUrl } from '@/lib/seo'
 import './globals.css'
 
-const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans', display: 'swap' })
-const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-poppins', display: 'swap' })
+// Una sola familia (Lexend) para toda la web. Se mantienen las dos variables CSS
+// (--font-dm-sans / --font-poppins) para no tener que tocar tailwind.config ni las
+// clases font-sans/font-display usadas en todo components/.
+const dmSans = Lexend({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-dm-sans', display: 'swap' })
+const poppins = Lexend({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-poppins', display: 'swap' })
 
 const description = 'Noticias agropecuarias publicadas por Agroconecta y organizaciones verificadas del sector paraguayo.'
 

@@ -15,6 +15,7 @@ import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { mockNews } from '@/lib/mock-data'
 import { fetchPublishedPosts } from '@/lib/supabase-repositories'
+import { isNewsContent } from '@/lib/feed-utils'
 import type { NewsCategory, Post } from '@/lib/types'
 
 const CATEGORIES: { value: NewsCategory; label: string }[] = [
@@ -36,7 +37,10 @@ export default function NoticiasScreen() {
 
   useEffect(() => {
     fetchPublishedPosts()
-      .then((remote) => { if (remote.length > 0) setPosts(remote) })
+      .then((remote) => {
+        const news = remote.filter(isNewsContent)
+        if (news.length > 0) setPosts(news)
+      })
       .catch(() => { setPosts(mockNews) })
       .finally(() => setLoading(false))
   }, [])

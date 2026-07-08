@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 
+export type BannerActionState = { error: string | null }
+
 const BANNERS_BUCKET = 'banners'
 const MAX_SIZE = 8 * 1024 * 1024
 
@@ -57,24 +59,32 @@ async function uploadBannerImage(formData: FormData): Promise<string> {
   return data.publicUrl
 }
 
-export async function createBanner(formData: FormData) {
-  await requireAdmin()
+export async function createBanner(
+  _prev: BannerActionState,
+  formData: FormData,
+): Promise<BannerActionState> {
+  try {
+    await requireAdmin()
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'No tenés permiso.' }
+  }
+
+  const title = String(formData.get('title') ?? '').trim()
+  if (!title) return { error: 'El título es obligatorio.' }
 
   let imageUrl: string
   try {
     imageUrl = await uploadBannerImage(formData)
-  } catch (err) {
-    // Si falla la subida retornamos silenciosamente (el form mostrará el error en futura iteración)
-    console.error(err)
-    return
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'No se pudo subir la imagen.' }
   }
 
   const linkType = String(formData.get('link_type') ?? '') || null
   const linkTarget = String(formData.get('link_target') ?? '').trim() || null
 
   const supabase = createSupabaseAdmin()
-  await supabase.from('ad_campaigns').insert({
-    title: String(formData.get('title') ?? ''),
+  const { error } = await supabase.from('ad_campaigns').insert({
+    title,
     image_url: imageUrl,
     target_professions: csv(formData.get('target_professions')),
     target_departments: formData.getAll('target_departments').map(String).filter(Boolean),
@@ -84,7 +94,10 @@ export async function createBanner(formData: FormData) {
     link_target: linkType && linkTarget ? linkTarget : null,
   })
 
+  if (error) return { error: error.message }
+
   revalidatePath('/admin/banners')
+  return { error: null }
 }
 
 export async function toggleBanner(formData: FormData) {

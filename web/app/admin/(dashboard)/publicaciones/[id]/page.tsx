@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { PostForm } from '../PostForm'
 import { updatePost } from '../actions'
 import { ArchiveButton } from './ArchiveButton'
@@ -11,13 +11,15 @@ interface Props {
 }
 
 async function loadData(id: string) {
-  const supabase = await createSupabaseServer()
+  // Server-side (anon key + RLS) solo puede leer posts publicados — un borrador o uno
+  // pendiente de revisión daría 404 al querer editarlo. Usamos el cliente admin acá.
+  const supabase = createSupabaseAdmin()
   const [postRes, orgsRes] = await Promise.all([
     supabase
       .from('posts')
       .select('*')
       .eq('id', id)
-      .single(),
+      .maybeSingle(),
     supabase
       .from('organizations')
       .select('id,name')

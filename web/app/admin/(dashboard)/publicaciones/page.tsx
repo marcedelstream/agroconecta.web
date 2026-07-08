@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type PostRow, type EditorialStatus, type NewsCategory } from '@/lib/types'
 import { approvePost, rejectPost } from './actions'
 
 async function loadPosts(status?: string) {
-  const supabase = await createSupabaseServer()
+  // Server-side (anon key + RLS) solo puede leer posts publicados — sin esto, los
+  // filtros de "Borradores"/"En revisión"/"Rechazadas" siempre mostraban vacío.
+  const supabase = createSupabaseAdmin()
   let query = supabase
     .from('posts')
     .select('id,title,category,target_departments,content_type,editorial_status,is_important,published_at,created_at,organizations(name)')

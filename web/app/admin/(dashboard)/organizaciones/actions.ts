@@ -126,12 +126,28 @@ export async function updateOrganization(
   redirect(`/admin/organizaciones/${id}`)
 }
 
-export async function deleteOrganization(formData: FormData) {
-  await requireAdmin()
+export async function deleteOrganization(
+  _prev: OrganizationActionState,
+  formData: FormData,
+): Promise<OrganizationActionState> {
+  try {
+    await requireAdmin()
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'No tenés permiso.' }
+  }
+
   const id = formData.get('id') as string
   const supabase = createSupabaseAdmin()
   const { error } = await supabase.from('organizations').delete().eq('id', id)
-  if (error) throw new Error(`No se pudo eliminar la organización: ${error.message}`)
+
+  if (error) {
+    // organizations.id tiene "on delete restrict" desde posts — no se puede borrar si
+    // tiene publicaciones asociadas.
+    if (error.code === '23503') {
+      return { error: 'No se puede eliminar: esta organización tiene publicaciones asociadas. Archivalas o reasignalas primero.' }
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/admin/organizaciones')
   revalidatePath('/')

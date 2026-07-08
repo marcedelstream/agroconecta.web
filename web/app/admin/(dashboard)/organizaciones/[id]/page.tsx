@@ -1,23 +1,26 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type OrganizationRow, type PostRow, type EditorialStatus, type NewsCategory } from '@/lib/types'
 import { OrganizationForm } from '../OrganizationForm'
-import { deleteOrganization, updateOrganization } from '../actions'
+import { updateOrganization } from '../actions'
+import { DeleteOrgButton } from './DeleteOrgButton'
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
 async function loadOrg(id: string) {
-  const supabase = await createSupabaseServer()
+  // Server-side (anon key + RLS) solo puede leer organizaciones trial/active/overdue y
+  // posts publicados — una organización pausada daba 404 al querer editarla o eliminarla.
+  const supabase = createSupabaseAdmin()
   const [orgRes, postsRes] = await Promise.all([
     supabase
       .from('organizations')
       .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url,events_organizer_slug')
       .eq('id', id)
-      .single(),
+      .maybeSingle(),
     supabase
       .from('posts')
       .select('id,title,editorial_status,category,created_at')
@@ -143,14 +146,9 @@ export default async function OrgDetailPage({ params }: Props) {
               Eliminar organización
             </h2>
             <p className="text-muted text-sm mb-4">
-              Si tiene publicaciones asociadas, Supabase puede impedir la eliminación para proteger el historial.
+              Si tiene publicaciones asociadas, Supabase impide la eliminación para proteger el historial.
             </p>
-            <form action={deleteOrganization}>
-              <input type="hidden" name="id" value={org.id} />
-              <button type="submit" className="btn text-xs border-danger/40 text-danger hover:bg-danger/10">
-                Eliminar organización
-              </button>
-            </form>
+            <DeleteOrgButton id={org.id} />
           </div>
         </div>
       </div>

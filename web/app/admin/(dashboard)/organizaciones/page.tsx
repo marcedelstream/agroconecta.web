@@ -1,12 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
 
 async function loadOrgs() {
-  const supabase = await createSupabaseServer()
+  // Cliente admin: la lista tiene que mostrar tambien las organizaciones pausadas
+  const supabase = createSupabaseAdmin()
   const { data } = await supabase
     .from('organizations')
     .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url')

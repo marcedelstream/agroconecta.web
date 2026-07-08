@@ -13,18 +13,18 @@ export const UPCOMING_PLATFORMS: UpcomingPlatform[] = [
     id: 'clasificados',
     name: 'Clasificados',
     icon: 'pricetags-outline',
-    description: 'Venta de servicios, productos e inmuebles del agro, organizados por secciones, igual que en Inicio.',
+    description: 'Publicá o encontrá servicios, productos e inmuebles del agro, organizados por secciones, igual que en Inicio.',
   },
   {
     id: 'bolsa-trabajo',
     name: 'Bolsa de Trabajo',
     icon: 'briefcase-outline',
-    description: 'Conectá con oportunidades laborales del sector agropecuario paraguayo — el LinkedIn del agro.',
+    description: 'Conectate con oportunidades laborales del sector agropecuario paraguayo — el LinkedIn del agro.',
   },
   {
     id: 'remates-online',
     name: 'Remates Online',
     icon: 'megaphone-outline',
-    description: 'Venta de ganado en remates transmitidos en vivo, desde la app.',
+    description: 'Mirá y participá de remates de ganado transmitidos en vivo, sin salir de la app.',
   },
 ]

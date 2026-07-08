@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, Image, StyleSheet, Linking, ActivityIndicator } from 'react-native'
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -7,31 +6,13 @@ import { Text } from '@/components/ui/Text'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
-import { fetchEcosystemSiteById } from '@/lib/supabase-repositories'
-import type { EcosystemSite } from '@/lib/types'
+import { UPCOMING_PLATFORMS } from '@/lib/ecosystem-data'
 
 export default function PlatformScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const C = useColors()
   const insets = useSafeAreaInsets()
-  const [platform, setPlatform] = useState<EcosystemSite | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!id) return
-    fetchEcosystemSiteById(id)
-      .then(setPlatform)
-      .catch(() => setPlatform(null))
-      .finally(() => setLoading(false))
-  }, [id])
-
-  if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: C.background }]}>
-        <ActivityIndicator color={Colors.lime} size="large" />
-      </View>
-    )
-  }
+  const platform = UPCOMING_PLATFORMS.find((p) => p.id === id)
 
   if (!platform) {
     return (
@@ -61,50 +42,28 @@ export default function PlatformScreen() {
       >
         {/* Icono + nombre */}
         <View style={styles.heroSection}>
-          <View style={[styles.bigIcon, { backgroundColor: platform.isAvailable ? `${Colors.lime}18` : `${C.muted}10` }]}>
-            {platform.isAvailable && platform.logoUrl ? (
-              <Image source={{ uri: platform.logoUrl }} style={styles.bigLogo} resizeMode="contain" />
-            ) : (
-              <Ionicons name={platform.isAvailable ? 'apps-outline' : 'sparkles-outline'} size={52} color={platform.isAvailable ? Colors.lime : C.muted} />
-            )}
+          <View style={[styles.bigIcon, { backgroundColor: `${C.muted}10` }]}>
+            <Ionicons name={platform.icon} size={52} color={C.muted} />
           </View>
           <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground, textAlign: 'center' }}>
-            {platform.isAvailable ? platform.name : 'Próximamente nuevas soluciones'}
+            {platform.name}
           </Text>
-          {!platform.isAvailable && (
-            <View style={styles.proximoBadge}>
-              <Text style={styles.proximoText}>PRÓXIMAMENTE</Text>
-            </View>
-          )}
+          <View style={styles.proximoBadge}>
+            <Text style={styles.proximoText}>PRÓXIMAMENTE</Text>
+          </View>
         </View>
 
         {/* Descripción */}
-        {platform.isAvailable && platform.description ? (
-          <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
-            {platform.description}
-          </Text>
-        ) : null}
+        <Text variant="body" style={{ color: C.foreground, lineHeight: 24, textAlign: 'center' }}>
+          {platform.description}
+        </Text>
 
-        {/* CTA */}
-        {platform.isAvailable && platform.url ? (
-          <TouchableOpacity
-            style={styles.ctaBtn}
-            activeOpacity={0.85}
-            onPress={() => Linking.openURL(platform.url)}
-          >
-            <Ionicons name="open-outline" size={20} color="#0A0A13" />
-            <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
-              Abrir {platform.name}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={[styles.ctaBtnDisabled, { borderColor: C.border }]}>
-            <Ionicons name="time-outline" size={20} color={C.muted} />
-            <Text variant="body" weight="semibold" style={{ color: C.muted }}>
-              Disponible próximamente
-            </Text>
-          </View>
-        )}
+        <View style={[styles.ctaBtnDisabled, { borderColor: C.border }]}>
+          <Ionicons name="time-outline" size={20} color={C.muted} />
+          <Text variant="body" weight="semibold" style={{ color: C.muted }}>
+            Disponible próximamente
+          </Text>
+        </View>
       </ScrollView>
     </View>
   )
@@ -130,7 +89,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bigLogo: { width: 60, height: 60 },
   proximoBadge: {
     backgroundColor: 'rgba(139,139,154,0.15)',
     borderRadius: Radius.sm,
@@ -138,15 +96,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[1],
   },
   proximoText: { fontSize: 11, color: '#8B8B9A', fontWeight: '700', letterSpacing: 1 },
-  ctaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing[2],
-    backgroundColor: Colors.lime,
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing[4],
-  },
   ctaBtnDisabled: {
     flexDirection: 'row',
     alignItems: 'center',

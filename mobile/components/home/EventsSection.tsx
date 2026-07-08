@@ -49,20 +49,22 @@ export function EventsSection({ search }: Props) {
       {loading ? (
         <ActivityIndicator color={C.lime} style={styles.loader} />
       ) : (
-        <FlatList
-          data={filtered}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(e) => e.id}
-          contentContainerStyle={styles.list}
-          ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
-          renderItem={({ item }) => (
-            <EventCard
-              event={item}
-              onPress={() => router.push(`/(main)/event/${item.slug}` as any)}
-            />
-          )}
-        />
+        <View style={styles.bleed}>
+          <FlatList
+            data={filtered}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(e) => e.id}
+            contentContainerStyle={styles.list}
+            ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
+            renderItem={({ item }) => (
+              <EventCard
+                event={item}
+                onPress={() => router.push(`/(main)/event/${item.slug}` as any)}
+              />
+            )}
+          />
+        </View>
       )}
     </View>
   )
@@ -70,5 +72,8 @@ export function EventsSection({ search }: Props) {
 
 const styles = StyleSheet.create({
   loader: { paddingVertical: Spacing[6] },
-  list: { paddingBottom: Spacing[2] },
+  // Rompe el padding lateral del ScrollView del home para que el carrusel llegue al borde
+  // y la última card quede parcialmente visible (da a entender que hay más deslizando)
+  bleed: { marginHorizontal: -Spacing[5] },
+  list: { paddingLeft: Spacing[5], paddingRight: Spacing[2], paddingBottom: Spacing[2] },
 })

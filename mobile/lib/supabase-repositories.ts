@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AgroEvent, EcosystemSite, EventScheduleItem, MarketPrice, Organization, Post } from './types'
+import type { AdCampaign, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
 
 function mapPost(row: any): Post {
   return {
@@ -259,46 +259,6 @@ export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
 
   if (error) throw error
   return (data ?? []).map(mapPost)
-}
-
-export async function fetchEcosystemSites(): Promise<EcosystemSite[]> {
-  const { data, error } = await supabase
-    .from('ecosystem_sites')
-    .select('*')
-    .order('order_index', { ascending: true })
-
-  if (error) throw error
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    name: row.name,
-    description: row.description ?? '',
-    url: row.url ?? '',
-    logoUrl: row.logo_url ?? undefined,
-    category: row.category,
-    isAvailable: row.is_available,
-    tags: row.tags ?? [],
-  }))
-}
-
-export async function fetchEcosystemSiteById(id: string): Promise<EcosystemSite | null> {
-  const { data, error } = await supabase
-    .from('ecosystem_sites')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle()
-
-  if (error) throw error
-  if (!data) return null
-  return {
-    id: data.id,
-    name: data.name,
-    description: data.description ?? '',
-    url: data.url ?? '',
-    logoUrl: data.logo_url ?? undefined,
-    category: data.category,
-    isAvailable: data.is_available,
-    tags: data.tags ?? [],
-  }
 }
 
 export async function fetchMarketPrices(): Promise<MarketPrice[]> {

@@ -43,6 +43,7 @@ export function OrganizationsSection({ onViewAll }: Props) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.bleed}
         contentContainerStyle={styles.row}
       >
         {orgs.map((org) => {
@@ -75,9 +76,12 @@ export function OrganizationsSection({ onViewAll }: Props) {
 }
 
 const styles = StyleSheet.create({
+  bleed: { marginHorizontal: -Spacing[5] },
   row: {
     paddingTop: Spacing[3],
     paddingBottom: Spacing[2],
+    paddingLeft: Spacing[5],
+    paddingRight: Spacing[2],
     gap: Spacing[5],
   },
   tile: {

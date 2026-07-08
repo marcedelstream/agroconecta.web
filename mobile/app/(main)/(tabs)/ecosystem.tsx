@@ -1,21 +1,14 @@
-import { useEffect, useState } from 'react'
-import { ScrollView, View, TouchableOpacity, Image, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
-import { fetchEcosystemSites } from '@/lib/supabase-repositories'
-import type { EcosystemSite } from '@/lib/types'
+import { UPCOMING_PLATFORMS } from '@/lib/ecosystem-data'
 
 export default function DescubrirScreen() {
   const C = useColors()
-  const [sites, setSites] = useState<EcosystemSite[]>([])
-
-  useEffect(() => {
-    fetchEcosystemSites().then(setSites).catch(() => setSites([]))
-  }, [])
 
   return (
     <ScrollView
@@ -35,35 +28,20 @@ export default function DescubrirScreen() {
 
       {/* Grid de plataformas */}
       <View style={styles.grid}>
-        {sites.map((site) => (
+        {UPCOMING_PLATFORMS.map((platform) => (
           <TouchableOpacity
-            key={site.id}
+            key={platform.id}
             style={styles.tile}
-            activeOpacity={site.isAvailable ? 0.7 : 0.5}
-            disabled={!site.isAvailable}
-            onPress={() => router.push(`/(main)/platform/${site.id}` as any)}
+            activeOpacity={0.75}
+            onPress={() => router.push(`/(main)/platform/${platform.id}` as any)}
           >
-            {site.isAvailable && site.logoUrl ? (
-              <Image source={{ uri: site.logoUrl }} style={styles.logo} resizeMode="contain" />
-            ) : (
-              <Ionicons
-                name={site.isAvailable ? 'apps-outline' : 'sparkles-outline'}
-                size={36}
-                color={site.isAvailable ? Colors.lime : C.muted}
-              />
-            )}
-            <Text
-              variant="caption"
-              weight="semibold"
-              style={{ color: site.isAvailable ? C.foreground : C.muted, textAlign: 'center' }}
-            >
-              {site.isAvailable ? site.name : 'Próximamente nuevas soluciones'}
+            <Ionicons name={platform.icon} size={36} color={C.muted} />
+            <Text variant="caption" weight="semibold" style={{ color: C.foreground, textAlign: 'center' }}>
+              {platform.name}
             </Text>
-            {!site.isAvailable && (
-              <View style={styles.proximoBadge}>
-                <Text style={styles.proximoText}>PRÓXIMO</Text>
-              </View>
-            )}
+            <View style={styles.proximoBadge}>
+              <Text style={styles.proximoText}>PRÓXIMO</Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -99,7 +77,6 @@ const styles = StyleSheet.create({
     gap: Spacing[2],
     paddingVertical: Spacing[2],
   },
-  logo: { width: 44, height: 44 },
   proximoBadge: {
     backgroundColor: 'rgba(139,139,154,0.15)',
     borderRadius: Radius.sm,

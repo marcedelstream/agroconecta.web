@@ -1,24 +1,15 @@
-import { View, TouchableOpacity, Image, StyleSheet } from 'react-native'
+import { useState } from 'react'
+import { View, FlatList, TouchableOpacity, Image, useWindowDimensions, StyleSheet } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import type { NewsArticle } from '@/lib/types'
 
-const GRID_HEIGHT = 240
+const CARD_HEIGHT = 240
 
 function categoryLabel(cat: string) {
   return cat.charAt(0).toUpperCase() + cat.slice(1)
-}
-
-function SmallCard({ article, onPress }: { article: NewsArticle; onPress: () => void }) {
-  return (
-    <TouchableOpacity style={styles.smallCard} activeOpacity={0.88} onPress={onPress}>
-      <Image source={{ uri: article.imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-      <View style={styles.smallOverlay}>
-        <Text style={styles.smallTitle} numberOfLines={2}>{article.title}</Text>
-      </View>
-    </TouchableOpacity>
-  )
 }
 
 interface Props {
@@ -27,62 +18,71 @@ interface Props {
 }
 
 export function FeaturedGrid({ posts, onPress }: Props) {
-  const [main, second, third] = posts
-  if (!main) return null
+  const { width } = useWindowDimensions()
+  const cardWidth = width - Spacing[5] * 2
+  const [index, setIndex] = useState(0)
 
-  if (!second) {
-    return (
-      <TouchableOpacity style={[styles.mainCard, { height: GRID_HEIGHT }]} activeOpacity={0.9} onPress={() => onPress(main.id)}>
-        <Image source={{ uri: main.imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-        <View style={styles.mainOverlay}>
-          <Badge variant={main.category}>{categoryLabel(main.category)}</Badge>
-          <Text variant="subtitle" weight="bold" family="poppins" style={styles.mainTitle} numberOfLines={3}>
-            {main.title}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    )
-  }
+  if (posts.length === 0) return null
 
   return (
-    <View style={[styles.row, { height: GRID_HEIGHT }]}>
-      <TouchableOpacity style={[styles.mainCard, styles.flex]} activeOpacity={0.9} onPress={() => onPress(main.id)}>
-        <Image source={{ uri: main.imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-        <View style={styles.mainOverlay}>
-          <Badge variant={main.category}>{categoryLabel(main.category)}</Badge>
-          <Text variant="subtitle" weight="bold" family="poppins" style={styles.mainTitle} numberOfLines={3}>
-            {main.title}
-          </Text>
-        </View>
-      </TouchableOpacity>
+    <View>
+      <FlatList
+        data={posts}
+        keyExtractor={(p) => p.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEnabled={posts.length > 1}
+        onMomentumScrollEnd={(e) => {
+          setIndex(Math.round(e.nativeEvent.contentOffset.x / cardWidth))
+        }}
+        getItemLayout={(_, i) => ({ length: cardWidth, offset: cardWidth * i, index: i })}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.card, { width: cardWidth, height: CARD_HEIGHT }]}
+            activeOpacity={0.9}
+            onPress={() => onPress(item.id)}
+          >
+            <Image source={{ uri: item.imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+            <View style={styles.overlay}>
+              <Badge variant={item.category}>{categoryLabel(item.category)}</Badge>
+              <Text variant="subtitle" weight="bold" family="poppins" style={styles.title} numberOfLines={3}>
+                {item.title}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
 
-      <View style={styles.sideColumn}>
-        <SmallCard article={second} onPress={() => onPress(second.id)} />
-        {third && <SmallCard article={third} onPress={() => onPress(third.id)} />}
-      </View>
+      {posts.length > 1 && (
+        <View style={styles.dots}>
+          {posts.map((_, i) => (
+            <View
+              key={i}
+              style={[styles.dot, { backgroundColor: i === index ? Colors.lime : 'rgba(255,255,255,0.35)' }]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: Spacing[2] },
-  flex: { flex: 1 },
-  mainCard: { borderRadius: Radius.xl, overflow: 'hidden' },
-  mainOverlay: {
+  card: { borderRadius: Radius.xl, overflow: 'hidden' },
+  overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'flex-end',
-    padding: Spacing[3],
-    backgroundColor: 'rgba(0,0,0,0.52)',
+    padding: Spacing[4],
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    gap: Spacing[2],
+  },
+  title: { color: '#FFF' },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: Spacing[1.5],
+    marginTop: Spacing[3],
   },
-  mainTitle: { color: '#FFF' },
-  sideColumn: { width: 128, gap: Spacing[2] },
-  smallCard: { flex: 1, borderRadius: Radius.base, overflow: 'hidden', backgroundColor: '#12121C' },
-  smallOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    padding: Spacing[2],
-    backgroundColor: 'rgba(0,0,0,0.58)',
-  },
-  smallTitle: { fontSize: 11, fontWeight: '600', color: '#FFF', lineHeight: 15 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
 })

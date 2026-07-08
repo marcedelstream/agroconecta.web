@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
   },
-  thumbContainer: { height: 100, position: 'relative' },
+  thumbContainer: { width: '100%', aspectRatio: 16 / 9, position: 'relative' },
   thumb: { width: '100%', height: '100%' },
   thumbOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.25)' },
   playBtn: {

@@ -20,10 +20,11 @@ function formatDate(date: Date) {
   return date.toLocaleDateString('es-PY', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-function getYoutubeEmbedUrl(url: string): string {
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/)
-  if (!match) return url
-  return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`
+function getYoutubeEmbedUrl(url: string): string | null {
+  // Cubre: watch?v=, youtu.be/, embed/, shorts/, live/, m.youtube.com y variantes con parámetros extra
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/)
+  if (!match) return null
+  return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0&playsinline=1`
 }
 
 export default function VideoDetailScreen() {
@@ -80,6 +81,7 @@ export default function VideoDetailScreen() {
               javaScriptEnabled
               domStorageEnabled
               allowsFullscreenVideo
+              allowsInlineMediaPlayback
               mediaPlaybackRequiresUserAction={false}
             />
           ) : (

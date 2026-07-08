@@ -91,7 +91,7 @@ export default function HomeScreen() {
 
       {loading ? (
         <View style={styles.section}>
-          <View style={styles.newsCarouselRow}>
+          <View style={[styles.bleed, styles.newsCarouselRow]}>
             {Array.from({ length: 3 }).map((_, i) => <NewsCardGridSkeleton key={i} style={styles.newsCardWidth} />)}
           </View>
         </View>
@@ -110,17 +110,19 @@ export default function HomeScreen() {
                 title="Más Noticias"
                 action={{ label: 'Ver todas', onPress: () => router.push('/(main)/noticias' as any) }}
               />
-              <FlatList
-                data={previewPosts}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.newsCarouselList}
-                ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
-                renderItem={({ item }) => (
-                  <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} style={styles.newsCardWidth} />
-                )}
-              />
+              <View style={styles.bleed}>
+                <FlatList
+                  data={previewPosts}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.newsCarouselList}
+                  ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
+                  renderItem={({ item }) => (
+                    <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} style={styles.newsCardWidth} />
+                  )}
+                />
+              </View>
             </View>
           )}
         </>
@@ -162,8 +164,10 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 15 },
   section: { gap: Spacing[3] },
-  newsCarouselList: { paddingBottom: Spacing[2] },
-  newsCarouselRow: { flexDirection: 'row', gap: Spacing[3] },
+  // Rompe el padding lateral de `content` para que el carrusel llegue al borde de la pantalla
+  bleed: { marginHorizontal: -Spacing[5] },
+  newsCarouselList: { paddingLeft: Spacing[5], paddingRight: Spacing[2], paddingBottom: Spacing[2] },
+  newsCarouselRow: { flexDirection: 'row', gap: Spacing[3], paddingLeft: Spacing[5], paddingRight: Spacing[2] },
   newsCardWidth: { width: 160 },
   adBanner: { marginVertical: Spacing[1] },
   empty: { alignItems: 'center', paddingTop: Spacing[8] },

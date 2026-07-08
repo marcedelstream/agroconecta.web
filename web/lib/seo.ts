@@ -1,6 +1,6 @@
 import type { PostRow } from './types'
 
-const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 function normalizeSiteUrl(value: string | undefined) {
   const fallback = 'https://agroconecta.com.py'
@@ -44,20 +44,14 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, '')
 }
 
-export function postSlug(post: Pick<PostRow, 'id' | 'title'>) {
-  const slug = slugify(post.title) || 'noticia'
-  return `${slug}-${post.id}`
+export function postPath(post: Pick<PostRow, 'slug'>) {
+  return `/noticias/${post.slug}`
 }
 
-export function postPath(post: Pick<PostRow, 'id' | 'title'>) {
-  return `/noticias/${postSlug(post)}`
-}
-
-export function postUrl(post: Pick<PostRow, 'id' | 'title'>) {
+export function postUrl(post: Pick<PostRow, 'slug'>) {
   return absoluteUrl(postPath(post))
 }
 
-export function extractPostId(slugOrId: string) {
-  const match = slugOrId.match(UUID_PATTERN)
-  return match?.[0] ?? slugOrId
+export function isUuid(value: string) {
+  return UUID_PATTERN.test(value)
 }

@@ -55,7 +55,7 @@ async function loadPosts(category?: NewsCategory) {
     const supabase = await createSupabaseServer()
     let query = supabase
       .from('posts')
-      .select('id,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,is_highlighted,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
+      .select('id,slug,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,is_highlighted,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
       .eq('editorial_status', 'published')
       .order('is_important', { ascending: false })
       .order('published_at', { ascending: false })

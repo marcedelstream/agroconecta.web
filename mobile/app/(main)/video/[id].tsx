@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
-import { fetchPublishedPostById } from '@/lib/supabase-repositories'
+import { fetchPublishedPostBySlug } from '@/lib/supabase-repositories'
 import type { Post } from '@/lib/types'
 
 function categoryLabel(cat: string) {
@@ -36,7 +36,7 @@ export default function VideoDetailScreen() {
   useEffect(() => {
     if (!id) return
     let mounted = true
-    fetchPublishedPostById(id)
+    fetchPublishedPostBySlug(id)
       .then((p) => { if (mounted) setPost(p) })
       .catch(() => { if (mounted) setPost(null) })
       .finally(() => { if (mounted) setLoading(false) })

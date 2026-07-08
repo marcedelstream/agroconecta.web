@@ -1,15 +1,25 @@
-import { useEffect, useState } from 'react'
-import { View, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native'
+import { useEffect, useMemo, useState } from 'react'
+import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { Badge } from '@/components/ui/Badge'
+import { FeaturedGrid } from '@/components/home/FeaturedGrid'
+import { SectionHeader } from '@/components/home/SectionHeader'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { fetchPublishedPosts } from '@/lib/supabase-repositories'
-import type { VideoItem, Post } from '@/lib/types'
+import type { VideoItem, Post, NewsCategory } from '@/lib/types'
+
+const CATEGORIES: { value: NewsCategory; label: string }[] = [
+  { value: 'ganaderia',     label: 'Ganadería' },
+  { value: 'agricultura',   label: 'Agricultura' },
+  { value: 'clima',         label: 'Clima' },
+  { value: 'mercados',      label: 'Mercados' },
+  { value: 'tecnologia',    label: 'Tecnología' },
+  { value: 'institucional', label: 'Institucional' },
+]
 
 function postToVideo(post: Post): VideoItem {
   return {
@@ -39,12 +49,8 @@ function timeAgo(date: Date): string {
   return `Hace ${d}d`
 }
 
-function categoryLabel(cat: string) {
-  return cat.charAt(0).toUpperCase() + cat.slice(1)
-}
-
 export default function VideosScreen() {
-  const [videos, setVideos] = useState<VideoItem[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const C = useColors()
 
@@ -52,74 +58,81 @@ export default function VideosScreen() {
     let mounted = true
     setLoading(true)
     fetchPublishedPosts()
-      .then((posts) => {
+      .then((remote) => {
         if (!mounted) return
-        const remoteVideos = posts
-          .filter((p) => p.contentType === 'video' || p.contentType === 'auction')
-          .map(postToVideo)
-        setVideos(remoteVideos)
+        setPosts(remote.filter((p) => p.contentType === 'video' || p.contentType === 'auction'))
       })
-      .catch(() => { if (mounted) setVideos([]) })
+      .catch(() => { if (mounted) setPosts([]) })
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [])
 
-  const auctions = videos.filter((v) => v.contentType === 'auction' && v.auctionStatus !== 'finished')
-  const regularVideos = videos.filter((v) => v.contentType !== 'auction')
+  const goToVideo = (id: string) => router.push({ pathname: '/(main)/video/[id]', params: { id } })
+
+  const auctions = useMemo(
+    () => posts.filter((p) => p.contentType === 'auction' && p.auctionStatus !== 'finished').map(postToVideo),
+    [posts]
+  )
+  const regularPosts = useMemo(() => posts.filter((p) => p.contentType !== 'auction'), [posts])
+  const heroPosts = regularPosts.slice(0, 3)
+  const restPosts = regularPosts.slice(3)
+
+  const grouped = useMemo(
+    () => CATEGORIES
+      .map((cat) => ({ ...cat, items: restPosts.filter((p) => p.category === cat.value).map(postToVideo) }))
+      .filter((g) => g.items.length > 0),
+    [restPosts]
+  )
+
+  const isEmpty = !loading && posts.length === 0
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
-      <FlatList
-        data={regularVideos}
-        keyExtractor={(v) => v.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.list}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        ListHeaderComponent={
-          <>
-            <Text variant="subtitle" weight="bold" family="poppins" style={styles.title}>
-              Galería de Videos
-            </Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <Text variant="subtitle" weight="bold" family="poppins" style={styles.title}>
+          Galería de Videos
+        </Text>
 
-            {/* Cards de remates / en vivo */}
-            {auctions.map((v) => (
-              <AuctionCard key={v.id} video={v} />
-            ))}
+        {auctions.map((v) => (
+          <AuctionCard key={v.id} video={v} onPress={() => goToVideo(v.id)} />
+        ))}
 
-            {regularVideos.length > 0 && (
-              <Text variant="caption" color={C.muted} style={styles.sectionLabel}>
-                Últimos programas
-              </Text>
-            )}
-          </>
-        }
-        renderItem={({ item }) => (
-          <VideoCard video={item} onPress={() => router.push({ pathname: '/(main)/video/[id]', params: { id: item.id } })} />
+        {heroPosts.length > 0 && (
+          <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
         )}
-        ListEmptyComponent={
-          !loading ? (
-            <View style={styles.empty}>
-              <Ionicons name="videocam-outline" size={52} color={C.muted} />
-              <Text variant="body" color={C.muted} style={styles.emptyText}>
-                No hay videos disponibles.{'\n'}Pronto cargaremos los últimos programas.
-              </Text>
+
+        {grouped.map((group) => (
+          <View key={group.value} style={styles.section}>
+            <SectionHeader title={group.label} />
+            <View style={styles.grid}>
+              {group.items.map((video) => (
+                <VideoCard key={video.id} video={video} onPress={() => goToVideo(video.id)} />
+              ))}
             </View>
-          ) : null
-        }
-      />
+          </View>
+        ))}
+
+        {isEmpty && (
+          <View style={styles.empty}>
+            <Ionicons name="videocam-outline" size={52} color={C.muted} />
+            <Text variant="body" color={C.muted} style={styles.emptyText}>
+              No hay videos disponibles.{'\n'}Pronto cargaremos los últimos programas.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   )
 }
 
-function AuctionCard({ video }: { video: VideoItem }) {
+function AuctionCard({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const C = useColors()
   const isLive = video.auctionStatus === 'live'
   return (
     <TouchableOpacity
       style={[styles.auctionCard, { backgroundColor: C.surface, borderColor: isLive ? Colors.destructive : C.border }]}
       activeOpacity={0.85}
-      onPress={() => router.push({ pathname: '/(main)/video/[id]', params: { id: video.id } })}
+      onPress={onPress}
     >
       <View style={styles.auctionTop}>
         <Text variant="label" style={{ color: Colors.lime }}>
@@ -157,7 +170,6 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
         </View>
       </View>
       <View style={styles.info}>
-        <Badge variant={video.category}>{categoryLabel(video.category)}</Badge>
         <Text variant="caption" weight="semibold" numberOfLines={2} style={{ lineHeight: 17, color: C.foreground }}>
           {video.title}
         </Text>
@@ -172,16 +184,15 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  list: { padding: Spacing[4], paddingBottom: Spacing[8] },
-  title: { marginBottom: Spacing[4] },
-  sectionLabel: { marginBottom: Spacing[3], marginTop: Spacing[2] },
-  row: { gap: Spacing[3], marginBottom: Spacing[3] },
+  content: { padding: Spacing[4], paddingBottom: Spacing[8], gap: Spacing[5] },
+  title: {},
+  section: { gap: Spacing[1] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },
   auctionCard: {
     borderWidth: 1,
     borderRadius: Radius.base,
     padding: Spacing[4],
     gap: Spacing[2],
-    marginBottom: Spacing[4],
   },
   auctionTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   liveBadge: {
@@ -195,7 +206,8 @@ const styles = StyleSheet.create({
   },
   liveDot: { width: 6, height: 6, borderRadius: 3 },
   card: {
-    flex: 1,
+    flexBasis: '47%',
+    flexGrow: 1,
     borderRadius: Radius.base,
     overflow: 'hidden',
     borderWidth: 1,

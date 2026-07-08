@@ -36,14 +36,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     const { data, error } = await supabase
       .from('posts')
-      .select('id,title,published_at,created_at')
+      .select('slug,published_at,created_at')
       .eq('editorial_status', 'published')
       .order('published_at', { ascending: false })
       .limit(500)
 
     if (error) return staticRoutes
 
-    const posts = (data ?? []) as Pick<PostRow, 'id' | 'title' | 'published_at' | 'created_at'>[]
+    const posts = (data ?? []) as Pick<PostRow, 'slug' | 'published_at' | 'created_at'>[]
     return [
       ...staticRoutes,
       ...posts.map((post) => ({

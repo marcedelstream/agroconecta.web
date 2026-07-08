@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Text } from '@/components/ui/Text'
 import { SectionHeader } from './SectionHeader'
@@ -55,11 +55,15 @@ export function OrganizationsSection({ onViewAll }: Props) {
               activeOpacity={0.7}
               onPress={() => router.push(`/publisher/${org.id}` as any)}
             >
-              <View style={[styles.avatar, { backgroundColor: `${accent}20` }]}>
-                <Text style={[styles.avatarText, { color: accent }]}>
-                  {org.name.slice(0, 2).toUpperCase()}
-                </Text>
-              </View>
+              {org.logoUrl ? (
+                <Image source={{ uri: org.logoUrl }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: `${accent}20` }]}>
+                  <Text style={[styles.avatarText, { color: accent }]}>
+                    {org.name.slice(0, 2).toUpperCase()}
+                  </Text>
+                </View>
+              )}
               <Text
                 variant="caption"
                 numberOfLines={2}
@@ -94,6 +98,11 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
   avatarText: { fontSize: 20, fontWeight: '700' },
 })

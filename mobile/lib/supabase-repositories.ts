@@ -2,9 +2,15 @@ import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
 import type { AdCampaign, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const POST_SELECT = '*, organizations(name, logo_url, slug)'
+
 function mapPost(row: any): Post {
+  const org = Array.isArray(row.organizations) ? row.organizations[0] : row.organizations
   return {
     id: row.id,
+    slug: row.slug ?? undefined,
     title: row.title,
     summary: row.summary,
     content: row.content,
@@ -14,8 +20,10 @@ function mapPost(row: any): Post {
     isImportant: row.is_important,
     isHighlighted: row.is_highlighted,
     imageUrl: row.image_url,
-    source: Array.isArray(row.organizations) ? row.organizations[0]?.name ?? 'Agroconecta' : row.organizations?.name ?? 'Agroconecta',
+    source: org?.name ?? 'Agroconecta',
     organizationId: row.organization_id,
+    organizationLogoUrl: org?.logo_url ?? undefined,
+    organizationSlug: org?.slug ?? undefined,
     publisherId: row.organization_id,
     targetDepartments: row.target_departments ?? [],
     publishedAt: new Date(row.published_at ?? row.created_at),
@@ -29,7 +37,7 @@ function mapPost(row: any): Post {
 export async function fetchPublishedPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, organizations(name)')
+    .select(POST_SELECT)
     .eq('editorial_status', 'published')
     .order('published_at', { ascending: false })
 
@@ -40,7 +48,7 @@ export async function fetchPublishedPosts(): Promise<Post[]> {
 export async function fetchPostsByOrganization(orgId: string): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, organizations(name)')
+    .select(POST_SELECT)
     .eq('editorial_status', 'published')
     .eq('organization_id', orgId)
     .order('published_at', { ascending: false })
@@ -49,11 +57,14 @@ export async function fetchPostsByOrganization(orgId: string): Promise<Post[]> {
   return (data ?? []).map(mapPost)
 }
 
-export async function fetchPublishedPostById(id: string): Promise<Post | null> {
+// Acepta tanto el slug legible como el uuid crudo (deep links de push notifications
+// siguen mandando el uuid) y busca por la columna que corresponda.
+export async function fetchPublishedPostBySlug(slugOrId: string): Promise<Post | null> {
+  const column = UUID_PATTERN.test(slugOrId) ? 'id' : 'slug'
   const { data, error } = await supabase
     .from('posts')
-    .select('*, organizations(name)')
-    .eq('id', id)
+    .select(POST_SELECT)
+    .eq(column, slugOrId)
     .eq('editorial_status', 'published')
     .maybeSingle()
 
@@ -65,6 +76,7 @@ export async function fetchPublishedPostById(id: string): Promise<Post | null> {
 function mapOrganization(row: any): Organization {
   return {
     id: row.id,
+    slug: row.slug,
     name: row.name,
     description: row.description,
     category: row.type,
@@ -78,10 +90,13 @@ function mapOrganization(row: any): Organization {
   }
 }
 
+// Solo organizaciones con al menos una publicación publicada — evita listar cuentas
+// que todavía no cargaron ninguna nota.
 export async function fetchOrganizations(): Promise<Organization[]> {
   const { data, error } = await supabase
     .from('organizations')
-    .select('*')
+    .select('*, posts!inner(id)')
+    .eq('posts.editorial_status', 'published')
     .order('name')
 
   if (error) throw error
@@ -252,7 +267,7 @@ export async function fetchEventSchedule(eventSlug: string): Promise<EventSchedu
 export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, organizations(name)')
+    .select(POST_SELECT)
     .eq('editorial_status', 'published')
     .eq('event_tag', eventSlug)
     .order('published_at', { ascending: false })

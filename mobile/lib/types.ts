@@ -63,6 +63,7 @@ export type CommercialStatus = 'trial' | 'active' | 'overdue' | 'paused';
 
 export interface Organization {
   id: string;
+  slug: string;
   name: string;
   description: string;
   isVerified: boolean;
@@ -83,6 +84,7 @@ export type AuctionStatus = 'upcoming' | 'live' | 'finished' | 'unavailable';
 
 export interface Post {
   id: string;
+  slug?: string;
   title: string;
   summary: string;
   content: string;
@@ -93,6 +95,8 @@ export interface Post {
   imageUrl: string;
   source: string;
   organizationId?: string;
+  organizationLogoUrl?: string;
+  organizationSlug?: string;
   publisherId?: string;
   targetDepartments?: Department[];
   authorName?: string;

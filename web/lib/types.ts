@@ -53,6 +53,7 @@ export type CommercialStatus = 'trial' | 'active' | 'overdue' | 'paused'
 
 export interface PostRow {
   id: string
+  slug: string
   title: string
   summary: string
   content: string

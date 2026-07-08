@@ -57,7 +57,7 @@ export default async function EditarPublicacionPage({ params }: Props) {
         <div className="flex items-center gap-2 shrink-0">
           {post.editorial_status === 'published' && (
             <Link
-              href={`/noticias/${post.id}`}
+              href={`/noticias/${post.slug}`}
               target="_blank"
               className="btn text-xs"
             >

@@ -29,7 +29,7 @@ export function NewsCard({ article, onPress }: Props) {
 
   async function handleShare() {
     await Share.share({
-      message: `${article.title}\n\nLeé más en Agroconecta: https://agroconecta.com.py/noticias/${article.id}`,
+      message: `${article.title}\n\nLeé más en Agroconecta: https://agroconecta.com.py/noticias/${article.slug ?? article.id}`,
     })
   }
 
@@ -47,6 +47,9 @@ export function NewsCard({ article, onPress }: Props) {
         </Text>
         <View style={styles.footer}>
           <View style={styles.meta}>
+            {article.organizationLogoUrl && (
+              <Image source={{ uri: article.organizationLogoUrl }} style={styles.sourceLogo} />
+            )}
             <Text variant="caption" style={{ color: C.muted }}>{article.source}</Text>
             <Text variant="caption" style={{ color: C.muted }}> · {timeAgo(article.publishedAt)}</Text>
           </View>
@@ -71,6 +74,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: Spacing[3], justifyContent: 'space-between', gap: Spacing[1.5] },
   title: { lineHeight: 21, flex: 1 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  meta: { flexDirection: 'row', flexShrink: 1 },
+  meta: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
+  sourceLogo: { width: 14, height: 14, borderRadius: 4, marginRight: Spacing[1] },
   shareBtn: { paddingLeft: Spacing[2] },
 })

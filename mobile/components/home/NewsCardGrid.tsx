@@ -42,9 +42,14 @@ export function NewsCardGrid({ article, onPress, style }: Props) {
         <Text variant="caption" weight="semibold" numberOfLines={2} style={styles.title}>
           {article.title}
         </Text>
-        <Text variant="label" style={{ color: C.muted }} numberOfLines={1}>
-          {article.source} · {timeAgo(article.publishedAt)}
-        </Text>
+        <View style={styles.metaRow}>
+          {article.organizationLogoUrl && (
+            <Image source={{ uri: article.organizationLogoUrl }} style={styles.sourceLogo} />
+          )}
+          <Text variant="label" style={{ color: C.muted, flexShrink: 1 }} numberOfLines={1}>
+            {article.source} · {timeAgo(article.publishedAt)}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
   )
@@ -62,4 +67,6 @@ const styles = StyleSheet.create({
   badgeOverlay: { position: 'absolute', top: Spacing[2], left: Spacing[2] },
   content: { padding: Spacing[2.5], gap: Spacing[1] },
   title: { lineHeight: 17 },
+  metaRow: { flexDirection: 'row', alignItems: 'center' },
+  sourceLogo: { width: 12, height: 12, borderRadius: 3, marginRight: Spacing[1] },
 })

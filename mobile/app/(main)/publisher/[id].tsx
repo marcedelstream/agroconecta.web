@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, FlatList, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, FlatList, TouchableOpacity, ScrollView, Image, StyleSheet, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -148,9 +148,13 @@ export default function PublisherScreen() {
 
         {/* Info del medio */}
         <View style={styles.publisherCard}>
-          <View style={[styles.publisherAvatar, { backgroundColor: `${catColor}18` }]}>
-            <Ionicons name="radio-outline" size={32} color={catColor} />
-          </View>
+          {currentPublisher.logoUrl ? (
+            <Image source={{ uri: currentPublisher.logoUrl }} style={styles.publisherAvatarImage} />
+          ) : (
+            <View style={[styles.publisherAvatar, { backgroundColor: `${catColor}18` }]}>
+              <Ionicons name="radio-outline" size={32} color={catColor} />
+            </View>
+          )}
 
           <View style={styles.publisherMeta}>
             <View style={styles.nameRow}>
@@ -290,6 +294,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  publisherAvatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.lg,
   },
   publisherMeta: { gap: Spacing[1.5] },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[2], flexWrap: 'wrap' },

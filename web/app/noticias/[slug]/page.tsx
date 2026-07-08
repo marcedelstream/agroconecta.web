@@ -7,19 +7,18 @@ import { Footer } from '@/components/Footer'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
-import { absoluteUrl, extractPostId, postPath, postUrl, truncateMeta } from '@/lib/seo'
+import { absoluteUrl, isUuid, postPath, postUrl, truncateMeta } from '@/lib/seo'
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }
 
-async function loadPost(id: string) {
-  const postId = extractPostId(id)
+async function loadPost(slug: string) {
   const supabase = await createSupabaseServer()
   const { data } = await supabase
     .from('posts')
-    .select('id,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
-    .eq('id', postId)
+    .select('id,slug,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
+    .eq(isUuid(slug) ? 'id' : 'slug', slug)
     .eq('editorial_status', 'published')
     .single()
   return data as PostRow | null
@@ -32,8 +31,8 @@ function youtubeEmbedUrl(url: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
-  const post = await loadPost(id)
+  const { slug } = await params
+  const post = await loadPost(slug)
   if (!post) return { title: 'Artículo no encontrado' }
 
   const description = truncateMeta(post.summary || post.content)
@@ -67,8 +66,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const { id } = await params
-  const post = await loadPost(id)
+  const { slug } = await params
+  const post = await loadPost(slug)
   if (!post) notFound()
 
   const org = post.organizations

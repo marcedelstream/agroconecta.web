@@ -58,16 +58,16 @@ export const newsCategories: { value: NewsCategory; label: string; icon: string 
 
 // Organizations / cuentas verificadas
 export const mockOrganizations: Organization[] = [
-  { id: 'poder-agropecuario', name: 'Poder Agropecuario', description: 'Medio especializado en noticias y análisis del sector agropecuario paraguayo.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
-  { id: 'campo-agropecuario', name: 'Campo Agropecuario', description: 'El referente digital del campo paraguayo con cobertura nacional.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
-  { id: 'agroconecta-medios', name: 'Agroconecta Medios', description: 'Noticias, análisis y tendencias del agro desde el ecosistema Agroconecta.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Interno' },
-  { id: 'abc-rural', name: 'ABC Rural', description: 'Sección agropecuaria de ABC Color, el diario de mayor circulación del país.', isVerified: true, category: 'media', commercialStatus: 'trial', planName: 'Piloto' },
-  { id: 'asociacion-brangus', name: 'Asociación Paraguaya de Brangus', description: 'Comunicados, remates, jornadas técnicas y novedades oficiales de la raza Brangus.', isVerified: true, category: 'asociacion', commercialStatus: 'active', planName: 'Asociación Pro' },
-  { id: 'arp', name: 'Asociación Rural del Paraguay', description: 'Gremio referente de la producción ganadera y exposiciones rurales del Paraguay.', isVerified: true, category: 'gremio', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'senacsa', name: 'SENACSA', description: 'Servicio Nacional de Calidad y Salud Animal. Organismo oficial del Estado.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'mag', name: 'MAG', description: 'Ministerio de Agricultura y Ganadería de la República del Paraguay.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'senave', name: 'SENAVE', description: 'Servicio Nacional de Calidad y Sanidad Vegetal y de Semillas.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
-  { id: 'remates-paraguay', name: 'Remates Paraguay', description: 'Agenda y transmisión de remates ganaderos en vivo desde todo el país.', isVerified: true, category: 'rematadora', commercialStatus: 'trial', planName: 'Remates' },
+  { id: 'poder-agropecuario', slug: 'poder-agropecuario', name: 'Poder Agropecuario', description: 'Medio especializado en noticias y análisis del sector agropecuario paraguayo.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
+  { id: 'campo-agropecuario', slug: 'campo-agropecuario', name: 'Campo Agropecuario', description: 'El referente digital del campo paraguayo con cobertura nacional.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Medio aliado' },
+  { id: 'agroconecta-medios', slug: 'agroconecta-medios', name: 'Agroconecta Medios', description: 'Noticias, análisis y tendencias del agro desde el ecosistema Agroconecta.', isVerified: true, category: 'media', commercialStatus: 'active', planName: 'Interno' },
+  { id: 'abc-rural', slug: 'abc-rural', name: 'ABC Rural', description: 'Sección agropecuaria de ABC Color, el diario de mayor circulación del país.', isVerified: true, category: 'media', commercialStatus: 'trial', planName: 'Piloto' },
+  { id: 'asociacion-brangus', slug: 'asociacion-brangus', name: 'Asociación Paraguaya de Brangus', description: 'Comunicados, remates, jornadas técnicas y novedades oficiales de la raza Brangus.', isVerified: true, category: 'asociacion', commercialStatus: 'active', planName: 'Asociación Pro' },
+  { id: 'arp', slug: 'arp', name: 'Asociación Rural del Paraguay', description: 'Gremio referente de la producción ganadera y exposiciones rurales del Paraguay.', isVerified: true, category: 'gremio', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'senacsa', slug: 'senacsa', name: 'SENACSA', description: 'Servicio Nacional de Calidad y Salud Animal. Organismo oficial del Estado.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'mag', slug: 'mag', name: 'MAG', description: 'Ministerio de Agricultura y Ganadería de la República del Paraguay.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'senave', slug: 'senave', name: 'SENAVE', description: 'Servicio Nacional de Calidad y Sanidad Vegetal y de Semillas.', isVerified: true, category: 'institucion', commercialStatus: 'active', planName: 'Institucional' },
+  { id: 'remates-paraguay', slug: 'remates-paraguay', name: 'Remates Paraguay', description: 'Agenda y transmisión de remates ganaderos en vivo desde todo el país.', isVerified: true, category: 'rematadora', commercialStatus: 'trial', planName: 'Remates' },
 ];
 
 export const mockPublishers = mockOrganizations;

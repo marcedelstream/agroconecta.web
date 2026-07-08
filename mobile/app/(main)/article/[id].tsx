@@ -13,7 +13,7 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { mockNews, mockPublishers } from '@/lib/mock-data'
-import { fetchPublishedPostById, fetchOrganizationById } from '@/lib/supabase-repositories'
+import { fetchPublishedPostBySlug, fetchOrganizationById } from '@/lib/supabase-repositories'
 import type { Organization, Post } from '@/lib/types'
 
 const MOCK_CONTENT = `El sector agropecuario paraguayo continúa consolidándose como uno de los motores de la economía nacional. Los datos más recientes reflejan un crecimiento sostenido que posiciona al país entre los principales referentes de la región.
@@ -50,7 +50,7 @@ export default function ArticleScreen() {
     const local = mockNews.find((n) => n.id === id) ?? null
     setArticle(local)
     let mounted = true
-    fetchPublishedPostById(id)
+    fetchPublishedPostBySlug(id)
       .then((remote) => { if (mounted && remote) setArticle(remote) })
       .catch(() => { if (mounted && !local) setArticle(null) })
     return () => { mounted = false }
@@ -75,7 +75,7 @@ export default function ArticleScreen() {
   }
 
   const shareText = `${article.title}\n\nLeé más en Agroconecta`
-  const shareUrl = `https://agroconecta.com.py/noticias/${article.id}`
+  const shareUrl = `https://agroconecta.com.py/noticias/${article.slug ?? article.id}`
 
   async function handleNativeShare() {
     await Share.share({ message: shareText, url: shareUrl })
@@ -142,9 +142,13 @@ export default function ArticleScreen() {
           >
             <Card style={styles.sourceCard} padding={3}>
               <View style={styles.sourceInner}>
-                <View style={styles.sourceAvatar}>
-                  <Ionicons name="newspaper-outline" size={20} color={Colors.lime} />
-                </View>
+                {(publisher?.logoUrl ?? article.organizationLogoUrl) ? (
+                  <Image source={{ uri: publisher?.logoUrl ?? article.organizationLogoUrl }} style={styles.sourceAvatarImage} />
+                ) : (
+                  <View style={styles.sourceAvatar}>
+                    <Ionicons name="newspaper-outline" size={20} color={Colors.lime} />
+                  </View>
+                )}
                 <View style={styles.sourceText}>
                   <Text variant="caption" color={C.muted}>Fuente</Text>
                   <View style={styles.sourceNameRow}>
@@ -255,6 +259,11 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.lime}18`,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sourceAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
   },
   sourceText: { flex: 1 },
   socialSection: { gap: Spacing[2] },

@@ -1,5 +1,6 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { createMarketPrice, deleteMarketPrice, updateMarketPrice } from './actions'
+import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 
 interface MarketPriceRow {
   id: string
@@ -140,12 +141,12 @@ function PriceTable({ title, rows }: { title: string; rows: MarketPriceRow[] }) 
                   {new Date(price.updated_at).toLocaleString('es-PY')}
                 </td>
                 <td>
-                  <form action={deleteMarketPrice} onSubmit={(e) => { if (!confirm('¿Eliminar este precio?')) e.preventDefault() }}>
-                    <input type="hidden" name="id" value={price.id} />
-                    <button type="submit" className="btn text-xs text-danger border-danger/40 hover:bg-danger/10">
-                      Eliminar
-                    </button>
-                  </form>
+                  <ConfirmSubmitButton
+                    action={deleteMarketPrice}
+                    fields={{ id: price.id }}
+                    confirmMessage="¿Eliminar este precio?"
+                    className="btn text-xs text-danger border-danger/40 hover:bg-danger/10"
+                  />
                 </td>
               </tr>
             ))}

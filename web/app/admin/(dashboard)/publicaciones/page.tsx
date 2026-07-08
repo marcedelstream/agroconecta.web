@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type PostRow, type EditorialStatus, type NewsCategory } from '@/lib/types'
-import { approvePost, rejectPost } from './actions'
+import { approvePost, rejectPost, deletePost } from './actions'
+import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 
 async function loadPosts(status?: string) {
   // Server-side (anon key + RLS) solo puede leer posts publicados — sin esto, los
@@ -9,7 +10,7 @@ async function loadPosts(status?: string) {
   const supabase = createSupabaseAdmin()
   let query = supabase
     .from('posts')
-    .select('id,title,category,target_departments,content_type,editorial_status,is_important,published_at,created_at,organizations(name)')
+    .select('id,title,category,target_departments,content_type,editorial_status,is_important,published_at,created_at,image_url,organizations(name)')
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -123,6 +124,12 @@ export default async function PublicacionesPage({ searchParams }: Props) {
                         <Link href={`/admin/publicaciones/${post.id}`} className="btn text-xs">
                           Editar
                         </Link>
+                        <ConfirmSubmitButton
+                          action={deletePost}
+                          fields={{ id: post.id, image_url: post.image_url ?? '' }}
+                          confirmMessage="¿Eliminar esta publicación? Esta acción no se puede deshacer."
+                          className="btn text-xs text-danger border-danger/40 hover:bg-danger/10"
+                        />
                       </div>
                     </td>
                   </tr>

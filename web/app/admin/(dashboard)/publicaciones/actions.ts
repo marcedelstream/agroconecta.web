@@ -144,6 +144,28 @@ export async function archivePost(formData: FormData) {
   revalidatePath('/')
 }
 
+export async function deletePost(formData: FormData) {
+  await requireAdmin()
+  const id = formData.get('id') as string
+  const imageUrl = String(formData.get('image_url') ?? '')
+  const supabase = createSupabaseAdmin()
+
+  if (imageUrl.includes(`/${POST_IMAGES_BUCKET}/`)) {
+    const path = imageUrl.split(`/${POST_IMAGES_BUCKET}/`)[1]
+    await supabase.storage.from(POST_IMAGES_BUCKET).remove([path]).catch(() => null)
+  }
+
+  const { error } = await supabase.from('posts').delete().eq('id', id)
+  if (error) {
+    console.error('No se pudo eliminar la publicación:', error.message)
+    return
+  }
+
+  revalidatePath('/admin/publicaciones')
+  revalidatePath('/admin')
+  revalidatePath('/')
+}
+
 export async function createPost(
   _prev: ActionState,
   formData: FormData,

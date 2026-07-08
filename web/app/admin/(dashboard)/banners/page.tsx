@@ -1,11 +1,14 @@
 import Image from 'next/image'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, type AdCampaignRow } from '@/lib/types'
 import { deleteBanner, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
+import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 
 async function loadBanners() {
-  const supabase = await createSupabaseServer()
+  // Cliente admin: "public can read active ads" en RLS esconde los pausados del anon key,
+  // y el admin tiene que poder verlos para reactivarlos.
+  const supabase = createSupabaseAdmin()
   const { data, error } = await supabase
     .from('ad_campaigns')
     .select('id,title,image_url,target_professions,target_departments,target_categories,starts_at,ends_at,is_active,link_type,link_target')
@@ -103,13 +106,12 @@ export default async function BannersPage() {
                             {banner.is_active ? 'Pausar' : 'Activar'}
                           </button>
                         </form>
-                        <form action={deleteBanner} onSubmit={(e) => { if (!confirm('¿Eliminar este banner?')) e.preventDefault() }}>
-                          <input type="hidden" name="id" value={banner.id} />
-                          <input type="hidden" name="image_url" value={banner.image_url} />
-                          <button type="submit" className="btn text-xs text-danger border-danger/40 hover:bg-danger/10">
-                            Eliminar
-                          </button>
-                        </form>
+                        <ConfirmSubmitButton
+                          action={deleteBanner}
+                          fields={{ id: banner.id, image_url: banner.image_url }}
+                          confirmMessage="¿Eliminar este banner?"
+                          className="btn text-xs text-danger border-danger/40 hover:bg-danger/10"
+                        />
                       </div>
                     </td>
                   </tr>

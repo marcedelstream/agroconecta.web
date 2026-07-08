@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { PostForm } from '../PostForm'
 import { updatePost } from '../actions'
 import { ArchiveButton } from './ArchiveButton'
+import { DeletePostButton } from './DeletePostButton'
 import type { OrganizationRow, PostRow } from '@/lib/types'
 
 interface Props {
@@ -64,6 +65,7 @@ export default async function EditarPublicacionPage({ params }: Props) {
             </Link>
           )}
           <ArchiveButton id={post.id} />
+          <DeletePostButton id={post.id} imageUrl={post.image_url} />
         </div>
       </div>
 

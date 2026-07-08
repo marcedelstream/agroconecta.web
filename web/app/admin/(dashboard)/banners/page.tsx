@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, type AdCampaignRow } from '@/lib/types'
+import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS, type AdCampaignRow, type AdPlacement } from '@/lib/types'
 import { deleteBanner, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
@@ -11,7 +11,7 @@ async function loadBanners() {
   const supabase = createSupabaseAdmin()
   const { data, error } = await supabase
     .from('ad_campaigns')
-    .select('id,title,image_url,target_professions,target_departments,target_categories,starts_at,ends_at,is_active,link_type,link_target')
+    .select('id,title,image_url,placement,target_professions,target_departments,target_categories,starts_at,ends_at,is_active,link_type,link_target')
     .order('created_at', { ascending: false })
   return {
     banners: (data ?? []) as AdCampaignRow[],
@@ -60,6 +60,7 @@ export default async function BannersPage() {
                 <tr>
                   <th>Imagen</th>
                   <th>Campaña</th>
+                  <th>Sección</th>
                   <th>Destino</th>
                   <th>Segmentación</th>
                   <th>Estado</th>
@@ -69,7 +70,7 @@ export default async function BannersPage() {
               <tbody>
                 {banners.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-muted">
+                    <td colSpan={7} className="text-center py-10 text-muted">
                       No hay banners cargados.
                     </td>
                   </tr>
@@ -83,6 +84,9 @@ export default async function BannersPage() {
                     </td>
                     <td>
                       <p className="font-medium">{banner.title}</p>
+                    </td>
+                    <td className="text-xs text-muted">
+                      {(banner.placement?.length ? banner.placement : (['home'] as AdPlacement[])).map((p) => PLACEMENT_LABELS[p]).join(', ')}
                     </td>
                     <td className="text-xs text-muted">
                       {banner.link_type

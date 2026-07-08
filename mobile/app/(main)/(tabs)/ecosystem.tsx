@@ -1,11 +1,13 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { router } from 'expo-router'
+import { View, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
-import { UPCOMING_PLATFORMS } from '@/lib/ecosystem-data'
+import { UPCOMING_PLATFORMS, type UpcomingPlatform } from '@/lib/ecosystem-data'
+
+function showComingSoon(platform: UpcomingPlatform) {
+  Alert.alert(`${platform.name} — Próximamente`, platform.description)
+}
 
 export default function DescubrirScreen() {
   const C = useColors()
@@ -33,7 +35,7 @@ export default function DescubrirScreen() {
             key={platform.id}
             style={styles.tile}
             activeOpacity={0.75}
-            onPress={() => router.push(`/(main)/platform/${platform.id}` as any)}
+            onPress={() => showComingSoon(platform)}
           >
             <Ionicons name={platform.icon} size={36} color={C.muted} />
             <Text variant="caption" weight="semibold" style={{ color: C.foreground, textAlign: 'center' }}>

@@ -7,7 +7,7 @@ import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Colors } from '@/constants/colors'
 import { fetchActiveBanners } from '@/lib/supabase-repositories'
-import type { AdCampaign } from '@/lib/types'
+import type { AdCampaign, AdPlacement } from '@/lib/types'
 
 function openBanner(banner: AdCampaign) {
   if (!banner.linkType || !banner.linkTarget) return
@@ -31,10 +31,11 @@ const SLIDE_INTERVAL = 4000
 
 interface Props {
   segment?: unknown
+  placement?: AdPlacement
   style?: ViewStyle
 }
 
-export function AdBanner({ style }: Props) {
+export function AdBanner({ placement = 'home', style }: Props) {
   const C = useColors()
   const { width } = useWindowDimensions()
   const bannerWidth = width - Spacing[5] * 2
@@ -44,10 +45,11 @@ export function AdBanner({ style }: Props) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    fetchActiveBanners()
+    setBanners([])
+    fetchActiveBanners(placement)
       .then((data) => { if (data.length > 0) setBanners(data) })
       .catch(() => {})
-  }, [])
+  }, [placement])
 
   useEffect(() => {
     if (banners.length <= 1) return

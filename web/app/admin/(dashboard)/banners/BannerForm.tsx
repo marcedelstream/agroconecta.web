@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, type Department, type NewsCategory } from '@/lib/types'
+import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS, type AdPlacement, type Department, type NewsCategory } from '@/lib/types'
 import { createBanner, type BannerActionState } from './actions'
 
 const initialState: BannerActionState = { error: null }
@@ -39,6 +39,18 @@ export function BannerForm() {
             hover:file:bg-lime/25 cursor-pointer"
         />
         <p className="text-xs text-muted mt-1">Formato recomendado: 640 × 200 px · Máx. 8 MB.</p>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium text-foreground mb-2">¿Dónde se muestra?</p>
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.entries(PLACEMENT_LABELS) as [AdPlacement, string][]).map(([value, label]) => (
+            <label key={value} className="flex items-center gap-2 text-xs text-muted">
+              <input type="checkbox" name="placement" value={value} defaultChecked={value === 'home'} className="accent-lime" />
+              {label}
+            </label>
+          ))}
+        </div>
       </div>
 
       <div>

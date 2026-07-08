@@ -1,11 +1,14 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
-import { router } from 'expo-router'
+import { View, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { SectionHeader } from './SectionHeader'
 import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
-import { UPCOMING_PLATFORMS } from '@/lib/ecosystem-data'
+import { UPCOMING_PLATFORMS, type UpcomingPlatform } from '@/lib/ecosystem-data'
+
+function showComingSoon(platform: UpcomingPlatform) {
+  Alert.alert(`${platform.name} — Próximamente`, platform.description)
+}
 
 interface Props {
   onViewAll?: () => void
@@ -20,13 +23,13 @@ export function EcosistemaSection({ onViewAll }: Props) {
         title="Ecosistema"
         action={onViewAll ? { label: 'Ver todo', onPress: onViewAll } : undefined}
       />
-      <View style={styles.row}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.row}>
         {UPCOMING_PLATFORMS.map((platform) => (
           <TouchableOpacity
             key={platform.id}
             style={[styles.tile, { backgroundColor: C.surface, borderColor: C.border }]}
             activeOpacity={0.75}
-            onPress={() => router.push(`/(main)/platform/${platform.id}` as any)}
+            onPress={() => showComingSoon(platform)}
           >
             <View style={[styles.iconWrap, { backgroundColor: `${C.muted}10` }]}>
               <Ionicons name={platform.icon} size={24} color={C.muted} />
@@ -36,15 +39,16 @@ export function EcosistemaSection({ onViewAll }: Props) {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: Spacing[3] },
+  bleed: { marginHorizontal: -Spacing[5] },
+  row: { flexDirection: 'row', gap: Spacing[3], paddingLeft: Spacing[5], paddingRight: Spacing[2] },
   tile: {
-    flex: 1,
+    width: 100,
     borderRadius: Radius.base,
     borderWidth: 1,
     paddingVertical: Spacing[3.5],

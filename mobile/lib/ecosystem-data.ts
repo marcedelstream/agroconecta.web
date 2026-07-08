@@ -27,4 +27,10 @@ export const UPCOMING_PLATFORMS: UpcomingPlatform[] = [
     icon: 'megaphone-outline',
     description: 'Mirá y participá de remates de ganado transmitidos en vivo, sin salir de la app.',
   },
+  {
+    id: 'cursos',
+    name: 'Cursos',
+    icon: 'school-outline',
+    description: 'Capacitaciones y cursos online para productores y profesionales del agro paraguayo.',
+  },
 ]

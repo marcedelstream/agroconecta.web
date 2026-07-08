@@ -81,11 +81,13 @@ export async function createBanner(
 
   const linkType = String(formData.get('link_type') ?? '') || null
   const linkTarget = String(formData.get('link_target') ?? '').trim() || null
+  const placement = formData.getAll('placement').map(String).filter(Boolean)
 
   const supabase = createSupabaseAdmin()
   const { error } = await supabase.from('ad_campaigns').insert({
     title,
     image_url: imageUrl,
+    placement: placement.length ? placement : ['home'],
     target_professions: csv(formData.get('target_professions')),
     target_departments: formData.getAll('target_departments').map(String).filter(Boolean),
     target_categories: formData.getAll('target_categories').map(String).filter(Boolean),

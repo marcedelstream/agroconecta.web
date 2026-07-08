@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  View, FlatList, TextInput, TouchableOpacity,
+  View, FlatList, TextInput, TouchableOpacity, Image,
   StyleSheet, ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
@@ -133,16 +133,20 @@ export default function MediaSubscriptionsScreen() {
                 onPress={() => toggle(item.id)}
                 activeOpacity={0.8}
               >
-                <View style={[
-                  styles.avatar,
-                  { backgroundColor: active ? `${Colors.lime}22` : `${C.muted}12` },
-                ]}>
-                  <Ionicons
-                    name="radio-outline"
-                    size={20}
-                    color={active ? Colors.lime : C.muted}
-                  />
-                </View>
+                {item.logoUrl ? (
+                  <Image source={{ uri: item.logoUrl }} style={styles.avatarImage} />
+                ) : (
+                  <View style={[
+                    styles.avatar,
+                    { backgroundColor: active ? `${Colors.lime}22` : `${C.muted}12` },
+                  ]}>
+                    <Ionicons
+                      name="radio-outline"
+                      size={20}
+                      color={active ? Colors.lime : C.muted}
+                    />
+                  </View>
+                )}
                 <View style={styles.info}>
                   <View style={styles.nameRow}>
                     <Text variant="body" weight="semibold" style={{ color: C.foreground }} numberOfLines={1}>
@@ -221,6 +225,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
   },
   info: { flex: 1, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },

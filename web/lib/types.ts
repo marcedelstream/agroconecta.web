@@ -81,10 +81,20 @@ export const LINK_TYPE_LABELS: Record<AdLinkType, string> = {
   course: 'Curso (por id)',
 }
 
+export type AdPlacement = 'home' | 'article' | 'precios' | 'videos'
+
+export const PLACEMENT_LABELS: Record<AdPlacement, string> = {
+  home: 'Inicio',
+  article: 'Noticia',
+  precios: 'Precios',
+  videos: 'Videos',
+}
+
 export interface AdCampaignRow {
   id: string
   title: string
   image_url: string
+  placement: AdPlacement[]
   target_professions: string[]
   target_departments: Department[]
   target_categories: NewsCategory[]

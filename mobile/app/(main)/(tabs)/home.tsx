@@ -101,7 +101,7 @@ export default function HomeScreen() {
           <FeaturedGrid posts={featuredPosts} onPress={goToArticle} />
 
           {/* Banner publicitario (posición 3) */}
-          <AdBanner segment={segment} style={styles.adBanner} />
+          <AdBanner segment={segment} placement="home" style={styles.adBanner} />
 
           {/* ── Más Noticias (posición 4, antes de eventos) — carrusel, igual que Próximos Eventos ── */}
           {previewPosts.length > 0 && (

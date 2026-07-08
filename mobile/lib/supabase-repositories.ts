@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
+import type { AdCampaign, AdPlacement, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -221,11 +221,12 @@ export async function upsertSubscriptionNotify(userId: string, organizationId: s
   )
 }
 
-export async function fetchActiveBanners(): Promise<AdCampaign[]> {
+export async function fetchActiveBanners(placement: AdPlacement = 'home'): Promise<AdCampaign[]> {
   const { data, error } = await supabase
     .from('ad_campaigns')
     .select('*')
     .eq('is_active', true)
+    .contains('placement', [placement])
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -233,6 +234,7 @@ export async function fetchActiveBanners(): Promise<AdCampaign[]> {
     id: row.id,
     title: row.title,
     imageUrl: row.image_url,
+    placement: row.placement ?? ['home'],
     targetProfessions: row.target_professions ?? [],
     targetDepartments: row.target_departments ?? [],
     targetCategories: row.target_categories ?? [],

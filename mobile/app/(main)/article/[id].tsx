@@ -188,7 +188,7 @@ export default function ArticleScreen() {
             </View>
           </View>
 
-          <AdBanner />
+          <AdBanner placement="article" />
 
           <Text variant="body" style={[styles.summary, { color: C.foreground, borderLeftColor: Colors.lime }]}>
             {article.summary}

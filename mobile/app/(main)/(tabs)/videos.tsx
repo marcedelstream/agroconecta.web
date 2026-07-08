@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-nat
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
+import { AdBanner } from '@/components/ui/AdBanner'
 import { FeaturedGrid } from '@/components/home/FeaturedGrid'
 import { SectionHeader } from '@/components/home/SectionHeader'
 import { Colors } from '@/constants/colors'
@@ -100,6 +101,8 @@ export default function VideosScreen() {
         {heroPosts.length > 0 && (
           <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
         )}
+
+        <AdBanner placement="videos" />
 
         {grouped.map((group) => (
           <View key={group.value} style={styles.section}>

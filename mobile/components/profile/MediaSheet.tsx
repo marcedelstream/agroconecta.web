@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { SettingsSheet } from './SettingsSheet'
 import { Text } from '@/components/ui/Text'
@@ -62,9 +62,13 @@ export function MediaSheet({ selected, onClose }: Props) {
               style={[styles.item, { backgroundColor: C.surface, borderColor: C.border }, isActive && styles.itemActive]}
               activeOpacity={0.8}
             >
-              <View style={[styles.icon, { backgroundColor: isActive ? 'rgba(0,0,0,0.12)' : `${Colors.lime}18` }]}>
-                <Ionicons name="radio-outline" size={20} color={isActive ? '#0A0A13' : Colors.lime} />
-              </View>
+              {pub.logoUrl ? (
+                <Image source={{ uri: pub.logoUrl }} style={styles.iconImage} />
+              ) : (
+                <View style={[styles.icon, { backgroundColor: isActive ? 'rgba(0,0,0,0.12)' : `${Colors.lime}18` }]}>
+                  <Ionicons name="radio-outline" size={20} color={isActive ? '#0A0A13' : Colors.lime} />
+                </View>
+              )}
               <View style={styles.info}>
                 <View style={styles.nameRow}>
                   <Text variant="body" weight="semibold" style={{ color: isActive ? '#0A0A13' : C.foreground }}>
@@ -92,6 +96,7 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3], borderRadius: Radius.base, borderWidth: 1, padding: Spacing[3.5] },
   itemActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },
   icon: { width: 40, height: 40, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
+  iconImage: { width: 40, height: 40, borderRadius: Radius.md },
   info: { flex: 1, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
 })

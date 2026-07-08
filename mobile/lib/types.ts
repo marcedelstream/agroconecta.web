@@ -225,10 +225,13 @@ export interface MockAd {
 
 export type AdLinkType = 'event' | 'post' | 'url' | 'course';
 
+export type AdPlacement = 'home' | 'article' | 'precios' | 'videos';
+
 export interface AdCampaign {
   id: string;
   title: string;
   imageUrl: string;
+  placement: AdPlacement[];
   targetProfessions: Profession[];
   targetDepartments: Department[];
   targetCategories: NewsCategory[];

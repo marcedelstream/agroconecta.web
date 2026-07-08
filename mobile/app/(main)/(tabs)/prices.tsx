@@ -3,6 +3,7 @@ import { View, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } fro
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Card } from '@/components/ui/card'
+import { AdBanner } from '@/components/ui/AdBanner'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
@@ -80,6 +81,7 @@ export default function PricesScreen() {
           </View>
 
           <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+            <AdBanner placement="precios" style={styles.adBanner} />
             {list.map((price) => {
               const isUp = price.change >= 0
               return (
@@ -152,6 +154,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   list: { paddingHorizontal: Spacing[5], paddingBottom: Spacing[10], gap: Spacing[2.5] },
+  adBanner: { marginBottom: Spacing[1] },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing[3] },
   rowLeft: { flex: 1, gap: 2 },
   rowRight: { alignItems: 'flex-end', gap: 2 },

@@ -61,6 +61,34 @@ export type OrganizationType =
 
 export type CommercialStatus = 'trial' | 'active' | 'overdue' | 'paused';
 
+export type AllyPlan = 'semilla' | 'cosecha';
+
+export type AllyCategory =
+  | 'agricultura'
+  | 'ganaderia'
+  | 'servicios'
+  | 'medios'
+  | 'instituciones'
+  | 'insumos_maquinaria'
+  | 'tecnologia'
+  | 'otros';
+
+export const ALLY_PLAN_LABELS: Record<AllyPlan, string> = {
+  semilla: 'Aliado Semilla',
+  cosecha: 'Aliado Cosecha',
+};
+
+export const ALLY_CATEGORY_LABELS: Record<AllyCategory, string> = {
+  agricultura: 'Agricultura',
+  ganaderia: 'Ganadería',
+  servicios: 'Servicios',
+  medios: 'Medios',
+  instituciones: 'Instituciones',
+  insumos_maquinaria: 'Insumos y Maquinaria',
+  tecnologia: 'Tecnología',
+  otros: 'Otros',
+};
+
 export interface Organization {
   id: string;
   slug: string;
@@ -74,6 +102,10 @@ export interface Organization {
   billingNotes?: string;
   logoUrl?: string;
   eventsOrganizerSlug?: string;
+  allyPlan?: AllyPlan;
+  allyCategory?: AllyCategory;
+  allyFounder?: boolean;
+  contactPhone?: string;
 }
 
 export type Publisher = Organization;

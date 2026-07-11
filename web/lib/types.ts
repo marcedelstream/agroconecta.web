@@ -51,6 +51,34 @@ export type OrganizationType =
 
 export type CommercialStatus = 'trial' | 'active' | 'overdue' | 'paused'
 
+export type AllyPlan = 'semilla' | 'cosecha'
+
+export const ALLY_PLAN_LABELS: Record<AllyPlan, string> = {
+  semilla: 'Aliado Semilla',
+  cosecha: 'Aliado Cosecha',
+}
+
+export type AllyCategory =
+  | 'agricultura'
+  | 'ganaderia'
+  | 'servicios'
+  | 'medios'
+  | 'instituciones'
+  | 'insumos_maquinaria'
+  | 'tecnologia'
+  | 'otros'
+
+export const ALLY_CATEGORY_LABELS: Record<AllyCategory, string> = {
+  agricultura: 'Agricultura',
+  ganaderia: 'Ganadería',
+  servicios: 'Servicios',
+  medios: 'Medios',
+  instituciones: 'Instituciones',
+  insumos_maquinaria: 'Insumos y Maquinaria',
+  tecnologia: 'Tecnología',
+  otros: 'Otros',
+}
+
 export interface PostRow {
   id: string
   slug: string
@@ -147,6 +175,10 @@ export interface OrganizationRow {
   is_verified: boolean
   logo_url: string | null
   events_organizer_slug?: string | null
+  ally_plan?: AllyPlan | null
+  ally_category?: AllyCategory | null
+  ally_founder?: boolean
+  contact_phone?: string | null
 }
 
 export const CATEGORY_LABELS: Record<NewsCategory, string> = {

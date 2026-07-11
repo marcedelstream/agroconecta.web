@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import type { OrganizationRow } from '@/lib/types'
+import { ALLY_PLAN_LABELS, type OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
 
@@ -10,7 +10,7 @@ async function loadOrgs() {
   const supabase = createSupabaseAdmin()
   const { data } = await supabase
     .from('organizations')
-    .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url')
+    .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url,ally_plan,ally_founder')
     .order('name')
   return (data ?? []) as OrganizationRow[]
 }
@@ -58,6 +58,7 @@ export default async function OrganizacionesPage() {
                   <th>Cuenta</th>
                   <th>Tipo</th>
                   <th>Plan</th>
+                  <th>Aliado</th>
                   <th>Estado</th>
                   <th>Verificada</th>
                   <th></th>
@@ -66,7 +67,7 @@ export default async function OrganizacionesPage() {
               <tbody>
                 {orgs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-10 text-muted">
+                    <td colSpan={8} className="text-center py-10 text-muted">
                       No hay organizaciones cargadas.
                     </td>
                   </tr>
@@ -88,6 +89,15 @@ export default async function OrganizacionesPage() {
                     </td>
                     <td className="text-muted text-sm capitalize">{org.type}</td>
                     <td className="text-sm">{org.plan_name}</td>
+                    <td className="text-xs">
+                      {org.ally_plan ? (
+                        <span className="badge text-xs bg-lime/15 text-lime">
+                          {ALLY_PLAN_LABELS[org.ally_plan]}{org.ally_founder ? ' · Fundador' : ''}
+                        </span>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
                     <td>
                       <span className={`badge text-xs ${STATUS_STYLE[org.commercial_status] ?? 'bg-secondary text-muted'}`}>
                         {STATUS_LABELS[org.commercial_status] ?? org.commercial_status}

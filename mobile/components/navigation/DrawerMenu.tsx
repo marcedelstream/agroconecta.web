@@ -67,8 +67,31 @@ export function DrawerMenu({ onClose }: Props) {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.itemsContainer}>
+          {/* INSTITUCIONAL */}
+          <Text variant="label" color={Colors.muted} style={styles.sectionLabel}>INSTITUCIONAL</Text>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => handleClose('/(main)/nosotros')}
+          >
+            <View style={styles.menuIconBox}>
+              <Ionicons name="information-circle-outline" size={19} color={Colors.lime} />
+            </View>
+            <Text variant="body" weight="medium">Nosotros</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => handleClose('/(main)/aliados')}
+          >
+            <View style={styles.menuIconBox}>
+              <Ionicons name="people-outline" size={19} color={Colors.lime} />
+            </View>
+            <Text variant="body" weight="medium">Directorio de Aliados</Text>
+          </TouchableOpacity>
+
           {/* SERVICIOS */}
-          <Text variant="label" color={Colors.muted} style={styles.sectionLabel}>SERVICIOS</Text>
+          <Text variant="label" color={Colors.muted} style={[styles.sectionLabel, { marginTop: Spacing[4] }]}>SERVICIOS</Text>
 
           <View style={styles.servicesList}>
             {SERVICES.map((svc) => (

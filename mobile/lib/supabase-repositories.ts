@@ -87,6 +87,10 @@ function mapOrganization(row: any): Organization {
     billingNotes: row.billing_notes,
     logoUrl: row.logo_url,
     eventsOrganizerSlug: row.events_organizer_slug ?? undefined,
+    allyPlan: row.ally_plan ?? undefined,
+    allyCategory: row.ally_category ?? undefined,
+    allyFounder: row.ally_founder ?? false,
+    contactPhone: row.contact_phone ?? undefined,
   }
 }
 
@@ -97,6 +101,20 @@ export async function fetchOrganizations(): Promise<Organization[]> {
     .from('organizations')
     .select('*, posts!inner(id)')
     .eq('posts.editorial_status', 'published')
+    .order('name')
+
+  if (error) throw error
+  return (data ?? []).map(mapOrganization)
+}
+
+// Directorio de Aliados: organizaciones que pagan el fee anual, independiente de si
+// publicaron alguna noticia o no — a diferencia de fetchOrganizations().
+export async function fetchAllyDirectory(): Promise<Organization[]> {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('*')
+    .not('ally_plan', 'is', null)
+    .eq('commercial_status', 'active')
     .order('name')
 
   if (error) throw error

@@ -232,6 +232,38 @@ export interface InstitutionNews {
   type: 'resolucion' | 'comunicado' | 'alerta' | 'normativa';
 }
 
+// Biblioteca digital
+export type LibraryCategory = 'manual' | 'revista' | 'tecnico' | 'historia' | 'legislacion' | 'otros';
+
+export const LIBRARY_CATEGORY_LABELS: Record<LibraryCategory, string> = {
+  manual: 'Manual',
+  revista: 'Revista',
+  tecnico: 'Técnico',
+  historia: 'Historia',
+  legislacion: 'Legislación',
+  otros: 'Otros',
+};
+
+export interface LibraryItem {
+  id: string;
+  title: string;
+  author?: string;
+  description: string;
+  category: LibraryCategory;
+  coverImageUrl: string;
+  fileUrl: string;
+  fileType: string;
+  pageCount?: number;
+  createdAt: Date;
+}
+
+export interface UserLibraryEntry {
+  itemId: string;
+  addedAt: Date;
+  lastOpenedAt?: Date;
+  progressPercent: number;
+}
+
 // Theme
 export type AppTheme = 'dark' | 'light'
 

@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AdPlacement, AgroEvent, EventScheduleItem, MarketPrice, Organization, Post } from './types'
+import type { AdCampaign, AdPlacement, AgroEvent, EventScheduleItem, LibraryItem, MarketPrice, Organization, Post, UserLibraryEntry } from './types'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -52,6 +52,19 @@ export async function fetchPostsByOrganization(orgId: string): Promise<Post[]> {
     .eq('editorial_status', 'published')
     .eq('organization_id', orgId)
     .order('published_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map(mapPost)
+}
+
+// Videos/remates marcados "en vivo" ahora mismo, para el botón EN VIVO del header.
+export async function fetchLiveVideos(): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .in('content_type', ['video', 'auction'])
+    .eq('auction_status', 'live')
+    .eq('editorial_status', 'published')
 
   if (error) throw error
   return (data ?? []).map(mapPost)
@@ -262,6 +275,83 @@ export async function fetchActiveBanners(placement: AdPlacement = 'home'): Promi
     linkType: row.link_type ?? undefined,
     linkTarget: row.link_target ?? undefined,
   }))
+}
+
+function mapLibraryItem(row: any): LibraryItem {
+  return {
+    id: row.id,
+    title: row.title,
+    author: row.author ?? undefined,
+    description: row.description,
+    category: row.category,
+    coverImageUrl: row.cover_image_url,
+    fileUrl: row.file_url,
+    fileType: row.file_type,
+    pageCount: row.page_count ?? undefined,
+    createdAt: new Date(row.created_at),
+  }
+}
+
+export async function fetchLibraryItems(): Promise<LibraryItem[]> {
+  const { data, error } = await supabase
+    .from('library_items')
+    .select('*')
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map(mapLibraryItem)
+}
+
+export async function fetchLibraryItemById(id: string): Promise<LibraryItem | null> {
+  const { data, error } = await supabase
+    .from('library_items')
+    .select('*')
+    .eq('id', id)
+    .eq('is_published', true)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+  return mapLibraryItem(data)
+}
+
+export async function fetchUserLibrary(userId: string): Promise<UserLibraryEntry[]> {
+  const { data, error } = await supabase
+    .from('user_library')
+    .select('*')
+    .eq('user_id', userId)
+
+  if (error) throw error
+  return (data ?? []).map((row: any) => ({
+    itemId: row.item_id,
+    addedAt: new Date(row.added_at),
+    lastOpenedAt: row.last_opened_at ? new Date(row.last_opened_at) : undefined,
+    progressPercent: Number(row.progress_percent ?? 0),
+  }))
+}
+
+export async function addToUserLibrary(userId: string, itemId: string): Promise<void> {
+  await supabase.from('user_library').upsert(
+    { user_id: userId, item_id: itemId },
+    { onConflict: 'user_id,item_id' }
+  )
+}
+
+export async function removeFromUserLibrary(userId: string, itemId: string): Promise<void> {
+  await supabase.from('user_library').delete().eq('user_id', userId).eq('item_id', itemId)
+}
+
+export async function markLibraryItemOpened(userId: string, itemId: string): Promise<void> {
+  await supabase.from('user_library').update({ last_opened_at: new Date().toISOString() })
+    .eq('user_id', userId).eq('item_id', itemId)
+}
+
+// El bucket de archivos es privado — se pide una URL firmada (10 min) recién al abrir el lector.
+export async function fetchLibraryFileSignedUrl(path: string): Promise<string | null> {
+  const { data, error } = await supabase.storage.from('library-files').createSignedUrl(path, 600)
+  if (error) return null
+  return data?.signedUrl ?? null
 }
 
 export async function fetchEventSchedule(eventSlug: string): Promise<EventScheduleItem[]> {

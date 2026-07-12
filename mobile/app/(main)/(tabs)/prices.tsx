@@ -81,7 +81,6 @@ export default function PricesScreen() {
           </View>
 
           <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-            <AdBanner placement="precios" style={styles.adBanner} />
             {list.map((price) => {
               const isUp = price.change >= 0
               return (
@@ -107,6 +106,7 @@ export default function PricesScreen() {
                 Sin precios cargados en esta categoría.
               </Text>
             )}
+            <AdBanner placement="precios" style={styles.adBanner} />
           </ScrollView>
         </>
       )}

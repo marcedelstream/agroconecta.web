@@ -91,6 +91,7 @@ async function extractPayload(formData: FormData, supabase: ReturnType<typeof cr
     category: formData.get('category') as string,
     target_departments: targetDepartments,
     content_type: (formData.get('content_type') as string) || 'article',
+    auction_status: (formData.get('auction_status') as string) || null,
     editorial_status: status,
     image_url: await uploadFeaturedImage(formData, supabase),
     youtube_url: (formData.get('youtube_url') as string) || null,

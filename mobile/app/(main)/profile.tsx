@@ -27,6 +27,7 @@ const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: str
   { id: 'appearance',   icon: 'color-palette-outline', label: 'Apariencia' },
   { id: 'preferences',  icon: 'heart-outline',         label: 'Mis intereses' },
   { id: 'media',        icon: 'radio-outline',         label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
+  { id: null,           icon: 'book-outline',          label: 'Biblioteca', navigate: '/(main)/library' },
 ]
 
 function categoryLabel(cat: string) {

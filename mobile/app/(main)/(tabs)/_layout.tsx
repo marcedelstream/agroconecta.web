@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Platform, StyleSheet } from 'react-native'
 import { Tabs } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -6,8 +6,12 @@ import { Ionicons } from '@expo/vector-icons'
 import { AppHeaderBar } from '@/components/navigation/AppHeaderBar'
 import { DrawerMenu } from '@/components/navigation/DrawerMenu'
 import { useColors } from '@/lib/theme-context'
+import { fetchLiveVideos } from '@/lib/supabase-repositories'
 import { Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/typography'
+import type { Post } from '@/lib/types'
+
+const LIVE_POLL_INTERVAL = 60_000
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
@@ -20,12 +24,25 @@ const tabs: { name: string; title: string; icon: IconName; activeIcon: IconName 
 
 export default function TabsLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [liveVideos, setLiveVideos] = useState<Post[]>([])
   const C = useColors()
+
+  useEffect(() => {
+    let mounted = true
+    function poll() {
+      fetchLiveVideos()
+        .then((data) => { if (mounted) setLiveVideos(data) })
+        .catch(() => { if (mounted) setLiveVideos([]) })
+    }
+    poll()
+    const interval = setInterval(poll, LIVE_POLL_INTERVAL)
+    return () => { mounted = false; clearInterval(interval) }
+  }, [])
 
   return (
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={[styles.headerSafe, { backgroundColor: C.surface }]}>
-        <AppHeaderBar onMenuPress={() => setMenuOpen(true)} />
+        <AppHeaderBar onMenuPress={() => setMenuOpen(true)} liveVideos={liveVideos} />
       </SafeAreaView>
 
       <Tabs

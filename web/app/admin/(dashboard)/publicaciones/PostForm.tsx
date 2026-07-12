@@ -1,8 +1,8 @@
 'use client'
 
 import { useActionState, useRef } from 'react'
-import type { PostRow, OrganizationRow, NewsCategory, ContentType, EditorialStatus, Department } from '@/lib/types'
-import { CATEGORY_LABELS, CONTENT_TYPE_LABELS, STATUS_LABELS, DEPARTMENT_LABELS } from '@/lib/types'
+import type { PostRow, OrganizationRow, NewsCategory, ContentType, AuctionStatus, EditorialStatus, Department } from '@/lib/types'
+import { CATEGORY_LABELS, CONTENT_TYPE_LABELS, AUCTION_STATUS_LABELS, STATUS_LABELS, DEPARTMENT_LABELS } from '@/lib/types'
 import type { ActionState } from './actions'
 
 interface Props {
@@ -155,6 +155,21 @@ export function PostForm({ post, orgs, action }: Props) {
               <option key={val} value={val}>{label}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className={labelClass}>Estado de transmisión</label>
+          <select
+            name="auction_status"
+            defaultValue={post?.auction_status ?? ''}
+            className={inputClass}
+          >
+            <option value="">— No aplica —</option>
+            {(Object.entries(AUCTION_STATUS_LABELS) as [AuctionStatus, string][]).map(([val, label]) => (
+              <option key={val} value={val}>{label}</option>
+            ))}
+          </select>
+          <p className="text-xs text-muted mt-1">Solo para Video o Remate. "En vivo" muestra el botón EN VIVO en la app.</p>
         </div>
 
         <div>

@@ -6,6 +6,37 @@ export type NewsCategory =
   | 'tecnologia'
   | 'institucional'
 
+export type LibraryCategory =
+  | 'manual'
+  | 'revista'
+  | 'tecnico'
+  | 'historia'
+  | 'legislacion'
+  | 'otros'
+
+export const LIBRARY_CATEGORY_LABELS: Record<LibraryCategory, string> = {
+  manual: 'Manual',
+  revista: 'Revista',
+  tecnico: 'Técnico',
+  historia: 'Historia',
+  legislacion: 'Legislación',
+  otros: 'Otros',
+}
+
+export interface LibraryItemRow {
+  id: string
+  title: string
+  author: string | null
+  description: string
+  category: LibraryCategory
+  cover_image_url: string
+  file_url: string
+  file_type: string
+  page_count: number | null
+  is_published: boolean
+  created_at: string
+}
+
 export type Department =
   | 'asuncion'
   | 'central'
@@ -38,6 +69,15 @@ export type ContentType =
   | 'video'
   | 'auction'
   | 'institutional_notice'
+
+export type AuctionStatus = 'upcoming' | 'live' | 'finished' | 'unavailable'
+
+export const AUCTION_STATUS_LABELS: Record<AuctionStatus, string> = {
+  upcoming: 'Próximo',
+  live: 'En vivo',
+  finished: 'Finalizado',
+  unavailable: 'No disponible',
+}
 
 export type MarketPriceKind = 'cattle' | 'international'
 
@@ -88,6 +128,7 @@ export interface PostRow {
   category: NewsCategory
   target_departments?: Department[] | null
   content_type: ContentType
+  auction_status?: AuctionStatus | null
   editorial_status: EditorialStatus
   image_url: string | null
   youtube_url: string | null

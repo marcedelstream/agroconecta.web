@@ -89,6 +89,16 @@ export function DrawerMenu({ onClose }: Props) {
             </View>
             <Text variant="body" weight="medium">Directorio de Aliados</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            activeOpacity={0.7}
+            onPress={() => handleClose('/(main)/contacto')}
+          >
+            <View style={styles.menuIconBox}>
+              <Ionicons name="mail-outline" size={19} color={Colors.lime} />
+            </View>
+            <Text variant="body" weight="medium">Contacto</Text>
+          </TouchableOpacity>
 
           {/* SERVICIOS */}
           <Text variant="label" color={Colors.muted} style={[styles.sectionLabel, { marginTop: Spacing[4] }]}>SERVICIOS</Text>

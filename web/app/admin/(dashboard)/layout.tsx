@@ -17,6 +17,7 @@ const ADMIN_NAV = [
   { href: '/admin/organizaciones', label: 'Organizaciones', icon: '◈' },
   { href: '/admin/banners', label: 'Banners', icon: '◎' },
   { href: '/admin/eventos', label: 'Eventos', icon: '▥' },
+  { href: '/admin/biblioteca', label: 'Biblioteca', icon: '▤' },
   { href: '/admin/precios', label: 'Precios', icon: '▨' },
   { href: '/admin/consultas', label: 'Consultas', icon: '◫' },
   { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },

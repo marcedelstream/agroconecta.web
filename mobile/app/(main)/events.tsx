@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
-import { View, SectionList, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Linking } from 'react-native'
+import { useEffect, useMemo, useState } from 'react'
+import { View, SectionList, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Linking } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
+import { LiveEventsTicker } from '@/components/home/LiveEventsTicker'
 import { fetchAllEvents } from '@/lib/supabase-repositories'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
+import { Fonts } from '@/constants/typography'
 import type { AgroEvent } from '@/lib/types'
 
 const SUGGEST_URL = 'https://eventosagropy.com'
@@ -50,15 +52,38 @@ function formatTime(ev: AgroEvent) {
 export default function EventsListScreen() {
   const C = useColors()
   const insets = useSafeAreaInsets()
-  const [sections, setSections] = useState<DaySection[]>([])
+  const [allEvents, setAllEvents] = useState<AgroEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAllEvents()
-      .then((data) => setSections(groupByDay(data)))
+      .then(setAllEvents)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const categories = useMemo(() => {
+    const set = new Set(allEvents.map((e) => e.category).filter(Boolean))
+    return Array.from(set).sort()
+  }, [allEvents])
+
+  const filtered = useMemo(() => {
+    let list = allEvents
+    if (category) list = list.filter((e) => e.category === category)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (e) => e.title.toLowerCase().includes(q)
+          || e.location.toLowerCase().includes(q)
+          || (e.city ?? '').toLowerCase().includes(q)
+      )
+    }
+    return list
+  }, [allEvents, category, search])
+
+  const sections = useMemo(() => groupByDay(filtered), [filtered])
 
   return (
     <View style={[styles.root, { backgroundColor: C.background }]}>
@@ -73,6 +98,50 @@ export default function EventsListScreen() {
         <View style={{ width: 24 }} />
       </View>
 
+      {/* Buscador */}
+      <View style={[styles.searchBar, { backgroundColor: C.surface, borderBottomColor: C.border }]}>
+        <Ionicons name="search-outline" size={17} color={C.muted} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Buscar evento, lugar..."
+          placeholderTextColor={C.muted}
+          style={[styles.searchInput, { color: C.foreground }]}
+          autoCorrect={false}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={16} color={C.muted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Filtros por categoría */}
+      {categories.length > 0 && (
+        <View style={[styles.filtersWrap, { borderBottomColor: C.border }]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow}>
+            <TouchableOpacity
+              style={[styles.chip, { borderColor: C.border, backgroundColor: !category ? Colors.lime : C.surface }]}
+              onPress={() => setCategory(null)}
+            >
+              <Text variant="caption" weight="semibold" style={{ color: !category ? '#0A0A13' : C.muted }}>Todas</Text>
+            </TouchableOpacity>
+            {categories.map((cat) => {
+              const active = category === cat
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.chip, { borderColor: active ? Colors.lime : C.border, backgroundColor: active ? Colors.lime : C.surface }]}
+                  onPress={() => setCategory(active ? null : cat)}
+                >
+                  <Text variant="caption" weight="semibold" style={{ color: active ? '#0A0A13' : C.muted }}>{cat}</Text>
+                </TouchableOpacity>
+              )
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={Colors.lime} size="large" />
@@ -80,8 +149,8 @@ export default function EventsListScreen() {
       ) : sections.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="calendar-outline" size={48} color={C.muted} />
-          <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3] }}>
-            No hay eventos próximos.
+          <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3], textAlign: 'center' }}>
+            {allEvents.length === 0 ? 'No hay eventos próximos.' : `Sin resultados para "${search || category}"`}
           </Text>
         </View>
       ) : (
@@ -92,15 +161,18 @@ export default function EventsListScreen() {
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
           stickySectionHeadersEnabled={false}
           ListHeaderComponent={
-            <TouchableOpacity
-              style={[styles.suggestTop, { borderColor: `${Colors.lime}50` }]}
-              activeOpacity={0.8}
-              onPress={() => Linking.openURL(SUGGEST_URL)}
-            >
-              <Ionicons name="add-circle-outline" size={13} color={Colors.lime} />
-              <Text style={[styles.suggestTopText, { color: Colors.lime }]}>Sugerir un evento</Text>
-              <Ionicons name="open-outline" size={11} color={`${Colors.lime}90`} />
-            </TouchableOpacity>
+            <>
+              <LiveEventsTicker events={allEvents} />
+              <TouchableOpacity
+                style={[styles.suggestTop, { borderColor: `${Colors.lime}50` }]}
+                activeOpacity={0.8}
+                onPress={() => Linking.openURL(SUGGEST_URL)}
+              >
+                <Ionicons name="add-circle-outline" size={13} color={Colors.lime} />
+                <Text style={[styles.suggestTopText, { color: Colors.lime }]}>Sugerir un evento</Text>
+                <Ionicons name="open-outline" size={11} color={`${Colors.lime}90`} />
+              </TouchableOpacity>
+            </>
           }
           renderSectionHeader={({ section }) => (
             <View style={styles.dayHeader}>
@@ -167,6 +239,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[5],
     paddingBottom: Spacing[3],
     borderBottomWidth: 1,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[3],
+    borderBottomWidth: 1,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: Fonts.dmSans,
+    fontSize: 15,
+  },
+  filtersWrap: { borderBottomWidth: 1 },
+  filtersRow: {
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[3],
+    gap: Spacing[2],
+  },
+  chip: {
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[1.5],
+    borderRadius: Radius.full,
+    borderWidth: 1,
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing[3] },
   list: { padding: Spacing[5], gap: Spacing[1] },

@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as WebBrowser from 'expo-web-browser'
+import * as Linking from 'expo-linking'
+import * as QueryParams from 'expo-auth-session/build/QueryParams'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import type { OnboardingState, UserProfile } from './types'
+
+WebBrowser.maybeCompleteAuthSession()
 
 const STORAGE_KEY = '@agroconecta:user'
 
@@ -16,6 +21,9 @@ interface AppContextType {
   updateUser: (updates: Partial<UserProfile>) => Promise<void>
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string) => Promise<string | null>
+  signInWithGoogle: () => Promise<string | null>
+  sendEmailOtp: (email: string) => Promise<string | null>
+  verifyEmailOtp: (email: string, token: string) => Promise<string | null>
   signOut: () => Promise<void>
   session: Session | null
   authUser: User | null
@@ -141,6 +149,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null
   }, [])
 
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      const redirectTo = Linking.createURL('auth/callback')
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, skipBrowserRedirect: true },
+      })
+      if (error) return error.message
+      if (!data?.url) return 'No se pudo iniciar el login con Google.'
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
+      if (result.type !== 'success' || !result.url) return null
+
+      const { params, errorCode } = QueryParams.getQueryParams(result.url)
+      if (errorCode) return errorCode
+      const { access_token, refresh_token } = params
+      if (!access_token || !refresh_token) return null
+
+      const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token })
+      return sessionError?.message ?? null
+    } catch (err) {
+      return err instanceof Error ? err.message : 'No se pudo completar el login con Google.'
+    }
+  }, [])
+
+  const sendEmailOtp = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+    return error?.message ?? null
+  }, [])
+
+  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+    return error?.message ?? null
+  }, [])
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     // Perfil queda en AsyncStorage para no repetir onboarding al volver a entrar
@@ -158,6 +201,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateUser,
         signIn,
         signUp,
+        signInWithGoogle,
+        sendEmailOtp,
+        verifyEmailOtp,
         signOut,
         session,
         authUser: session?.user ?? null,

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -21,12 +22,12 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
-type LoginView = 'options' | 'email'
+type LoginView = 'options' | 'email' | 'otp'
 
 export default function LoginScreen() {
   const C = useColors()
   const { isDark } = useTheme()
-  const { signIn, signUp, user } = useApp()
+  const { signIn, signUp, signInWithGoogle, sendEmailOtp, verifyEmailOtp, user } = useApp()
   const [view, setView] = useState<LoginView>('options')
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -34,6 +35,13 @@ export default function LoginScreen() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [otpStep, setOtpStep] = useState<'request' | 'verify'>('request')
+  const [otpEmail, setOtpEmail] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
 
   const logo = isDark
     ? require('@/assets/images/logo-dark.png')
@@ -55,6 +63,24 @@ export default function LoginScreen() {
       : await signUp(email.trim(), password)
     setLoading(false)
     if (result) { setError(result); return }
+    afterAuth()
+  }
+
+  function goToEmail(m: typeof mode) {
+    setMode(m)
+    setError(null)
+    setView('email')
+  }
+
+  function goToOtp() {
+    setOtpStep('request')
+    setOtpEmail('')
+    setOtpCode('')
+    setOtpError(null)
+    setView('otp')
+  }
+
+  function afterAuth() {
     if (user) {
       router.replace('/(main)/(tabs)/home')
     } else {
@@ -62,10 +88,39 @@ export default function LoginScreen() {
     }
   }
 
-  function goToEmail(m: typeof mode) {
-    setMode(m)
+  async function handleGoogle() {
     setError(null)
-    setView('email')
+    setGoogleLoading(true)
+    const result = await signInWithGoogle()
+    setGoogleLoading(false)
+    if (result) { setError(result); return }
+    afterAuth()
+  }
+
+  async function handleSendOtp() {
+    if (!otpEmail.includes('@')) {
+      setOtpError('Ingresá un email válido.')
+      return
+    }
+    setOtpLoading(true)
+    setOtpError(null)
+    const result = await sendEmailOtp(otpEmail.trim())
+    setOtpLoading(false)
+    if (result) { setOtpError(result); return }
+    setOtpStep('verify')
+  }
+
+  async function handleVerifyOtp() {
+    if (otpCode.length < 6) {
+      setOtpError('Ingresá el código de 6 dígitos que te enviamos.')
+      return
+    }
+    setOtpLoading(true)
+    setOtpError(null)
+    const result = await verifyEmailOtp(otpEmail.trim(), otpCode.trim())
+    setOtpLoading(false)
+    if (result) { setOtpError(result); return }
+    afterAuth()
   }
 
   return (
@@ -87,7 +142,7 @@ export default function LoginScreen() {
           />
         </View>
 
-        {view === 'options' ? (
+        {view === 'options' && (
           /* ── Opciones ── */
           <View style={styles.options}>
             <AuthBtn
@@ -99,14 +154,24 @@ export default function LoginScreen() {
             <AuthBtn
               icon="logo-google"
               label="Continuar con Google"
-              disabled
+              onPress={handleGoogle}
+              loading={googleLoading}
               C={C}
             />
+            {error && (
+              <Text variant="caption" style={{ color: Colors.destructive, textAlign: 'center' }}>{error}</Text>
+            )}
             <View style={styles.dividerRow}>
               <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
               <Text variant="caption" style={{ color: C.muted }}>o</Text>
               <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
             </View>
+            <AuthBtn
+              icon="key-outline"
+              label="Iniciar sesión con código"
+              onPress={goToOtp}
+              C={C}
+            />
             <AuthBtn
               icon="mail-outline"
               label="Iniciar sesión con correo"
@@ -120,7 +185,74 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        )}
+
+        {view === 'otp' && (
+          /* ── Login con código por email ── */
+          <View style={styles.form}>
+            <View style={styles.formHeader}>
+              <TouchableOpacity
+                onPress={() => otpStep === 'verify' ? setOtpStep('request') : setView('options')}
+                hitSlop={8}
+              >
+                <Ionicons name="arrow-back" size={22} color={C.foreground} />
+              </TouchableOpacity>
+              <Text variant="body" weight="semibold" family="poppins">
+                {otpStep === 'request' ? 'Código por email' : 'Ingresá el código'}
+              </Text>
+              <View style={{ width: 22 }} />
+            </View>
+
+            {otpStep === 'request' ? (
+              <>
+                <TextInput
+                  value={otpEmail}
+                  onChangeText={setOtpEmail}
+                  placeholder="Correo electrónico"
+                  placeholderTextColor={C.muted}
+                  style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoFocus
+                />
+                {otpError && (
+                  <Text variant="caption" style={{ color: Colors.destructive }}>{otpError}</Text>
+                )}
+                <Button onPress={handleSendOtp} fullWidth size="lg" loading={otpLoading}>
+                  Enviar código
+                </Button>
+              </>
+            ) : (
+              <>
+                <Text variant="body" style={{ color: C.muted }}>
+                  Te enviamos un código a {otpEmail}
+                </Text>
+                <TextInput
+                  value={otpCode}
+                  onChangeText={setOtpCode}
+                  placeholder="Código de 6 dígitos"
+                  placeholderTextColor={C.muted}
+                  style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground, textAlign: 'center', letterSpacing: 6, fontSize: 20 }]}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoFocus
+                />
+                {otpError && (
+                  <Text variant="caption" style={{ color: Colors.destructive }}>{otpError}</Text>
+                )}
+                <Button onPress={handleVerifyOtp} fullWidth size="lg" loading={otpLoading}>
+                  Verificar
+                </Button>
+                <TouchableOpacity onPress={handleSendOtp} style={{ alignSelf: 'center' }} disabled={otpLoading}>
+                  <Text variant="body" style={{ color: Colors.lime }}>Reenviar código</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+        {view === 'email' && (
           /* ── Formulario de email ── */
           <View style={styles.form}>
             {/* Título + volver */}
@@ -199,11 +331,12 @@ export default function LoginScreen() {
 }
 
 function AuthBtn({
-  icon, label, disabled, onPress, C, primary,
+  icon, label, disabled, loading, onPress, C, primary,
 }: {
   icon: IconName
   label: string
   disabled?: boolean
+  loading?: boolean
   onPress?: () => void
   C: ReturnType<typeof useColors>
   primary?: boolean
@@ -218,10 +351,14 @@ function AuthBtn({
           opacity: disabled ? 0.45 : 1,
         },
       ]}
-      onPress={disabled ? undefined : onPress}
+      onPress={disabled || loading ? undefined : onPress}
       activeOpacity={disabled ? 1 : 0.8}
     >
-      <Ionicons name={icon} size={20} color={primary ? '#0A0A13' : C.foreground} />
+      {loading ? (
+        <ActivityIndicator size="small" color={primary ? '#0A0A13' : C.foreground} />
+      ) : (
+        <Ionicons name={icon} size={20} color={primary ? '#0A0A13' : C.foreground} />
+      )}
       <Text
         variant="body"
         weight="semibold"

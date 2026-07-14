@@ -123,7 +123,7 @@ export function DrawerMenu({ onClose }: Props) {
           <TouchableOpacity
             style={styles.menuItem}
             activeOpacity={0.7}
-            onPress={() => handleClose('/(main)/profile')}
+            onPress={() => handleClose('/(main)/(tabs)/profile')}
           >
             <View style={styles.menuIconBox}>
               <Ionicons name="settings-outline" size={19} color={Colors.lime} />

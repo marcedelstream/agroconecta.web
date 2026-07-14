@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
@@ -55,6 +56,7 @@ export default function VideosScreen() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const C = useColors()
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     let mounted = true
@@ -90,11 +92,17 @@ export default function VideosScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: C.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text variant="subtitle" weight="bold" family="poppins" style={styles.title}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing[3], borderBottomColor: C.border, backgroundColor: C.surface }]}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="arrow-back" size={24} color={C.foreground} />
+        </TouchableOpacity>
+        <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>
           Galería de Videos
         </Text>
+        <View style={{ width: 24 }} />
+      </View>
 
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {loading ? (
           <>
             <HeroCarouselSkeleton />
@@ -105,7 +113,9 @@ export default function VideosScreen() {
         ) : (
           <>
             {heroPosts.length > 0 && (
-              <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
+              <View style={styles.hero}>
+                <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
+              </View>
             )}
 
             {auctions.length > 0 && (
@@ -206,9 +216,17 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: Spacing[4], paddingBottom: Spacing[8], gap: Spacing[5] },
-  title: {},
-  section: { gap: Spacing[1] },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing[5],
+    paddingBottom: Spacing[3],
+    borderBottomWidth: 1,
+  },
+  content: { padding: Spacing[4], paddingBottom: Spacing[8], gap: Spacing[6] },
+  hero: { marginBottom: Spacing[2] },
+  section: { gap: Spacing[3] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },
   adBanner: { marginTop: Spacing[2] },
   auctionCard: {

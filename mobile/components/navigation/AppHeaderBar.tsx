@@ -23,7 +23,7 @@ export function AppHeaderBar({ onMenuPress, liveVideos = [] }: Props) {
     if (liveVideos.length === 1) {
       router.push(`/(main)/video/${liveVideos[0].id}` as any)
     } else {
-      router.push('/(main)/(tabs)/videos')
+      router.push('/(main)/videos')
     }
   }
 
@@ -43,8 +43,8 @@ export function AppHeaderBar({ onMenuPress, liveVideos = [] }: Props) {
             <Text variant="label" style={styles.liveText}>EN VIVO</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => router.push('/(main)/profile')} style={styles.iconBtn} hitSlop={12}>
-          <Ionicons name="person-circle-outline" size={26} color={C.foreground} />
+        <TouchableOpacity onPress={() => router.push('/(main)/videos')} style={styles.iconBtn} hitSlop={12}>
+          <Ionicons name="play-circle-outline" size={26} color={C.foreground} />
         </TouchableOpacity>
         <TouchableOpacity onPress={onMenuPress} style={styles.iconBtn} hitSlop={12}>
           <Ionicons name="menu-outline" size={28} color={C.foreground} />

@@ -1,44 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { router, Href } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { Badge } from '@/components/ui/Badge'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { BookCardSkeleton } from '@/components/ui/Skeleton'
+import { BookCard } from '@/components/library/BookCard'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
 import { getDepartmentLabel, getProfessionLabel } from '@/lib/mock-data'
-import { PreferencesSheet } from '@/components/profile/PreferencesSheet'
+import { fetchLibraryItems, fetchUserLibrary } from '@/lib/supabase-repositories'
 import { MediaSheet } from '@/components/profile/MediaSheet'
 import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
-import { AppearanceSheet } from '@/components/profile/AppearanceSheet'
+import { PersonalizationSheet } from '@/components/profile/PersonalizationSheet'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
-import type { NewsCategory } from '@/lib/types'
+import type { LibraryItem, NewsCategory } from '@/lib/types'
 
-type ActiveSheet = 'preferences' | 'media' | 'notifications' | 'appearance' | 'edit-profile' | null
+type ActiveSheet = 'personalization' | 'media' | 'notifications' | 'edit-profile' | null
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: string }[] = [
-  { id: 'notifications', icon: 'notifications-outline', label: 'Notificaciones' },
-  { id: 'appearance',   icon: 'color-palette-outline', label: 'Apariencia' },
-  { id: 'preferences',  icon: 'heart-outline',         label: 'Mis intereses' },
-  { id: 'media',        icon: 'radio-outline',         label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
-  { id: null,           icon: 'book-outline',          label: 'Biblioteca', navigate: '/(main)/library' },
+  { id: 'notifications',   icon: 'notifications-outline', label: 'Notificaciones' },
+  { id: 'personalization', icon: 'color-palette-outline',  label: 'Personalización' },
+  { id: 'media',           icon: 'radio-outline',          label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
 ]
-
-function categoryLabel(cat: string) {
-  return cat.charAt(0).toUpperCase() + cat.slice(1)
-}
 
 export default function ProfileScreen() {
   const { user, signOut, updateUser } = useApp()
   const C = useColors()
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
+  const [savedBooks, setSavedBooks] = useState<LibraryItem[]>([])
+  const [libraryLoading, setLibraryLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user?.id) return
+    Promise.all([fetchLibraryItems(), fetchUserLibrary(user.id)])
+      .then(([items, entries]) => {
+        const ids = entries.map((e) => e.itemId)
+        setSavedBooks(items.filter((i) => ids.includes(i.id)))
+      })
+      .catch(() => setSavedBooks([]))
+      .finally(() => setLibraryLoading(false))
+  }, [user?.id])
 
   async function confirmLogout() {
     setLogoutModalVisible(false)
@@ -62,18 +69,8 @@ export default function ProfileScreen() {
     <View style={[styles.root, { backgroundColor: C.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Avatar + identidad (sin barra de título) ── */}
-        <SafeAreaView edges={['top']}>
-          <View style={styles.identity}>
-            {/* Flecha atrás pequeña, arriba a la izquierda */}
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={12}
-              style={styles.backFloating}
-            >
-              <Ionicons name="arrow-back" size={22} color={C.foreground} />
-            </TouchableOpacity>
-
+        {/* ── Avatar + identidad ── */}
+        <View style={styles.identity}>
             <View style={[styles.avatarCircle, { backgroundColor: `${Colors.lime}18`, borderColor: `${Colors.lime}50` }]}>
               <Text style={styles.avatarText}>{initials}</Text>
             </View>
@@ -97,8 +94,7 @@ export default function ProfileScreen() {
               <Ionicons name="create-outline" size={14} color={Colors.lime} />
               <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Editar perfil</Text>
             </TouchableOpacity>
-          </View>
-        </SafeAreaView>
+        </View>
 
         {/* ── Stats ── */}
         <View style={[styles.statsRow, { backgroundColor: C.surface, borderColor: C.border }]}>
@@ -109,22 +105,43 @@ export default function ProfileScreen() {
           <StatItem label="Miembro" value={memberYear} C={C} />
         </View>
 
-        {/* ── Mis intereses ── */}
-        {interestsCount > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Mis intereses</Text>
-              <TouchableOpacity onPress={() => setActiveSheet('preferences')} hitSlop={8}>
-                <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Editar</Text>
+        {/* ── Mis colecciones ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Mis colecciones</Text>
+            {!libraryLoading && savedBooks.length > 0 && (
+              <TouchableOpacity onPress={() => router.push('/(main)/library' as any)} hitSlop={8}>
+                <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>Ver más libros</Text>
               </TouchableOpacity>
-            </View>
-            <View style={styles.chips}>
-              {user.preferences.map((pref) => (
-                <Badge key={pref} variant={pref}>{categoryLabel(pref)}</Badge>
-              ))}
-            </View>
+            )}
           </View>
-        )}
+          {libraryLoading ? (
+            <View style={styles.chips}>
+              {[0, 1, 2].map((i) => <BookCardSkeleton key={i} />)}
+            </View>
+          ) : savedBooks.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionsRow}>
+              {savedBooks.map((item) => (
+                <BookCard key={item.id} item={item} onPress={() => router.push(`/(main)/book/${item.id}` as any)} />
+              ))}
+            </ScrollView>
+          ) : (
+            <TouchableOpacity
+              style={[styles.collectionsCta, { borderColor: C.border, backgroundColor: C.surface }]}
+              onPress={() => router.push('/(main)/library' as any)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.collectionsCtaIcon, { backgroundColor: `${Colors.lime}15` }]}>
+                <Ionicons name="book-outline" size={20} color={Colors.lime} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Conocé la biblioteca del agro</Text>
+                <Text variant="caption" style={{ color: C.muted }}>Guardá libros y documentos para leer después</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={C.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* ── Configuración ── */}
         <View style={styles.section}>
@@ -172,8 +189,8 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Sheets */}
-      {activeSheet === 'preferences' && (
-        <PreferencesSheet
+      {activeSheet === 'personalization' && (
+        <PersonalizationSheet
           selected={user.preferences}
           onClose={(updated: NewsCategory[]) => { updateUser({ preferences: updated }); setActiveSheet(null) }}
         />
@@ -189,9 +206,6 @@ export default function ProfileScreen() {
       )}
       {activeSheet === 'notifications' && (
         <NotificationsSheet onClose={() => setActiveSheet(null)} />
-      )}
-      {activeSheet === 'appearance' && (
-        <AppearanceSheet onClose={() => setActiveSheet(null)} />
       )}
       {activeSheet === 'edit-profile' && (
         <EditProfileSheet
@@ -236,19 +250,13 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: Spacing[12] },
 
-  // Identity (sin topBar)
+  // Identity
   identity: {
     alignItems: 'center',
     paddingTop: Spacing[4],
     paddingBottom: Spacing[4],
     paddingHorizontal: Spacing[5],
     gap: Spacing[2],
-  },
-  backFloating: {
-    position: 'absolute',
-    top: Spacing[4],
-    left: Spacing[5],
-    zIndex: 1,
   },
   editBtn: {
     flexDirection: 'row',
@@ -307,6 +315,22 @@ const styles = StyleSheet.create({
   },
   sectionLabel: { marginBottom: Spacing[1] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
+  collectionsRow: { gap: Spacing[3] },
+  collectionsCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    padding: Spacing[4],
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+  },
+  collectionsCtaIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   // Settings list
   settingsList: {

@@ -349,6 +349,9 @@ export async function markLibraryItemOpened(userId: string, itemId: string): Pro
 
 // El bucket de archivos es privado — se pide una URL firmada (10 min) recién al abrir el lector.
 export async function fetchLibraryFileSignedUrl(path: string): Promise<string | null> {
+  // Permite cargar un item de biblioteca apuntando a una URL externa (seed/demo) sin pasar
+  // por el bucket privado — los uploads reales desde el admin guardan un path, no una URL.
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
   const { data, error } = await supabase.storage.from('library-files').createSignedUrl(path, 600)
   if (error) return null
   return data?.signedUrl ?? null

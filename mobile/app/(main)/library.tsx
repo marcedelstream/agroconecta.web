@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { BookCard } from '@/components/library/BookCard'
+import { Skeleton, BookCardSkeleton } from '@/components/ui/Skeleton'
 import { Colors } from '@/constants/colors'
-import { Spacing } from '@/constants/spacing'
+import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
@@ -79,21 +80,33 @@ export default function LibraryScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={Colors.lime} />
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + Spacing[8] }}>
+          {[0, 1].map((i) => (
+            <View key={i} style={styles.section}>
+              <Skeleton height={20} width={150} style={{ marginHorizontal: Spacing[5], marginBottom: Spacing[3] }} />
+              <View style={styles.row}>
+                {Array.from({ length: 3 }).map((_, j) => <BookCardSkeleton key={j} />)}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + Spacing[8] }}>
-          {saved.length > 0 && (
-            <View style={styles.section}>
-              <Text variant="body" weight="bold" family="poppins" style={[styles.sectionTitle, { color: C.foreground }]}>
-                Mi Biblioteca
-              </Text>
+          <View style={styles.section}>
+            <Text variant="body" weight="bold" family="poppins" style={[styles.sectionTitle, { color: C.foreground }]}>
+              Mis colecciones
+            </Text>
+            {saved.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
                 {saved.map((item) => <BookCard key={item.id} item={item} onPress={() => goToBook(item.id)} />)}
               </ScrollView>
-            </View>
-          )}
+            ) : (
+              <View style={[styles.emptyCollections, { borderColor: C.border }]}>
+                <Ionicons name="book-outline" size={20} color={Colors.lime} />
+                <Text variant="body" style={{ color: C.muted }}>Conocé la biblioteca del agro</Text>
+              </View>
+            )}
+          </View>
 
           {groups.map((group) => (
             <View key={group.value} style={styles.section}>
@@ -143,4 +156,14 @@ const styles = StyleSheet.create({
   section: { marginTop: Spacing[5] },
   sectionTitle: { paddingHorizontal: Spacing[5], marginBottom: Spacing[3] },
   row: { paddingHorizontal: Spacing[5], gap: Spacing[3] },
+  emptyCollections: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginHorizontal: Spacing[5],
+    padding: Spacing[4],
+    borderRadius: Radius.base,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+  },
 })

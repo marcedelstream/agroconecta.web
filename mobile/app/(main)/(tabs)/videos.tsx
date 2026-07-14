@@ -4,6 +4,7 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
+import { HeroCarouselSkeleton, VideoCardSkeleton } from '@/components/ui/Skeleton'
 import { FeaturedGrid } from '@/components/home/FeaturedGrid'
 import { SectionHeader } from '@/components/home/SectionHeader'
 import { Colors } from '@/constants/colors'
@@ -94,34 +95,52 @@ export default function VideosScreen() {
           Galería de Videos
         </Text>
 
-        {auctions.map((v) => (
-          <AuctionCard key={v.id} video={v} onPress={() => goToVideo(v.id)} />
-        ))}
-
-        {heroPosts.length > 0 && (
-          <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
-        )}
-
-        <AdBanner placement="videos" />
-
-        {grouped.map((group) => (
-          <View key={group.value} style={styles.section}>
-            <SectionHeader title={group.label} />
+        {loading ? (
+          <>
+            <HeroCarouselSkeleton />
             <View style={styles.grid}>
-              {group.items.map((video) => (
-                <VideoCard key={video.id} video={video} onPress={() => goToVideo(video.id)} />
-              ))}
+              {Array.from({ length: 4 }).map((_, i) => <VideoCardSkeleton key={i} />)}
             </View>
-          </View>
-        ))}
+          </>
+        ) : (
+          <>
+            {heroPosts.length > 0 && (
+              <FeaturedGrid posts={heroPosts} onPress={goToVideo} />
+            )}
 
-        {isEmpty && (
-          <View style={styles.empty}>
-            <Ionicons name="videocam-outline" size={52} color={C.muted} />
-            <Text variant="body" color={C.muted} style={styles.emptyText}>
-              No hay videos disponibles.{'\n'}Pronto cargaremos los últimos programas.
-            </Text>
-          </View>
+            {auctions.length > 0 && (
+              <View style={styles.section}>
+                <SectionHeader title="Remates" />
+                <View style={{ gap: Spacing[3] }}>
+                  {auctions.map((v) => (
+                    <AuctionCard key={v.id} video={v} onPress={() => goToVideo(v.id)} />
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {grouped.map((group) => (
+              <View key={group.value} style={styles.section}>
+                <SectionHeader title={group.label} />
+                <View style={styles.grid}>
+                  {group.items.map((video) => (
+                    <VideoCard key={video.id} video={video} onPress={() => goToVideo(video.id)} />
+                  ))}
+                </View>
+              </View>
+            ))}
+
+            {isEmpty && (
+              <View style={styles.empty}>
+                <Ionicons name="videocam-outline" size={52} color={C.muted} />
+                <Text variant="body" color={C.muted} style={styles.emptyText}>
+                  No hay videos disponibles.{'\n'}Pronto cargaremos los últimos programas.
+                </Text>
+              </View>
+            )}
+
+            <AdBanner placement="videos" style={styles.adBanner} />
+          </>
         )}
       </ScrollView>
     </View>
@@ -191,6 +210,7 @@ const styles = StyleSheet.create({
   title: {},
   section: { gap: Spacing[1] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },
+  adBanner: { marginTop: Spacing[2] },
   auctionCard: {
     borderWidth: 1,
     borderRadius: Radius.base,

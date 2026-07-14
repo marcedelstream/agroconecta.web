@@ -50,7 +50,44 @@ export function NewsCardGridSkeleton({ style }: { style?: ViewStyle }) {
   )
 }
 
+// Placeholder del carrusel destacado (mismo alto que FeaturedGrid)
+export function HeroCarouselSkeleton() {
+  return <Skeleton height={240} radius={Radius.xl} />
+}
+
+// Placeholder de una tarjeta de video en grid (thumbnail 16:9 + 2 líneas de texto)
+export function VideoCardSkeleton({ style }: { style?: ViewStyle }) {
+  const C = useColors()
+  return (
+    <View style={[styles.videoCard, { backgroundColor: C.surface, borderColor: C.border }, style]}>
+      <Skeleton height={100} radius={0} />
+      <View style={styles.content}>
+        <Skeleton height={13} width="85%" />
+        <Skeleton height={13} width="55%" />
+        <View style={styles.metaRow}>
+          <Skeleton height={9} width="35%" />
+          <Skeleton height={9} width="20%" />
+        </View>
+      </View>
+    </View>
+  )
+}
+
+// Placeholder de una tapa de libro (portada 5:7 + 2 líneas de texto)
+export function BookCardSkeleton() {
+  return (
+    <View style={styles.bookCard}>
+      <Skeleton height={168} radius={Radius.md} />
+      <Skeleton height={12} width="90%" style={{ marginTop: 6 }} />
+      <Skeleton height={10} width="60%" style={{ marginTop: 4 }} />
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
   card: { flexBasis: '48%', borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1 },
   content: { padding: 10, gap: 6 },
+  videoCard: { flexBasis: '47%', flexGrow: 1, borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  bookCard: { width: 120 },
 })

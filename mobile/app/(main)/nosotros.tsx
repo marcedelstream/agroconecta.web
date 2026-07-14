@@ -1,4 +1,4 @@
-import { ScrollView, View, Image, TouchableOpacity, StyleSheet } from 'react-native'
+import { ScrollView, View, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -8,7 +8,7 @@ import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
 
-const FOUNDERS = [
+const FOUNDERS: { name: string; role: string; image: string | ImageSourcePropType; bio: string }[] = [
   {
     name: 'Marcelo Escobar',
     role: 'Co-fundador y Director de Tecnología',
@@ -20,6 +20,12 @@ const FOUNDERS = [
     role: 'Co-fundadora y Directora de Comunicación',
     image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-03-23%20at%2010.53.16-Q322FxX2EnEsc2L66VwEACBjsTqvsp.jpeg',
     bio: 'Encabeza la estrategia de comunicación y contenidos, acercando el ecosistema a productores, instituciones, marcas y profesionales que necesitan información clara y segmentada.',
+  },
+  {
+    name: 'Fiorella Riveros',
+    role: 'Directora de Sostenibilidad',
+    image: require('@/assets/images/fiorella-riveros.jpeg'),
+    bio: 'Lidera la visión socioambiental y de sostenibilidad, conectando gestión ambiental, comunicación e innovación para desarrollar soluciones que respondan a los desafíos actuales y futuros.',
   },
 ]
 
@@ -94,13 +100,13 @@ export default function NosotrosScreen() {
         <View style={styles.section}>
           <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>EQUIPO</Text>
           <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1], marginBottom: Spacing[3] }}>
-            Fundadores
+            Equipo directivo
           </Text>
           <View style={{ gap: Spacing[3] }}>
             {FOUNDERS.map((founder) => (
               <Card key={founder.name} padding={4}>
                 <View style={styles.founderRow}>
-                  <Image source={{ uri: founder.image }} style={styles.founderPhoto} />
+                  <Image source={typeof founder.image === 'string' ? { uri: founder.image } : founder.image} style={styles.founderPhoto} />
                   <View style={{ flex: 1 }}>
                     <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>{founder.name}</Text>
                     <Text variant="caption" weight="semibold" style={{ color: Colors.lime, marginTop: 2 }}>{founder.role}</Text>

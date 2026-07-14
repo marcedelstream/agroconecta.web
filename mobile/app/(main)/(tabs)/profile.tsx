@@ -120,11 +120,13 @@ export default function ProfileScreen() {
               {[0, 1, 2].map((i) => <BookCardSkeleton key={i} />)}
             </View>
           ) : savedBooks.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionsRow}>
-              {savedBooks.map((item) => (
-                <BookCard key={item.id} item={item} onPress={() => router.push(`/(main)/book/${item.id}` as any)} />
-              ))}
-            </ScrollView>
+            <View style={styles.bleed}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionsRow}>
+                {savedBooks.map((item) => (
+                  <BookCard key={item.id} item={item} onPress={() => router.push(`/(main)/book/${item.id}` as any)} />
+                ))}
+              </ScrollView>
+            </View>
           ) : (
             <TouchableOpacity
               style={[styles.collectionsCta, { borderColor: C.border, backgroundColor: C.surface }]}
@@ -211,6 +213,7 @@ export default function ProfileScreen() {
         <EditProfileSheet
           name={user.name}
           department={user.department}
+          profession={user.profession}
           onClose={(updated) => { if (updated) updateUser(updated); setActiveSheet(null) }}
         />
       )}
@@ -315,7 +318,9 @@ const styles = StyleSheet.create({
   },
   sectionLabel: { marginBottom: Spacing[1] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2] },
-  collectionsRow: { gap: Spacing[3] },
+  // Rompe el margen horizontal de `section` para que el carrusel llegue al borde de la pantalla
+  bleed: { marginHorizontal: -Spacing[5] },
+  collectionsRow: { paddingLeft: Spacing[5], paddingRight: Spacing[2], gap: Spacing[3] },
   collectionsCta: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -59,6 +59,23 @@ export function NotificationsForm() {
         />
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-muted uppercase tracking-wide">
+          Categoría <span className="text-muted font-normal">(filtra por lo que cada usuario activó en su perfil)</span>
+        </label>
+        <select
+          name="category"
+          defaultValue=""
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-white focus:outline-none focus:border-lime/60 transition-colors"
+        >
+          <option value="">Todos los dispositivos (sin filtrar)</option>
+          <option value="breakingNews">Noticias de último momento</option>
+          <option value="priceAlerts">Alertas de precios</option>
+          <option value="weatherAlerts">Alertas climáticas</option>
+          <option value="institutionalUpdates">Avisos institucionales</option>
+        </select>
+      </div>
+
       <button
         type="submit"
         disabled={pending}

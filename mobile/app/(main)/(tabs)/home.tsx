@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, FlatList, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, ScrollView, FlatList, TextInput, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
-import { NewsCardGridSkeleton } from '@/components/ui/Skeleton'
+import { HeroCarouselSkeleton, NewsCardGridSkeleton } from '@/components/ui/Skeleton'
 import { FeaturedGrid } from '@/components/home/FeaturedGrid'
 import { NewsCardGrid } from '@/components/home/NewsCardGrid'
 import { SectionHeader } from '@/components/home/SectionHeader'
@@ -29,18 +29,31 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('')
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [adRefreshKey, setAdRefreshKey] = useState(0)
+
+  const loadPosts = useCallback(async () => {
+    try {
+      const remote = await fetchPublishedPosts()
+      const news = remote.filter(isNewsContent)
+      if (news.length > 0) setPosts(news)
+    } catch {
+      setPosts(mockNews)
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
-    fetchPublishedPosts()
-      .then((remote) => {
-        const news = remote.filter(isNewsContent)
-        if (mounted && news.length > 0) setPosts(news)
-      })
-      .catch(() => { if (mounted) setPosts(mockNews) })
-      .finally(() => { if (mounted) setLoading(false) })
+    loadPosts().finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [])
+  }, [loadPosts])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    setAdRefreshKey((k) => k + 1)
+    await loadPosts()
+    setRefreshing(false)
+  }, [loadPosts])
 
   const filtered = useMemo(() => {
     let list = [...posts]
@@ -69,6 +82,7 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
     >
       {/* Buscador */}
       <View style={[styles.searchBox, { backgroundColor: C.surface, borderColor: C.border }]}>
@@ -90,18 +104,21 @@ export default function HomeScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.section}>
-          <View style={[styles.bleed, styles.newsCarouselRow]}>
-            {Array.from({ length: 3 }).map((_, i) => <NewsCardGridSkeleton key={i} style={styles.newsCardWidth} />)}
+        <>
+          <HeroCarouselSkeleton />
+          <View style={styles.section}>
+            <View style={[styles.bleed, styles.newsCarouselRow]}>
+              {Array.from({ length: 3 }).map((_, i) => <NewsCardGridSkeleton key={i} style={styles.newsCardWidth} />)}
+            </View>
           </View>
-        </View>
+        </>
       ) : (
         <>
           {/* Noticias destacadas */}
           <FeaturedGrid posts={featuredPosts} onPress={goToArticle} />
 
           {/* Banner publicitario (posición 3) */}
-          <AdBanner segment={segment} placement="home" style={styles.adBanner} />
+          <AdBanner segment={segment} placement="home" refreshKey={adRefreshKey} style={styles.adBanner} />
 
           {/* ── Más Noticias (posición 4, antes de eventos) — carrusel, igual que Próximos Eventos ── */}
           {previewPosts.length > 0 && (

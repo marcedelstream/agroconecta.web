@@ -10,6 +10,79 @@ import type { OnboardingState, UserProfile } from './types'
 WebBrowser.maybeCompleteAuthSession()
 
 const STORAGE_KEY = '@agroconecta:user'
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function normalizeStoredUser(stored: string): UserProfile | null {
+  try {
+    const parsed = JSON.parse(stored) as UserProfile
+    parsed.createdAt = new Date(parsed.createdAt)
+    parsed.notificationPrefs ??= {
+      breakingNews: true,
+      priceAlerts: true,
+      weatherAlerts: true,
+      institutionalUpdates: false,
+    }
+    parsed.organizationSubscriptions ??= parsed.mediaPreferences ?? []
+    parsed.mediaPreferences ??= parsed.organizationSubscriptions
+    return parsed
+  } catch (err) {
+    console.warn('No se pudo leer el perfil local guardado.', err)
+    return null
+  }
+}
+
+function validUuid(value: string): boolean {
+  return UUID_PATTERN.test(value)
+}
+
+async function syncUserProfileToSupabase(profile: UserProfile): Promise<void> {
+  if (!validUuid(profile.id)) return
+
+  const { error: profileError } = await supabase.from('profiles').upsert({
+    id: profile.id,
+    name: profile.name,
+    email: profile.email ?? null,
+    phone: profile.phone ?? null,
+    profession: profile.profession,
+    department: profile.department,
+    notification_prefs: profile.notificationPrefs,
+    updated_at: new Date().toISOString(),
+  })
+  if (profileError) throw profileError
+
+  const { error: interestsDeleteError } = await supabase
+    .from('user_interests')
+    .delete()
+    .eq('user_id', profile.id)
+  if (interestsDeleteError) throw interestsDeleteError
+
+  if (profile.preferences.length > 0) {
+    const { error: interestsInsertError } = await supabase.from('user_interests').insert(
+      profile.preferences.map((category) => ({ user_id: profile.id, category }))
+    )
+    if (interestsInsertError) throw interestsInsertError
+  }
+
+  const { error: subscriptionsDeleteError } = await supabase
+    .from('user_subscriptions')
+    .delete()
+    .eq('user_id', profile.id)
+  if (subscriptionsDeleteError) throw subscriptionsDeleteError
+
+  const organizationIds = profile.organizationSubscriptions.filter(validUuid)
+  if (organizationIds.length > 0) {
+    const { error: subscriptionsInsertError } = await supabase.from('user_subscriptions').insert(
+      organizationIds.map((organizationId) => ({ user_id: profile.id, organization_id: organizationId }))
+    )
+    if (subscriptionsInsertError) throw subscriptionsInsertError
+  }
+}
+
+function syncUserProfileInBackground(profile: UserProfile) {
+  syncUserProfileToSupabase(profile).catch((err) => {
+    console.warn('No se pudo sincronizar el perfil con Supabase.', err)
+  })
+}
 
 interface AppContextType {
   onboarding: OnboardingState
@@ -19,6 +92,7 @@ interface AppContextType {
   completeOnboarding: () => void
   resetOnboarding: () => void
   updateUser: (updates: Partial<UserProfile>) => Promise<void>
+  resolveProfileForCurrentSession: () => Promise<boolean>
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
@@ -69,22 +143,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((stored) => {
         if (stored) {
-          const parsed = JSON.parse(stored) as UserProfile
-          parsed.createdAt = new Date(parsed.createdAt)
-          if (!parsed.notificationPrefs) {
-            parsed.notificationPrefs = {
-              breakingNews: true,
-              priceAlerts: true,
-              weatherAlerts: true,
-              institutionalUpdates: false,
-            }
+          const parsed = normalizeStoredUser(stored)
+          if (parsed) {
+            setUser(parsed)
+            setOnboarding((prev) => ({ ...prev, isComplete: true }))
           }
-          if (!parsed.organizationSubscriptions) {
-            parsed.organizationSubscriptions = parsed.mediaPreferences ?? []
-          }
-          if (!parsed.mediaPreferences) parsed.mediaPreferences = parsed.organizationSubscriptions
-          setUser(parsed)
-          setOnboarding((prev) => ({ ...prev, isComplete: true }))
         }
       })
       .finally(() => setIsLoading(false))
@@ -124,14 +187,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newUser))
     setUser(newUser)
     setOnboarding((prev) => ({ ...prev, isComplete: true }))
-  }, [onboarding])
+    syncUserProfileInBackground(newUser)
+  }, [onboarding, session?.user.email, session?.user.id])
 
   const updateUser = useCallback(async (updates: Partial<UserProfile>) => {
     if (!user) return
     const updated = { ...user, ...updates }
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
     setUser(updated)
+    syncUserProfileInBackground(updated)
   }, [user])
+
+  // Se llama justo despues de un login exitoso (Google u OTP) para decidir si hace falta
+  // onboarding — no se puede confiar en el `user` cacheado en closure, porque el perfil
+  // guardado en AsyncStorage puede pertenecer a OTRA cuenta que se logueo antes en este
+  // mismo dispositivo.
+  const resolveProfileForCurrentSession = useCallback(async () => {
+    const { data } = await supabase.auth.getUser()
+    const authId = data.user?.id
+    if (!authId) return true
+
+    const stored = await AsyncStorage.getItem(STORAGE_KEY)
+    const parsed = stored ? normalizeStoredUser(stored) : null
+
+    if (parsed && parsed.id === authId) {
+      setUser(parsed)
+      setOnboarding((prev) => ({ ...prev, isComplete: true }))
+      return false
+    }
+
+    if (parsed) await AsyncStorage.removeItem(STORAGE_KEY)
+    setUser(null)
+    setOnboarding(initialOnboarding)
+    return true
+  }, [])
 
   const resetOnboarding = useCallback(async () => {
     await AsyncStorage.removeItem(STORAGE_KEY)
@@ -199,6 +288,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         completeOnboarding,
         resetOnboarding,
         updateUser,
+        resolveProfileForCurrentSession,
         signIn,
         signUp,
         signInWithGoogle,

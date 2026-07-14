@@ -3,22 +3,24 @@ import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react
 import { SettingsSheet } from './SettingsSheet'
 import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
-import { departments } from '@/lib/mock-data'
+import { departments, professions } from '@/lib/mock-data'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
-import type { Department } from '@/lib/types'
+import type { Department, Profession } from '@/lib/types'
 
 interface Props {
   name: string
   department: Department
-  onClose: (updated?: { name: string; department: Department }) => void
+  profession: Profession
+  onClose: (updated?: { name: string; department: Department; profession: Profession }) => void
 }
 
-export function EditProfileSheet({ name, department, onClose }: Props) {
+export function EditProfileSheet({ name, department, profession, onClose }: Props) {
   const C = useColors()
   const [localName, setLocalName] = useState(name)
   const [localDepartment, setLocalDepartment] = useState<Department>(department)
+  const [localProfession, setLocalProfession] = useState<Profession>(profession)
 
   return (
     <SettingsSheet title="Editar perfil" onClose={() => onClose()} heightRatio={0.74}>
@@ -30,6 +32,24 @@ export function EditProfileSheet({ name, department, onClose }: Props) {
           placeholderTextColor={C.muted}
           style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
         />
+
+        <Text variant="body" weight="semibold">Profesión</Text>
+        <View style={styles.grid}>
+          {professions.map((item) => {
+            const active = item.value === localProfession
+            return (
+              <TouchableOpacity
+                key={item.value}
+                onPress={() => setLocalProfession(item.value)}
+                style={[styles.department, { backgroundColor: C.surface, borderColor: C.border }, active && styles.departmentActive]}
+              >
+                <Text variant="caption" weight="medium" style={{ color: active ? '#0A0A13' : C.foreground }}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
 
         <Text variant="body" weight="semibold">Departamento</Text>
         <View style={styles.grid}>
@@ -53,7 +73,7 @@ export function EditProfileSheet({ name, department, onClose }: Props) {
           fullWidth
           size="lg"
           disabled={localName.trim().length < 2}
-          onPress={() => onClose({ name: localName.trim(), department: localDepartment })}
+          onPress={() => onClose({ name: localName.trim(), department: localDepartment, profession: localProfession })}
         >
           Guardar cambios
         </Button>

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Card } from '@/components/ui/card'
@@ -26,16 +26,31 @@ export default function PricesScreen() {
   const C = useColors()
   const [prices, setPrices] = useState<MarketPrice[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [adRefreshKey, setAdRefreshKey] = useState(0)
   const [tab, setTab] = useState<MarketPriceKind>('cattle')
+
+  const loadPrices = useCallback(async () => {
+    try {
+      const data = await fetchMarketPrices()
+      setPrices(data)
+    } catch {
+      setPrices([])
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
-    fetchMarketPrices()
-      .then((data) => { if (mounted) setPrices(data) })
-      .catch(() => { if (mounted) setPrices([]) })
-      .finally(() => { if (mounted) setLoading(false) })
+    loadPrices().finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [])
+  }, [loadPrices])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    setAdRefreshKey((k) => k + 1)
+    await loadPrices()
+    setRefreshing(false)
+  }, [loadPrices])
 
   const list = useMemo(() => prices.filter((p) => p.kind === tab), [prices, tab])
 
@@ -80,7 +95,11 @@ export default function PricesScreen() {
             })}
           </View>
 
-          <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
+          >
             {list.map((price) => {
               const isUp = price.change >= 0
               return (
@@ -106,7 +125,7 @@ export default function PricesScreen() {
                 Sin precios cargados en esta categoría.
               </Text>
             )}
-            <AdBanner placement="precios" style={styles.adBanner} />
+            <AdBanner placement="precios" refreshKey={adRefreshKey} style={styles.adBanner} />
           </ScrollView>
         </>
       )}

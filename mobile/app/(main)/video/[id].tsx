@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
-import WebView from 'react-native-webview'
+import { View, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert, StyleSheet } from 'react-native'
+import YoutubePlayer from 'react-native-youtube-iframe'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { ReminderModal } from '@/components/ui/ReminderModal'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
@@ -20,18 +22,52 @@ function formatDate(date: Date) {
   return date.toLocaleDateString('es-PY', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
-function getYoutubeEmbedUrl(url: string): string | null {
+function getYoutubeVideoId(url: string): string | null {
   // Cubre: watch?v=, youtu.be/, embed/, shorts/, live/, m.youtube.com y variantes con parámetros extra
   const match = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{11})/)
-  if (!match) return null
-  return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0&playsinline=1`
+  return match?.[1] ?? null
+}
+
+function daysUntil(date: Date): number {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(date)
+  target.setHours(0, 0, 0, 0)
+  return Math.floor((target.getTime() - today.getTime()) / 86_400_000)
+}
+
+async function scheduleAuctionReminder(post: Post) {
+  const { status } = await Notifications.requestPermissionsAsync()
+  if (status !== 'granted') {
+    Alert.alert('Permisos necesarios', 'Activá las notificaciones en ajustes del dispositivo para recibir recordatorios.')
+    return false
+  }
+  const reminderDate = new Date(post.startsAt!)
+  reminderDate.setDate(reminderDate.getDate() - 1)
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: '📅 Mañana: ' + post.title,
+      body: post.source,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: reminderDate,
+    },
+  })
+  return true
 }
 
 export default function VideoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reminding, setReminding] = useState(false)
+  const [reminderModalVisible, setReminderModalVisible] = useState(false)
+  const [reminderDateLabel, setReminderDateLabel] = useState('')
   const C = useColors()
+  const { width } = useWindowDimensions()
+  const playerHeight = (width * 9) / 16
 
   useEffect(() => {
     if (!id) return
@@ -45,7 +81,24 @@ export default function VideoDetailScreen() {
 
   const isLive = post?.auctionStatus === 'live'
   const isAuction = post?.contentType === 'auction'
-  const embedUrl = post?.youtubeUrl ? getYoutubeEmbedUrl(post.youtubeUrl) : null
+  const videoId = post?.youtubeUrl ? getYoutubeVideoId(post.youtubeUrl) : null
+  const showReminder = isAuction && post?.startsAt && post.auctionStatus === 'upcoming' && daysUntil(post.startsAt) >= 2
+
+  async function handleReminder() {
+    if (!post?.startsAt) return
+    setReminding(true)
+    try {
+      const ok = await scheduleAuctionReminder(post)
+      if (ok) {
+        const reminderDate = new Date(post.startsAt)
+        reminderDate.setDate(reminderDate.getDate() - 1)
+        setReminderDateLabel(reminderDate.toLocaleDateString('es-PY', { weekday: 'long', day: 'numeric', month: 'long' }))
+        setReminderModalVisible(true)
+      }
+    } finally {
+      setReminding(false)
+    }
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['bottom']}>
@@ -69,21 +122,13 @@ export default function VideoDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Video player */}
-        <View style={styles.playerContainer}>
+        <View style={[styles.playerContainer, { height: playerHeight }]}>
           {loading ? (
             <View style={[styles.playerPlaceholder, { backgroundColor: C.secondary }]}>
               <Ionicons name="videocam-outline" size={40} color={C.muted} />
             </View>
-          ) : embedUrl ? (
-            <WebView
-              source={{ uri: embedUrl }}
-              style={styles.player}
-              javaScriptEnabled
-              domStorageEnabled
-              allowsFullscreenVideo
-              allowsInlineMediaPlayback
-              mediaPlaybackRequiresUserAction={false}
-            />
+          ) : videoId ? (
+            <YoutubePlayer height={playerHeight} videoId={videoId} play />
           ) : (
             <View style={[styles.playerPlaceholder, { backgroundColor: C.secondary }]}>
               <Ionicons name="play-circle-outline" size={48} color={C.muted} />
@@ -142,17 +187,42 @@ export default function VideoDetailScreen() {
 
             {/* Próximo remate */}
             {isAuction && post.startsAt && post.auctionStatus === 'upcoming' && (
-              <View style={[styles.scheduledBox, { backgroundColor: `${Colors.lime}15`, borderColor: `${Colors.lime}40` }]}>
-                <Ionicons name="calendar" size={20} color={Colors.lime} />
-                <View>
-                  <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>FECHA DEL REMATE</Text>
-                  <Text variant="body" weight="bold">{formatDate(post.startsAt)}</Text>
+              <View style={{ gap: Spacing[3] }}>
+                <View style={[styles.scheduledBox, { backgroundColor: `${Colors.lime}15`, borderColor: `${Colors.lime}40` }]}>
+                  <Ionicons name="calendar" size={20} color={Colors.lime} />
+                  <View>
+                    <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>FECHA DEL REMATE</Text>
+                    <Text variant="body" weight="bold">{formatDate(post.startsAt)}</Text>
+                  </View>
                 </View>
+
+                {showReminder && (
+                  <TouchableOpacity
+                    style={[styles.remindBtn, reminding && { opacity: 0.6 }]}
+                    activeOpacity={0.85}
+                    onPress={handleReminder}
+                    disabled={reminding}
+                  >
+                    {reminding
+                      ? <ActivityIndicator color="#0A0A13" size="small" />
+                      : <Ionicons name="notifications-outline" size={20} color="#0A0A13" />
+                    }
+                    <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
+                      {reminding ? 'Programando…' : 'Recordarme este remate'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
         )}
       </ScrollView>
+      <ReminderModal
+        visible={reminderModalVisible}
+        eventTitle={post?.title ?? ''}
+        reminderDateLabel={reminderDateLabel}
+        onClose={() => setReminderModalVisible(false)}
+      />
     </SafeAreaView>
   )
 }
@@ -181,10 +251,8 @@ const styles = StyleSheet.create({
   liveDot: { width: 6, height: 6, borderRadius: 3 },
   playerContainer: {
     width: '100%',
-    aspectRatio: 16 / 9,
     backgroundColor: '#000',
   },
-  player: { flex: 1 },
   playerPlaceholder: {
     flex: 1,
     alignItems: 'center',
@@ -216,5 +284,14 @@ const styles = StyleSheet.create({
     padding: Spacing[4],
     borderRadius: Radius.base,
     borderWidth: 1,
+  },
+  remindBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing[2],
+    backgroundColor: Colors.lime,
+    borderRadius: Radius.xl,
+    paddingVertical: Spacing[4],
   },
 })

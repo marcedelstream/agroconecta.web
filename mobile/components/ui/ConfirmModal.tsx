@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function ConfirmModal({
-  visible, icon, iconColor, title, message, confirmLabel, cancelLabel = 'Cancelar', destructive, onConfirm, onCancel,
+  visible, icon, iconColor, title, message, confirmLabel, cancelLabel, destructive, onConfirm, onCancel,
 }: Props) {
   const C = useColors()
   const accent = iconColor ?? (destructive ? Colors.destructive : Colors.lime)
@@ -43,13 +43,15 @@ export function ConfirmModal({
           </Text>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.btn, styles.cancelBtn, { borderColor: C.border }]}
-              onPress={onCancel}
-              activeOpacity={0.85}
-            >
-              <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{cancelLabel}</Text>
-            </TouchableOpacity>
+            {cancelLabel && (
+              <TouchableOpacity
+                style={[styles.btn, styles.cancelBtn, { borderColor: C.border }]}
+                onPress={onCancel}
+                activeOpacity={0.85}
+              >
+                <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{cancelLabel}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.btn, { backgroundColor: destructive ? Colors.destructive : Colors.lime }]}
               onPress={onConfirm}

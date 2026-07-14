@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { View, ScrollView, TextInput, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -22,16 +22,41 @@ export default function LibraryScreen() {
   const [items, setItems] = useState<LibraryItem[]>([])
   const [savedIds, setSavedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    fetchLibraryItems().then(setItems).catch(() => setItems([])).finally(() => setLoading(false))
+  const loadSavedIds = useCallback(async () => {
+    if (!user?.id) { setSavedIds([]); return }
+    try {
+      const entries = await fetchUserLibrary(user.id)
+      setSavedIds(entries.map((e) => e.itemId))
+    } catch {
+      // deja lo que ya había cargado
+    }
+  }, [user?.id])
+
+  const loadItems = useCallback(async () => {
+    try {
+      const data = await fetchLibraryItems()
+      setItems(data)
+    } catch {
+      setItems([])
+    }
   }, [])
 
   useEffect(() => {
-    if (!user?.id) { setSavedIds([]); return }
-    fetchUserLibrary(user.id).then((entries) => setSavedIds(entries.map((e) => e.itemId))).catch(() => {})
-  }, [user?.id])
+    loadItems().finally(() => setLoading(false))
+  }, [loadItems])
+
+  useEffect(() => {
+    loadSavedIds()
+  }, [loadSavedIds])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await Promise.all([loadItems(), loadSavedIds()])
+    setRefreshing(false)
+  }, [loadItems, loadSavedIds])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return items
@@ -91,7 +116,11 @@ export default function LibraryScreen() {
           ))}
         </ScrollView>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + Spacing[8] }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + Spacing[8] }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
+        >
           <View style={styles.section}>
             <Text variant="body" weight="bold" family="poppins" style={[styles.sectionTitle, { color: C.foreground }]}>
               Mis colecciones

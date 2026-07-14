@@ -1,89 +1,98 @@
-# Agroconecta MVP Implementation
+# Agroconecta — MVP Implementation Notes
 
-## Mobile App
+Ultima actualizacion: 2026-07-14
 
-Run the Expo app from the repository root:
+Este documento resume el estado de implementacion actual. Para convenciones generales usar `AGENTS.md` y `CLAUDE.md`; para roadmap usar `docs/ESTRUCTURA-Y-ROADMAP.md`.
+
+## Proyectos
 
 ```bash
+# App movil
+cd mobile
 npm install
-npx expo start --host lan
+npm start
+npm run tsc
+
+# Web publica + admin
+cd web
+npm install
+npm run dev
+npm run build
 ```
 
-Required environment variables once Supabase is created:
+## Variables de entorno
+
+Mobile (`mobile/.env.local` o entorno Expo):
 
 ```bash
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
+EXPO_PUBLIC_EVENTS_SUPABASE_URL=
+EXPO_PUBLIC_EVENTS_SUPABASE_ANON_KEY=
 ```
 
-Until those values exist, the app keeps using the local mock data. The new domain model is already in place:
-
-- `Organization` replaces publisher/medio as the main account entity.
-- `Post` replaces news article and supports article, video, auction, and institutional notice.
-- `MarketPrice` is the manual-price shape that Supabase/admin will write.
-- `organizationSubscriptions` is the canonical user-follow list. `mediaPreferences` remains as a compatibility alias.
-
-## Supabase
-
-Create a Supabase project, then run:
-
-```sql
--- supabase/schema.sql
-```
-
-Then load demo data:
-
-```sql
--- supabase/seed.sql
-```
-
-The schema includes:
-
-- Profiles with email, phone, profession, and department.
-- Organizations with commercial status and manual plan tracking.
-- Organization members with admin/editor roles.
-- Posts with editorial workflow and importance flag.
-- User interests and organization subscriptions.
-- Market prices for manual cattle/international updates.
-- Push tokens for Expo notifications.
-
-## Admin Web
-
-The admin is intentionally separate from Expo to avoid Metro/router conflicts.
-
-```bash
-cd admin-web
-npm install
-npm run dev
-```
-
-Admin env vars:
+Web/admin (`web/.env.local` y servidor):
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+RESEND_API_KEY=
+SERVICE_LEAD_EMAIL_TO=
 ```
 
-Current admin scope:
+Si faltan env vars en mobile, el cliente muestra warning y varias pantallas pueden caer a datos mock/desarrollo. No tratar ese fallback como comportamiento final de produccion.
 
-- Dashboard scaffold.
-- Reads posts, organizations, and market prices.
-- Shows editorial status, important flag, B2B commercial status, and manual prices.
+## Modelo actual
 
-Next admin implementation step:
+- `Organization` es la entidad de cuenta/publicador/aliado.
+- `Post` unifica articulos, videos, remates y avisos institucionales.
+- `MarketPrice` unifica precios ganaderos e internacionales.
+- `UserProfile` vive localmente en AsyncStorage como cache y se sincroniza best-effort a Supabase al completar onboarding o editar perfil.
+- `organizationSubscriptions` es la lista canonica de organizaciones seguidas; `mediaPreferences` queda como alias de compatibilidad.
 
-- Add authenticated login.
-- Add create/edit post form.
-- Add approve/reject actions for `agro_admin`.
-- Add manual price form.
-- Add organization billing status form.
+## Supabase
 
-## MVP Behavior Implemented In Mobile
+Aplicar primero `supabase/schema.sql` y luego seeds/migraciones necesarias (`seed.sql`, `seed-*.sql`, `fix-*.sql`). La app y la web comparten el Supabase principal. Eventos usa un Supabase externo separado, por eso los cruces evento-noticia se hacen por `event_tag`, no por FK.
 
-- Home feed now separates important posts, personalized posts, and discovery.
-- Banners and organization logos use public Supabase Storage buckets. See `docs/supabase-buckets-banners.md`.
-- Following accounts includes associations, institutions, media, gremios, and rematadoras.
-- Onboarding collects name, email, phone, profession, department, interests, and followed accounts.
-- Videos has a featured embedded YouTube auction block.
-- Prices use the `MarketPrice` shape that the admin will populate.
-- Push token registration helper is ready in `lib/push-notifications.ts`.
+Tablas principales usadas por mobile/web:
+
+- `profiles`
+- `organizations`
+- `organization_members`
+- `posts`
+- `user_interests`
+- `user_subscriptions`
+- `market_prices`
+- `push_tokens`
+- `ad_campaigns`
+- `library_items`
+- `user_library`
+- `event_schedule_items`
+
+Storage relevante:
+
+- `organization-logos`
+- `banners`
+- `post-images`
+- `library-covers`
+- `library-files` privado con signed URLs
+
+## MVP mobile implementado
+
+- Home feed con destacados, busqueda, secciones de eventos/ecosistema/organizaciones y banners.
+- Auth con email/password, OTP y Google OAuth.
+- Onboarding con datos de perfil, intereses y suscripciones.
+- Precios desde `market_prices`.
+- Videos/remates y detalle de video.
+- Eventos desde Supabase externo, detalle/hub con programa y noticias relacionadas.
+- Biblioteca digital con guardados de usuario y signed URL para archivos privados.
+- Perfil con edicion, preferencias, notificaciones y tema.
+- Push token registration listo y prompt propio antes del prompt nativo.
+
+## Notas de calidad
+
+- `mobile/lib/supabase-repositories.ts` es la frontera de datos: cualquier columna nueva debe mapearse ahi antes de llegar a UI.
+- Evitar `any`; usar interfaces de fila para datos Supabase y tipos de dominio para la app.
+- `npm run tsc` en `mobile/` debe quedar limpio antes de cerrar una sesion.
+- No usar la salida mojibake de PowerShell como prueba de encoding roto; verificar con Node/bytes si hay duda.

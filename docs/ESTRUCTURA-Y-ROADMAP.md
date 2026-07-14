@@ -75,6 +75,10 @@ Se implementó todo lo de arriba:
 
 ## 3. Feature 2 — Cursos + Inscripción
 
+> **2026-07-14: en pausa, sin fecha.** Decisión de producto — Cursos se queda como está (pantalla "Próximamente"
+> dentro de Ecosistema + formulario de interés que manda un lead a `service_leads`). El diseño de abajo queda
+> de referencia para cuando se decida retomarlo, no es un compromiso de corto plazo.
+
 **Objetivo:** listar cursos (online/presenciales) del ecosistema agro y permitir que el usuario se inscriba desde la app.
 
 ### Schema propuesto (`supabase/`)
@@ -200,6 +204,9 @@ eas build --profile production --platform android
 ## 7. Pendientes generales (fuera de las 3 features nuevas)
 
 - [ ] Formularios de publicación desde la app móvil (hoy solo desde web admin)
-- [ ] AgroClima, AgroMercado, AgroTV (próximas plataformas del ecosistema)
 - [ ] Tests (no hay suite todavía)
 - [ ] Configurar `eas.json` si en algún momento se decide usar EAS Build/Submit para Play Store
+
+Descartado (2026-07-14): AgroClima, AgroMercado, AgroTV — no se van a construir. Las próximas plataformas del
+ecosistema mobile se agregan hardcodeadas vía actualización nativa de la app (`mobile/lib/ecosystem-data.ts`),
+no desde un admin dinámico.

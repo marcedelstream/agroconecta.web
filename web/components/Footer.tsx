@@ -1,6 +1,18 @@
 import Link from 'next/link'
 import { Logo } from './Logo'
 
+const SOCIAL_LINKS = [
+  { label: 'TikTok', url: 'https://www.tiktok.com/@agroconecta.py?lang=es-419' },
+  { label: 'YouTube', url: 'https://www.youtube.com/@agroconectapy' },
+  { label: 'LinkedIn', url: 'https://www.linkedin.com/company/agroconectapy/' },
+  { label: 'X', url: 'https://x.com/agroconectapy' },
+  { label: 'Facebook', url: 'https://www.facebook.com/agroconectapy' },
+  { label: 'Instagram', url: 'https://www.instagram.com/agroconectapy/' },
+]
+
+const WHATSAPP_NUMBER = '+595 986 945 816'
+const WHATSAPP_URL = 'https://wa.me/595986945816'
+
 export function Footer() {
   const year = new Date().getFullYear()
   return (
@@ -19,6 +31,29 @@ export function Footer() {
             <Link href="/" className="text-muted hover:text-foreground transition-colors">Noticias</Link>
             <Link href="/ecosistema" className="text-muted hover:text-foreground transition-colors">Ecosistema</Link>
             <Link href="/quienes-somos" className="text-muted hover:text-foreground transition-colors">Quiénes somos</Link>
+          </div>
+
+          <div className="flex flex-col gap-2 text-sm">
+            <span className="text-xs text-muted uppercase tracking-wider font-display font-semibold">Seguinos</span>
+            {SOCIAL_LINKS.map((social) => (
+              <a
+                key={social.label}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted hover:text-foreground transition-colors"
+              >
+                {social.label}
+              </a>
+            ))}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-foreground transition-colors"
+            >
+              WhatsApp · {WHATSAPP_NUMBER}
+            </a>
           </div>
         </div>
 

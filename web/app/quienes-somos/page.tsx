@@ -24,6 +24,12 @@ const FOUNDERS = [
     image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-03-23%20at%2010.53.16-Q322FxX2EnEsc2L66VwEACBjsTqvsp.jpeg',
     bio: 'Encabeza la estrategia de comunicación y contenidos, acercando el ecosistema a productores, instituciones, marcas y profesionales que necesitan información clara y segmentada.',
   },
+  {
+    name: 'Fiorella Riveros',
+    role: 'Directora de Sostenibilidad',
+    image: '/fiorella-riveros.jpeg',
+    bio: 'Lidera la visión socioambiental y de sostenibilidad, conectando gestión ambiental, comunicación e innovación para desarrollar soluciones que respondan a los desafíos actuales y futuros.',
+  },
 ]
 
 const VALUES = [
@@ -101,11 +107,11 @@ export default function QuienesSomosPage() {
               Equipo
             </p>
             <h2 className="font-display font-semibold text-2xl md:text-3xl text-foreground">
-              Fundadores
+              Equipo directivo
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {FOUNDERS.map((founder) => (
               <article key={founder.name} className="card p-6">
                 <div className="flex items-center gap-4 mb-5">

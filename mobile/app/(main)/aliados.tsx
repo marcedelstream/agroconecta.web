@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   View, FlatList, TextInput, TouchableOpacity, Image, ScrollView, Linking,
   StyleSheet, ActivityIndicator,
@@ -28,15 +28,28 @@ export default function AliadosScreen() {
 
   const [orgs, setOrgs] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<AllyCategory | null>(null)
 
-  useEffect(() => {
-    fetchAllyDirectory()
-      .then(setOrgs)
-      .catch(() => setOrgs([]))
-      .finally(() => setLoading(false))
+  const loadOrgs = useCallback(async () => {
+    try {
+      const data = await fetchAllyDirectory()
+      setOrgs(data)
+    } catch {
+      setOrgs([])
+    }
   }, [])
+
+  useEffect(() => {
+    loadOrgs().finally(() => setLoading(false))
+  }, [loadOrgs])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await loadOrgs()
+    setRefreshing(false)
+  }, [loadOrgs])
 
   const filtered = useMemo(() => {
     let list = orgs
@@ -60,7 +73,7 @@ export default function AliadosScreen() {
             Directorio de Aliados
           </Text>
           <Text variant="caption" style={{ color: C.muted }}>
-            Empresas y organizaciones que sostienen Agroconecta
+            Organizaciones que sostienen Agroconecta
           </Text>
         </View>
       </View>
@@ -117,6 +130,8 @@ export default function AliadosScreen() {
           keyExtractor={(o) => o.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.item, { backgroundColor: C.surface, borderColor: C.border }]}

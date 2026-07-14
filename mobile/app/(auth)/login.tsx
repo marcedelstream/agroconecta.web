@@ -22,18 +22,13 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
-type LoginView = 'options' | 'email' | 'otp'
+type LoginView = 'options' | 'otp'
 
 export default function LoginScreen() {
   const C = useColors()
   const { isDark } = useTheme()
-  const { signIn, signUp, signInWithGoogle, sendEmailOtp, verifyEmailOtp, user } = useApp()
+  const { signInWithGoogle, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
   const [view, setView] = useState<LoginView>('options')
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [googleLoading, setGoogleLoading] = useState(false)
@@ -47,31 +42,6 @@ export default function LoginScreen() {
     ? require('@/assets/images/logo-dark.png')
     : require('@/assets/images/logo-light.png')
 
-  async function submit() {
-    if (!email.includes('@') || password.length < 6) {
-      setError('Ingresá un email válido y una contraseña de al menos 6 caracteres.')
-      return
-    }
-    if (mode === 'signup' && password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.')
-      return
-    }
-    setLoading(true)
-    setError(null)
-    const result = mode === 'login'
-      ? await signIn(email.trim(), password)
-      : await signUp(email.trim(), password)
-    setLoading(false)
-    if (result) { setError(result); return }
-    afterAuth()
-  }
-
-  function goToEmail(m: typeof mode) {
-    setMode(m)
-    setError(null)
-    setView('email')
-  }
-
   function goToOtp() {
     setOtpStep('request')
     setOtpEmail('')
@@ -80,11 +50,12 @@ export default function LoginScreen() {
     setView('otp')
   }
 
-  function afterAuth() {
-    if (user) {
-      router.replace('/(main)/(tabs)/home')
-    } else {
+  async function afterAuth() {
+    const needsOnboarding = await resolveProfileForCurrentSession()
+    if (needsOnboarding) {
       router.replace('/(onboarding)')
+    } else {
+      router.replace('/(main)/(tabs)/home')
     }
   }
 
@@ -94,7 +65,7 @@ export default function LoginScreen() {
     const result = await signInWithGoogle()
     setGoogleLoading(false)
     if (result) { setError(result); return }
-    afterAuth()
+    await afterAuth()
   }
 
   async function handleSendOtp() {
@@ -111,8 +82,8 @@ export default function LoginScreen() {
   }
 
   async function handleVerifyOtp() {
-    if (otpCode.length < 6) {
-      setOtpError('Ingresá el código de 6 dígitos que te enviamos.')
+    if (otpCode.length < 8) {
+      setOtpError('Ingresá el código de 8 dígitos que te enviamos.')
       return
     }
     setOtpLoading(true)
@@ -120,7 +91,7 @@ export default function LoginScreen() {
     const result = await verifyEmailOtp(otpEmail.trim(), otpCode.trim())
     setOtpLoading(false)
     if (result) { setOtpError(result); return }
-    afterAuth()
+    await afterAuth()
   }
 
   return (
@@ -146,17 +117,12 @@ export default function LoginScreen() {
           /* ── Opciones ── */
           <View style={styles.options}>
             <AuthBtn
-              icon="logo-apple"
-              label="Continuar con Apple"
-              disabled
-              C={C}
-            />
-            <AuthBtn
               icon="logo-google"
               label="Continuar con Google"
               onPress={handleGoogle}
               loading={googleLoading}
               C={C}
+              primary
             />
             {error && (
               <Text variant="caption" style={{ color: Colors.destructive, textAlign: 'center' }}>{error}</Text>
@@ -172,18 +138,6 @@ export default function LoginScreen() {
               onPress={goToOtp}
               C={C}
             />
-            <AuthBtn
-              icon="mail-outline"
-              label="Iniciar sesión con correo"
-              onPress={() => goToEmail('login')}
-              C={C}
-              primary
-            />
-            <TouchableOpacity onPress={() => goToEmail('signup')} style={{ alignSelf: 'center' }}>
-              <Text variant="body" style={{ color: Colors.lime }}>
-                ¿No tenés cuenta? Registrarte
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -231,11 +185,11 @@ export default function LoginScreen() {
                 <TextInput
                   value={otpCode}
                   onChangeText={setOtpCode}
-                  placeholder="Código de 6 dígitos"
+                  placeholder="Código de 8 dígitos"
                   placeholderTextColor={C.muted}
-                  style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground, textAlign: 'center', letterSpacing: 6, fontSize: 20 }]}
+                  style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground, textAlign: 'center', letterSpacing: 4, fontSize: 20 }]}
                   keyboardType="number-pad"
-                  maxLength={6}
+                  maxLength={8}
                   autoFocus
                 />
                 {otpError && (
@@ -249,66 +203,6 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </>
             )}
-          </View>
-        )}
-
-        {view === 'email' && (
-          /* ── Formulario de email ── */
-          <View style={styles.form}>
-            {/* Título + volver */}
-            <View style={styles.formHeader}>
-              <TouchableOpacity onPress={() => { setView('options'); setError(null) }} hitSlop={8}>
-                <Ionicons name="arrow-back" size={22} color={C.foreground} />
-              </TouchableOpacity>
-              <Text variant="body" weight="semibold" family="poppins">
-                {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
-              </Text>
-              <View style={{ width: 22 }} />
-            </View>
-
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Correo electrónico"
-              placeholderTextColor={C.muted}
-              style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoFocus
-            />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Contraseña"
-              placeholderTextColor={C.muted}
-              style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
-              secureTextEntry
-            />
-            {mode === 'signup' && (
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirmar contraseña"
-                placeholderTextColor={C.muted}
-                style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
-                secureTextEntry
-              />
-            )}
-            {error && (
-              <Text variant="caption" style={{ color: Colors.destructive }}>{error}</Text>
-            )}
-            <Button onPress={submit} fullWidth size="lg" loading={loading}>
-              {mode === 'login' ? 'Entrar' : 'Crear cuenta'}
-            </Button>
-            <TouchableOpacity
-              onPress={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null) }}
-              style={{ alignSelf: 'center' }}
-            >
-              <Text variant="body" style={{ color: Colors.lime }}>
-                {mode === 'login' ? '¿No tenés cuenta? Registrarte' : '¿Ya tenés cuenta? Iniciar sesión'}
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -366,11 +260,6 @@ function AuthBtn({
       >
         {label}
       </Text>
-      {disabled && (
-        <View style={styles.pronto}>
-          <Text style={styles.prontoText}>PRÓXIMO</Text>
-        </View>
-      )}
     </TouchableOpacity>
   )
 }
@@ -403,13 +292,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: Spacing[3],
   },
-  pronto: {
-    backgroundColor: 'rgba(139,139,154,0.18)',
-    borderRadius: 4,
-    paddingHorizontal: Spacing[1.5],
-    paddingVertical: 2,
-  },
-  prontoText: { fontSize: 9, color: '#8B8B9A', fontWeight: '700', letterSpacing: 0.5 },
   terms: { textAlign: 'center', paddingHorizontal: Spacing[2] },
   // Form
   form: { gap: Spacing[4] },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { View, SectionList, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Linking } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -54,15 +54,28 @@ export default function EventsListScreen() {
   const insets = useSafeAreaInsets()
   const [allEvents, setAllEvents] = useState<AgroEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchAllEvents()
-      .then(setAllEvents)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+  const loadEvents = useCallback(async () => {
+    try {
+      const data = await fetchAllEvents()
+      setAllEvents(data)
+    } catch {
+      // mantiene lo que ya había cargado
+    }
   }, [])
+
+  useEffect(() => {
+    loadEvents().finally(() => setLoading(false))
+  }, [loadEvents])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await loadEvents()
+    setRefreshing(false)
+  }, [loadEvents])
 
   const categories = useMemo(() => {
     const set = new Set(allEvents.map((e) => e.category).filter(Boolean))
@@ -160,6 +173,8 @@ export default function EventsListScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
           stickySectionHeadersEnabled={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListHeaderComponent={
             <>
               <LiveEventsTicker events={allEvents} />

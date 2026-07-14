@@ -32,18 +32,29 @@ export default function NoticiasScreen() {
   const insets = useSafeAreaInsets()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<NewsCategory | null>(null)
 
-  useEffect(() => {
-    fetchPublishedPosts()
-      .then((remote) => {
-        const news = remote.filter(isNewsContent)
-        if (news.length > 0) setPosts(news)
-      })
-      .catch(() => { setPosts(mockNews) })
-      .finally(() => setLoading(false))
+  const loadPosts = useCallback(async () => {
+    try {
+      const remote = await fetchPublishedPosts()
+      const news = remote.filter(isNewsContent)
+      if (news.length > 0) setPosts(news)
+    } catch {
+      setPosts(mockNews)
+    }
   }, [])
+
+  useEffect(() => {
+    loadPosts().finally(() => setLoading(false))
+  }, [loadPosts])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await loadPosts()
+    setRefreshing(false)
+  }, [loadPosts])
 
   const filtered = useMemo(() => {
     let list = [...posts]
@@ -153,6 +164,8 @@ export default function NoticiasScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
           keyboardShouldPersistTaps="handled"
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           renderItem={({ item }) => (
             <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} />
           )}

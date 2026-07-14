@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { View, ScrollView, TouchableOpacity, Image, RefreshControl, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -55,21 +55,32 @@ function timeAgo(date: Date): string {
 export default function VideosScreen() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [adRefreshKey, setAdRefreshKey] = useState(0)
   const C = useColors()
   const insets = useSafeAreaInsets()
 
+  const loadPosts = useCallback(async () => {
+    try {
+      const remote = await fetchPublishedPosts()
+      setPosts(remote.filter((p) => p.contentType === 'video' || p.contentType === 'auction'))
+    } catch {
+      setPosts([])
+    }
+  }, [])
+
   useEffect(() => {
     let mounted = true
-    setLoading(true)
-    fetchPublishedPosts()
-      .then((remote) => {
-        if (!mounted) return
-        setPosts(remote.filter((p) => p.contentType === 'video' || p.contentType === 'auction'))
-      })
-      .catch(() => { if (mounted) setPosts([]) })
-      .finally(() => { if (mounted) setLoading(false) })
+    loadPosts().finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [])
+  }, [loadPosts])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    setAdRefreshKey((k) => k + 1)
+    await loadPosts()
+    setRefreshing(false)
+  }, [loadPosts])
 
   const goToVideo = (id: string) => router.push({ pathname: '/(main)/video/[id]', params: { id } })
 
@@ -102,7 +113,11 @@ export default function VideosScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
+      >
         {loading ? (
           <>
             <HeroCarouselSkeleton />
@@ -149,7 +164,7 @@ export default function VideosScreen() {
               </View>
             )}
 
-            <AdBanner placement="videos" style={styles.adBanner} />
+            <AdBanner placement="videos" refreshKey={adRefreshKey} style={styles.adBanner} />
           </>
         )}
       </ScrollView>
@@ -224,7 +239,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing[3],
     borderBottomWidth: 1,
   },
-  content: { padding: Spacing[4], paddingBottom: Spacing[8], gap: Spacing[6] },
+  content: { paddingHorizontal: Spacing[5], paddingTop: Spacing[4], paddingBottom: Spacing[8], gap: Spacing[6] },
   hero: { marginBottom: Spacing[2] },
   section: { gap: Spacing[3] },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[3] },

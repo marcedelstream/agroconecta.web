@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native'
+import { View, ScrollView, TouchableOpacity, TextInput, Linking, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -10,6 +10,7 @@ import { Fonts } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
+import { SOCIAL_LINKS, WHATSAPP_NUMBER, WHATSAPP_URL } from '@/lib/social-links'
 
 const SERVICE_TYPE = 'oportunidad_comercial'
 const SERVICE_LABEL = 'Oportunidad comercial'
@@ -142,6 +143,35 @@ export default function ContactoScreen() {
             </View>
           </>
         )}
+
+        <View style={[styles.divider, { backgroundColor: C.border }]} />
+
+        <View style={styles.socialSection}>
+          <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+            SEGUINOS
+          </Text>
+          <View style={styles.socialRow}>
+            {SOCIAL_LINKS.map((social) => (
+              <TouchableOpacity
+                key={social.id}
+                style={[styles.socialBtn, { backgroundColor: C.secondary, borderColor: C.border }]}
+                onPress={() => Linking.openURL(social.url).catch(() => {})}
+                hitSlop={4}
+              >
+                <Ionicons name={social.icon} size={20} color={C.foreground} />
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.whatsappBtn, { borderColor: C.border }]}
+            onPress={() => Linking.openURL(WHATSAPP_URL).catch(() => {})}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="logo-whatsapp" size={20} color={Colors.success} />
+            <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{WHATSAPP_NUMBER}</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   )
@@ -196,5 +226,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing[4],
     paddingVertical: Spacing[8],
+  },
+  divider: { height: 1, marginTop: Spacing[2] },
+  socialSection: { gap: Spacing[3] },
+  socialRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing[2.5],
+  },
+  socialBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whatsappBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    borderWidth: 1,
+    borderRadius: Radius.base,
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
+    alignSelf: 'flex-start',
   },
 })

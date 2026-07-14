@@ -17,7 +17,7 @@ export const professions: { value: Profession; label: string }[] = [
   { value: 'productor', label: 'Productor/a' },
   { value: 'comunicador', label: 'Comunicador/a' },
   { value: 'veterinario', label: 'Veterinario/a' },
-  { value: 'agronomo', label: 'Ingeniero/a Agronomo/a' },
+  { value: 'agronomo', label: 'Ingeniero/a Agrónomo/a' },
   { value: 'comerciante', label: 'Comerciante' },
   { value: 'transportista', label: 'Transportista' },
   { value: 'estudiante', label: 'Estudiante' },
@@ -26,33 +26,33 @@ export const professions: { value: Profession; label: string }[] = [
 
 // Departments list
 export const departments: { value: Department; label: string }[] = [
-  { value: 'asuncion', label: 'Asuncion' },
+  { value: 'asuncion', label: 'Asunción' },
   { value: 'central', label: 'Central' },
-  { value: 'alto-parana', label: 'Alto Parana' },
-  { value: 'itapua', label: 'Itapua' },
-  { value: 'caaguazu', label: 'Caaguazu' },
+  { value: 'alto-parana', label: 'Alto Paraná' },
+  { value: 'itapua', label: 'Itapúa' },
+  { value: 'caaguazu', label: 'Caaguazú' },
   { value: 'san-pedro', label: 'San Pedro' },
-  { value: 'canindeyu', label: 'Canindeyu' },
-  { value: 'paraguari', label: 'Paraguari' },
+  { value: 'canindeyu', label: 'Canindeyú' },
+  { value: 'paraguari', label: 'Paraguarí' },
   { value: 'cordillera', label: 'Cordillera' },
-  { value: 'guaira', label: 'Guaira' },
-  { value: 'caazapa', label: 'Caazapa' },
+  { value: 'guaira', label: 'Guairá' },
+  { value: 'caazapa', label: 'Caazapá' },
   { value: 'misiones', label: 'Misiones' },
-  { value: 'neembucu', label: 'Neembucu' },
+  { value: 'neembucu', label: 'Ñeembucú' },
   { value: 'amambay', label: 'Amambay' },
-  { value: 'concepcion', label: 'Concepcion' },
+  { value: 'concepcion', label: 'Concepción' },
   { value: 'presidente-hayes', label: 'Presidente Hayes' },
-  { value: 'boqueron', label: 'Boqueron' },
+  { value: 'boqueron', label: 'Boquerón' },
   { value: 'alto-paraguay', label: 'Alto Paraguay' },
 ];
 
 // News categories
 export const newsCategories: { value: NewsCategory; label: string; icon: string }[] = [
-  { value: 'ganaderia', label: 'Ganaderia', icon: 'cow' },
+  { value: 'ganaderia', label: 'Ganadería', icon: 'cow' },
   { value: 'agricultura', label: 'Agricultura', icon: 'wheat' },
   { value: 'clima', label: 'Clima', icon: 'cloud-sun' },
   { value: 'mercados', label: 'Mercados', icon: 'trending-up' },
-  { value: 'tecnologia', label: 'Tecnologia Agro', icon: 'cpu' },
+  { value: 'tecnologia', label: 'Tecnología Agro', icon: 'cpu' },
   { value: 'institucional', label: 'Institucional', icon: 'building' },
 ];
 

@@ -4,9 +4,11 @@ import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
+import { useColors } from '@/lib/theme-context'
 import type { NewsArticle } from '@/lib/types'
 
 const CARD_HEIGHT = 240
+const CARD_GAP = Spacing[3]
 
 function categoryLabel(cat: string) {
   return cat.charAt(0).toUpperCase() + cat.slice(1)
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export function FeaturedGrid({ posts, onPress }: Props) {
+  const C = useColors()
   const { width } = useWindowDimensions()
   const cardWidth = width - Spacing[5] * 2
   const [index, setIndex] = useState(0)
@@ -30,13 +33,15 @@ export function FeaturedGrid({ posts, onPress }: Props) {
         data={posts}
         keyExtractor={(p) => p.id}
         horizontal
-        pagingEnabled
+        snapToInterval={cardWidth + CARD_GAP}
+        decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         scrollEnabled={posts.length > 1}
+        ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
         onMomentumScrollEnd={(e) => {
-          setIndex(Math.round(e.nativeEvent.contentOffset.x / cardWidth))
+          setIndex(Math.round(e.nativeEvent.contentOffset.x / (cardWidth + CARD_GAP)))
         }}
-        getItemLayout={(_, i) => ({ length: cardWidth, offset: cardWidth * i, index: i })}
+        getItemLayout={(_, i) => ({ length: cardWidth, offset: (cardWidth + CARD_GAP) * i, index: i })}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.card, { width: cardWidth, height: CARD_HEIGHT }]}
@@ -59,7 +64,7 @@ export function FeaturedGrid({ posts, onPress }: Props) {
           {posts.map((_, i) => (
             <View
               key={i}
-              style={[styles.dot, { backgroundColor: i === index ? Colors.lime : 'rgba(255,255,255,0.35)' }]}
+              style={[styles.dot, { backgroundColor: i === index ? Colors.lime : C.border }]}
             />
           ))}
         </View>

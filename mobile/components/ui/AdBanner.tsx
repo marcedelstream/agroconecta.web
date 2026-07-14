@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { View, FlatList, TouchableOpacity, useWindowDimensions, StyleSheet, Linking, type ViewStyle } from 'react-native'
+import { useEffect, useState } from 'react'
+import { View, TouchableOpacity, useWindowDimensions, StyleSheet, Linking, type ViewStyle } from 'react-native'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { Text } from './Text'
 import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
-import { Colors } from '@/constants/colors'
 import { fetchActiveBanners } from '@/lib/supabase-repositories'
-import type { AdCampaign, AdPlacement } from '@/lib/types'
+import type { AdCampaign, AdPlacement, AdSegment } from '@/lib/types'
 
 function openBanner(banner: AdCampaign) {
   if (!banner.linkType || !banner.linkTarget) return
@@ -27,43 +26,44 @@ function openBanner(banner: AdCampaign) {
   }
 }
 
-const SLIDE_INTERVAL = 4000
+function matchesSegment(banner: AdCampaign, segment?: AdSegment): boolean {
+  if (!segment) return true
+  const professionMatch = !banner.targetProfessions?.length || banner.targetProfessions.includes(segment.profession)
+  const departmentMatch = !banner.targetDepartments?.length || banner.targetDepartments.includes(segment.department)
+  const categoryMatch = !banner.targetCategories?.length || banner.targetCategories.some((cat) => segment.categories.includes(cat))
+  return professionMatch && departmentMatch && categoryMatch
+}
+
+function pickRandomBanner(banners: AdCampaign[], segment?: AdSegment): AdCampaign | null {
+  if (banners.length === 0) return null
+  const matched = banners.filter((b) => matchesSegment(b, segment))
+  const pool = matched.length > 0 ? matched : banners
+  return pool[Math.floor(Math.random() * pool.length)]
+}
 
 interface Props {
-  segment?: unknown
+  segment?: AdSegment
   placement?: AdPlacement
+  refreshKey?: number
   style?: ViewStyle
 }
 
-export function AdBanner({ placement = 'home', style }: Props) {
+export function AdBanner({ segment, placement = 'home', refreshKey, style }: Props) {
   const C = useColors()
   const { width } = useWindowDimensions()
   const bannerWidth = width - Spacing[5] * 2
-  const [banners, setBanners] = useState<AdCampaign[]>([])
-  const [index, setIndex] = useState(0)
-  const listRef = useRef<FlatList<AdCampaign>>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [banner, setBanner] = useState<AdCampaign | null>(null)
+  const segmentKey = segment ? `${segment.profession}|${segment.department}|${segment.categories.join(',')}` : ''
 
   useEffect(() => {
-    setBanners([])
     fetchActiveBanners(placement)
-      .then((data) => { if (data.length > 0) setBanners(data) })
+      .then((data) => setBanner(pickRandomBanner(data, segment)))
       .catch(() => {})
-  }, [placement])
+    // segment se resume en segmentKey para no refetchear por una referencia nueva del objeto en cada render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placement, segmentKey, refreshKey])
 
-  useEffect(() => {
-    if (banners.length <= 1) return
-    timerRef.current = setInterval(() => {
-      setIndex((prev) => {
-        const next = (prev + 1) % banners.length
-        listRef.current?.scrollToIndex({ index: next, animated: true })
-        return next
-      })
-    }, SLIDE_INTERVAL)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [banners.length])
-
-  if (banners.length === 0) {
+  if (!banner) {
     return (
       <View style={[styles.container, style]}>
         <View style={styles.labelRow}>
@@ -83,49 +83,18 @@ export function AdBanner({ placement = 'home', style }: Props) {
         <Text variant="label" style={[styles.labelText, { color: C.muted }]}>Publicidad</Text>
       </View>
 
-      <FlatList
-        ref={listRef}
-        data={banners}
-        keyExtractor={(b) => b.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        scrollEnabled={banners.length > 1}
-        onMomentumScrollEnd={(e) => {
-          const newIndex = Math.round(e.nativeEvent.contentOffset.x / bannerWidth)
-          setIndex(newIndex)
-        }}
-        getItemLayout={(_, i) => ({ length: bannerWidth, offset: bannerWidth * i, index: i })}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            activeOpacity={0.92}
-            style={{ width: bannerWidth }}
-            disabled={!item.linkType || !item.linkTarget}
-            onPress={() => openBanner(item)}
-          >
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={[styles.image, { width: bannerWidth }]}
-              contentFit="cover"
-              transition={300}
-            />
-          </TouchableOpacity>
-        )}
-      />
-
-      {banners.length > 1 && (
-        <View style={styles.dots}>
-          {banners.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                { backgroundColor: i === index ? Colors.lime : C.border },
-              ]}
-            />
-          ))}
-        </View>
-      )}
+      <TouchableOpacity
+        activeOpacity={0.92}
+        disabled={!banner.linkType || !banner.linkTarget}
+        onPress={() => openBanner(banner)}
+      >
+        <Image
+          source={{ uri: banner.imageUrl }}
+          style={[styles.image, { width: bannerWidth }]}
+          contentFit="cover"
+          transition={300}
+        />
+      </TouchableOpacity>
     </View>
   )
 }
@@ -146,16 +115,5 @@ const styles = StyleSheet.create({
   image: {
     height: 100,
     borderRadius: Radius.md,
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing[1.5],
-    marginTop: Spacing[2],
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
 })

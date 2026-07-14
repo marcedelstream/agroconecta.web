@@ -1,313 +1,134 @@
 # AGROCONECTA — Codex Session Guide
 
-## Qué es este proyecto
+Ultima actualizacion: 2026-07-14
 
-**Agroconecta** es un ecosistema digital agropecuario para Paraguay. Es una app mobile (React Native + Expo) que centraliza noticias, precios de mercado y productos del ecosistema para productores, veterinarios, agrónomos y demás profesionales del agro paraguayo.
+## Que es este proyecto
 
-## Stack tecnológico (target)
+Agroconecta es un ecosistema digital agropecuario para Paraguay. Centraliza noticias, precios de mercado, videos/remates, eventos, biblioteca digital, aliados y productos del ecosistema para productores, veterinarios, agronomos, comunicadores y otros profesionales del agro paraguayo.
 
-| Capa | Tecnología |
+El repo es un monorepo con tres piezas principales:
+
+| Pieza | Carpeta | Stack | Estado |
+|---|---|---|---|
+| App movil | `mobile/` | React Native 0.83 + Expo SDK 55 + Expo Router | Funcional, `npm run tsc` limpio |
+| Web publica + admin | `web/` | Next.js 16 App Router + Tailwind | Funcional, deploy Hostinger/GitHub Actions |
+| Backend | `supabase/` | Supabase Postgres/Auth/Storage + SQL migrations | Operativo |
+
+`mobile/` y `web/` son proyectos autocontenidos: cada uno tiene su propio `package.json`, dependencias y comandos. Los archivos web originales fuera de `web/` no son fuente de verdad.
+
+## Stack real de mobile
+
+| Capa | Tecnologia |
 |---|---|
-| Framework | **React Native + Expo SDK 52+** |
-| Router | **Expo Router v4** (file-based, similar a Next.js) |
-| Styling | **NativeWind v4** (Tailwind para RN) |
-| UI Components | Componentes propios basados en el design system |
-| State | **React Context API** (sin Redux/Zustand por ahora) |
-| Navegación | **React Navigation v7** (via Expo Router) |
-| Tipos | **TypeScript** estricto |
-| Íconos | **@expo/vector-icons** (Ionicons) |
-| Fuentes | **Expo Google Fonts** (Poppins + DM Sans) |
-| Validación | **Zod + React Hook Form** |
-| Charts | **Victory Native XL** o **react-native-gifted-charts** |
+| Framework | Expo `~55`, React Native `0.83`, React `19` |
+| Router | Expo Router `~55` con rutas file-based |
+| Styling | NativeWind v4 + StyleSheet + tokens propios |
+| Estado | React Context API (`lib/app-context.tsx`, `lib/theme-context.tsx`) |
+| Backend client | `@supabase/supabase-js` v2 |
+| Auth | Supabase Auth: email/password, OTP email, Google OAuth |
+| Persistencia local | AsyncStorage (`@agroconecta:user`, `@agroconecta:theme`) |
+| Tipos | TypeScript estricto |
+| Iconos | `@expo/vector-icons` / Ionicons |
+| Fuentes | Lexend como unica familia; las claves legacy `poppins`/`dmSans` apuntan a Lexend |
+| Notificaciones | `expo-notifications`, tabla `push_tokens` |
 
-## Origen: web (Next.js → React Native)
+## Estructura actual
 
-El proyecto original era Next.js 16 + shadcn/ui + Tailwind. Fue completamente refactorizado a React Native. Los archivos web originales pueden existir aún como referencia pero **NO se usan**.
-
-## Design System
-
-### Paleta de colores
-
-```typescript
-// Siempre usar estas constantes, nunca valores hardcodeados
-const colors = {
-  // Primario
-  lime: '#A4D233',          // verde lima — color principal de marca
-  limeDark: '#8BB82B',       // variante oscura del lima
-
-  // Fondos (dark theme — default)
-  background: '#0A0A13',     // fondo principal
-  surface: '#12121C',        // tarjetas / elevated
-  secondary: '#1A1A26',      // superficies secundarias
-
-  // Texto
-  foreground: '#FFFFFF',
-  mutedForeground: '#8B8B9A',
-
-  // Sistema
-  border: '#2A2A3A',
-  destructive: '#FF4D4D',
-
-  // Light theme
-  lightBackground: '#FAFAFA',
-  lightSurface: '#FFFFFF',
-  lightSecondary: '#F0F0F0',
-  lightForeground: '#0A0A13',
-  lightBorder: '#E5E5E5',
-  lightLime: '#7AB800',
-}
+```txt
+AGROCONECTA APP/
+├── mobile/                  # App Expo
+│   ├── app/                 # Expo Router
+│   │   ├── _layout.tsx      # Providers, fonts, splash nativo, push prompt
+│   │   ├── index.tsx        # Splash visual y decision inicial
+│   │   ├── (auth)/login.tsx
+│   │   ├── (onboarding)/index.tsx
+│   │   ├── (main)/(tabs)/   # home, prices, ecosystem, profile
+│   │   ├── (main)/          # events, videos, library, article, publisher, etc.
+│   │   ├── legal/           # terms/privacy
+│   │   └── article|publisher direct routes
+│   ├── components/          # ui, home, navigation, profile, library
+│   ├── constants/           # colors, typography, spacing
+│   ├── lib/                 # contextos, tipos, repositorios Supabase, utils
+│   ├── assets/              # logos, iconos, splash, banners demo
+│   └── app.json/eas.json/tsconfig/etc.
+├── web/                     # Web publica + admin Next.js
+├── supabase/                # schema.sql, seed.sql, fix-*.sql
+├── docs/                    # roadmap, MVP, buckets, notas tecnicas
+├── CLAUDE.md                # Guia amplia del proyecto
+└── AGENTS.md                # Esta guia corta para agentes
 ```
 
-### Tipografía
+## Backend y datos
 
-- **Display / Títulos:** Poppins (300, 400, 500, 600, 700)
-- **Body / UI:** DM Sans (400, 500, 600, 700)
+- Supabase principal: perfiles, organizaciones, publicaciones, precios, banners, biblioteca, suscripciones, push tokens.
+- Supabase externo de eventos: `mobile/lib/supabase-events.ts`, usado para eventos de eventosagropy.com.
+- Acceso mobile: `mobile/lib/supabase.ts` crea el cliente; `mobile/lib/supabase-repositories.ts` concentra queries y mapea snake_case DB a camelCase TS.
+- Los mapeadores de repositorios tienen interfaces de fila locales (`PostRow`, `OrganizationRow`, etc.) y normalizan `null` a `undefined`/fallbacks antes de salir al dominio.
+- `mobile/lib/app-context.tsx` mantiene AsyncStorage como cache local de perfil, pero al completar onboarding o editar perfil sincroniza best-effort a Supabase (`profiles`, `user_interests`, `user_subscriptions`) cuando el usuario tiene UUID valido.
 
-### Border radius
+## Design system
 
-- `sm`: 8px
-- `md`: 10px  
-- `base`: 12px
-- `lg`: 12px
-- `xl`: 16px
+Usar siempre tokens existentes:
 
-### Spacing base
+- Colores: `mobile/constants/colors.ts`
+- Tipografia: `mobile/constants/typography.ts`
+- Spacing/radius: `mobile/constants/spacing.ts`
+- Texto base: `mobile/components/ui/Text.tsx`
+- Botones/cards/badges base: `mobile/components/ui/`
 
-Usar múltiplos de 4. Base unit = 4px.
-
----
-
-> Nota 2026-07-03: la app móvil vive en `mobile/` (antes estaba suelta en la raíz). Todas las rutas de abajo son
-> relativas a `mobile/`. Ver `CLAUDE.md` para la estructura completa y actualizada.
-
-## Estructura de carpetas (React Native / Expo Router)
-
-```
-mobile/
-├── app/                          # Expo Router — rutas file-based
-│   ├── _layout.tsx               # Root layout (fonts, providers)
-│   ├── index.tsx                 # Entry → redirige a splash
-│   ├── (onboarding)/
-│   │   ├── _layout.tsx
-│   │   └── index.tsx             # Flujo onboarding 4 pasos
-│   └── (main)/
-│       ├── _layout.tsx           # Bottom tabs layout
-│       ├── home.tsx              # Feed de noticias
-│       ├── prices.tsx            # Precios ganaderos
-│       ├── ecosystem.tsx         # Ecosistema digital
-│       └── profile.tsx           # Perfil de usuario
-├── components/
-│   ├── ui/                       # Componentes base del design system
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   ├── Badge.tsx
-│   │   ├── Text.tsx              # Tipografía con variantes
-│   │   └── ...
-│   ├── screens/                  # Componentes de pantalla complejos
-│   └── navigation/               # Headers, tabs, etc.
-├── constants/
-│   ├── colors.ts                 # Tokens de color
-│   ├── typography.ts             # Fuentes y tamaños
-│   └── spacing.ts                # Espaciado
-├── lib/
-│   ├── types.ts                  # Interfaces TypeScript
-│   ├── mock-data.ts              # Datos de prueba
-│   └── app-context.tsx           # Estado global (Context API)
-├── hooks/                        # Custom hooks
-├── assets/
-│   ├── fonts/                    # Poppins + DM Sans
-│   └── images/                  # Logo, íconos
-├── app.json                      # Config Expo
-├── babel.config.js
-├── tailwind.config.js            # NativeWind config
-└── tsconfig.json
-```
-
----
-
-## Pantallas y flujo de la app
-
-### 1. Splash Screen
-- Logo centrado + animación de carga
-- Auto-navega a onboarding (primera vez) o main (ya configurado)
-- Duración: ~2.5 segundos
-
-### 2. Onboarding (4 pasos)
-- **Paso 0:** Nombre del usuario (mín 2 chars)
-- **Paso 1:** Profesión (8 opciones: productor, comunicador, veterinario, agrónomo, comerciante, transportista, estudiante, otro)
-- **Paso 2:** Departamento de Paraguay (18 opciones)
-- **Paso 3:** Preferencias de noticias (6 categorías: Ganadería, Agricultura, Clima, Mercados, Tecnología Agro, Institucional)
-- Barra de progreso visual, animaciones de slide entre pasos
-
-### 3. Main App — Bottom Tabs (4 tabs)
-
-| Tab | Ícono | Descripción |
-|---|---|---|
-| Inicio | Home | Feed de noticias con filtros y búsqueda |
-| Precios | TrendingUp | Precios ganaderos + commodities internacionales |
-| Ecosistema | Globe | Productos del ecosistema (Eventosagropy, Agrojuego, etc.) |
-| Perfil | User | Datos del usuario, configuraciones |
-
----
-
-## Tipos de datos clave
-
-```typescript
-type Profession = 'productor' | 'comunicador' | 'veterinario' | 'agronomo' | 'comerciante' | 'transportista' | 'estudiante' | 'otro'
-
-type Department = 'Asunción' | 'Central' | 'Alto Paraná' | 'Itapuá' | 'Caaguazú' | 'San Pedro' | 'Canindeyu' | 'Paraguarí' | 'Cordillera' | 'Guairá' | 'Caazapá' | 'Misiones' | 'Ñeembucú' | 'Amambay' | 'Concepción' | 'Presidente Hayes' | 'Boqueron' | 'Alto Paraguay'
-
-type NewsCategory = 'ganaderia' | 'agricultura' | 'clima' | 'mercados' | 'tecnologia' | 'institucional'
-
-type EcosystemCategory = 'eventos' | 'juegos' | 'institucional' | 'streaming'
-
-interface UserProfile {
-  id: string
-  name: string
-  profession: Profession
-  department: Department
-  preferences: NewsCategory[]
-  createdAt: Date
-}
-
-interface NewsArticle {
-  id: string
-  title: string
-  summary: string
-  content: string
-  category: NewsCategory
-  imageUrl: string
-  source: string
-  publishedAt: Date
-  readTime: number
-  isHighlighted?: boolean
-}
-
-interface CattlePrice {
-  category: string
-  pricePerKg: number   // en PYG
-  change: number
-  changePercent: number
-  updatedAt: Date
-}
-
-interface InternationalPrice {
-  commodity: string
-  price: number        // en USD
-  unit: string
-  market: string
-  change: number
-  changePercent: number
-  updatedAt: Date
-}
-
-interface EcosystemSite {
-  id: string
-  name: string
-  description: string
-  url: string
-  logoUrl?: string
-  category: EcosystemCategory
-  isLive?: boolean
-  tags: string[]
-}
-```
-
----
-
-## Contexto de la app
-
-```typescript
-// lib/app-context.tsx
-interface AppState {
-  currentScreen: 'splash' | 'onboarding' | 'main'
-  onboarding: {
-    step: number           // 0-3
-    name: string
-    profession: Profession | null
-    department: Department | null
-    preferences: NewsCategory[]
-    isComplete: boolean
-  }
-  user: UserProfile | null
-  activeTab: 'home' | 'prices' | 'ecosystem' | 'profile'
-}
-```
-
----
+Tema actual: **light default** desde 2026-07, con dark disponible desde perfil. No asumir dark default aunque los tokens dark sigan siendo importantes para compatibilidad.
 
 ## Reglas de desarrollo
 
-1. **Dark theme como default** — la app es principalmente oscura
-2. **TypeScript estricto** — sin `any`, tipar todo
-3. **Español** — toda la UI en español, contexto paraguayo
-4. **Mobile-first** — diseñar para 390px (iPhone 14 Pro) como referencia
-5. **Sin comentarios obvios** — solo comentar el *por qué*, nunca el *qué*
-6. **Componentes small** — si un componente supera ~150 líneas, dividirlo
-7. **Constants extraídas** — nunca hardcodear colores o strings en componentes
-8. **Moneda:** Precios ganaderos en PYG (₲), commodities en USD ($)
+1. Trabajar dentro de `mobile/` para app Expo y dentro de `web/` para web/admin.
+2. TypeScript estricto: no introducir `any`; para datos externos crear tipos de frontera y mapear a tipos de dominio.
+3. UI en espanol con contexto paraguayo. Mantener textos con UTF-8 real; si PowerShell muestra `Ã¡`, verificar bytes antes de editar.
+4. No tocar UI/estilos si el pedido es de backend, datos o documentacion.
+5. No hardcodear colores nuevos en pantallas; usar `Colors`/`useColors`.
+6. Mantener AsyncStorage como cache local, pero preferir Supabase como fuente persistente para datos de usuario reales.
+7. `mock-data.ts` es fallback/desarrollo, no fuente de verdad de produccion.
+8. Antes de terminar cambios mobile, correr `cd mobile && npm run tsc`.
+9. Hay cambios locales posibles del usuario; no revertir archivos no relacionados.
 
----
-
-## Assets existentes
-
-| Asset | Descripción |
-|---|---|
-| `logo.png` | Logo principal de Agroconecta (160×48px) |
-| `icon.svg` | Ícono escalable |
-| `apple-icon.png` | Ícono para iOS |
-| `placeholder.jpg` / `placeholder.svg` | Imagen fallback para noticias |
-| `placeholder-user.jpg` | Avatar de usuario por defecto |
-
----
-
-## Ecosistema — Productos actuales
-
-| Producto | Categoría | Estado |
-|---|---|---|
-| Eventosagropy | eventos | Activo |
-| Agrojuego | juegos | Activo |
-| Agroconecta | institucional | Activo |
-| (4+ proyectos) | varios | Coming Soon |
-
----
-
-## Comandos útiles
+## Comandos utiles
 
 ```bash
-# Desde mobile/
+# Mobile
 cd mobile
-
-# Iniciar servidor de desarrollo
-npx expo start
-
-# Correr en simulador iOS
-npx expo run:ios
-
-# Correr en emulador Android
-npx expo run:android
-
-# Verificar tipos
-npx tsc --noEmit
-
-# Limpiar caché
+npm start
+npm run android
+npm run ios
+npm run web
+npm run tsc
 npx expo start --clear
+
+# EAS
+cd mobile
+eas build --profile development --platform android
+eas build --profile production --platform android
+
+# Web
+cd web
+npm run dev
+npm run build
+npm run start
 ```
 
----
+## Estado funcional resumido
 
-## Estado del proyecto (2026-05-07)
+Mobile:
+- Auth Supabase, OTP, Google OAuth.
+- Splash, onboarding, perfil, tema claro/oscuro.
+- Home/feed, detalle de articulo, publishers/organizaciones.
+- Precios, eventos, videos/remates, ecosistema, biblioteca, aliados, contacto, legales.
+- Push notifications con registro de token y tap-to-open.
 
-- [x] Análisis del proyecto web original (Next.js)
-- [x] Definición del design system en React Native
-- [ ] Scaffold inicial de Expo Router
-- [ ] Migración de tipos y mock data
-- [ ] Implementación del design system (tokens + componentes base)
-- [ ] Pantalla Splash
-- [ ] Flujo Onboarding
-- [ ] Tab: Home (feed de noticias)
-- [ ] Tab: Precios
-- [ ] Tab: Ecosistema
-- [ ] Tab: Perfil
-- [ ] Persistencia de usuario (AsyncStorage)
-- [ ] Modo claro/oscuro
+Web/admin:
+- Home publica, noticias, precios, ecosistema, quienes somos.
+- Admin para publicaciones, organizaciones, precios, banners, eventos, biblioteca, notificaciones y consultas.
+
+Pendientes relevantes:
+- Tests automatizados.
+- Primer build EAS de produccion validado en dispositivo real.
+- Hidratacion remota completa de perfil al iniciar sesion en un dispositivo sin AsyncStorage local.
+- Mejor observabilidad de errores Supabase en produccion.

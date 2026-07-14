@@ -1,14 +1,11 @@
-import { View, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { SectionHeader } from './SectionHeader'
 import { useColors } from '@/lib/theme-context'
 import { Radius, Spacing } from '@/constants/spacing'
-import { UPCOMING_PLATFORMS, type UpcomingPlatform } from '@/lib/ecosystem-data'
-
-function showComingSoon(platform: UpcomingPlatform) {
-  Alert.alert(`${platform.name} — Próximamente`, platform.description)
-}
+import { UPCOMING_PLATFORMS } from '@/lib/ecosystem-data'
 
 interface Props {
   onViewAll?: () => void
@@ -29,7 +26,7 @@ export function EcosistemaSection({ onViewAll }: Props) {
             key={platform.id}
             style={[styles.tile, { backgroundColor: C.surface, borderColor: C.border }]}
             activeOpacity={0.75}
-            onPress={() => showComingSoon(platform)}
+            onPress={() => router.push(`/(main)/ecosistema/${platform.id}` as any)}
           >
             <View style={[styles.iconWrap, { backgroundColor: `${C.muted}10` }]}>
               <Ionicons name={platform.icon} size={24} color={C.muted} />

@@ -15,6 +15,21 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-07-14 (tarde):** login mobile simplificado a solo Google + código por email (se sacó Apple y contraseña);
+> se corrigió un bug donde una cuenta nueva heredaba el perfil cacheado de la sesión anterior en el mismo
+> dispositivo en vez de disparar onboarding (`resolveProfileForCurrentSession` en `app-context.tsx`); reproductor
+> de YouTube pasó de `WebView` manual a `react-native-youtube-iframe` (arreglaba el error 153); pull-to-refresh
+> en Home/Videos/Precios/Eventos/Aliados/Biblioteca/Noticias; el popup "Próximamente" de Ecosistema ahora es
+> una pantalla propia por plataforma (`ecosistema/[slug].tsx`) con formulario de interés, no un simple modal;
+> notificaciones dejaron de ser cosméticas — `profiles.notification_prefs` se sincroniza desde el perfil y
+> `sendPushToAll` filtra destinatarios por categoría (el push automático al aprobar una nota importante usa
+> `breakingNews`, el envío manual desde `/admin/notificaciones` deja elegir categoría o mandar a todos);
+> redes sociales + WhatsApp agregados en Contacto (mobile) y Footer (web). Se descartó el plan de admin-CMS
+> para el Ecosistema (`ecosystem_sites`, `/admin/ecosistema`) — las próximas plataformas se agregan de forma
+> nativa vía actualizaciones de la app, no dinámicamente desde el panel.
+>
+> **2026-07-14:** `AGENTS.md` queda como guia corta para sesiones con poco contexto; `CLAUDE.md` mantiene la guia amplia. La capa mobile de Supabase ya no usa `any` explicitos en sus mapeadores principales y `app-context` sincroniza perfil/intereses/suscripciones a Supabase best-effort cuando hay usuario autenticado.
+>
 > **2026-07-03:** se reorganizó el repo — todo lo de la app móvil (antes suelto en la raíz: `app/`, `components/`,
 > `lib/`, `constants/`, `assets/`, configs) se movió a `mobile/`. De paso se borró un scaffold viejo de Next.js/v0
 > (`components/ui/*` estilo shadcn, `components/screens/`, `hooks/`, `next.config.*`, `public/`, `styles/`, etc.)
@@ -61,7 +76,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 - **Tablas:** `profiles`, `organizations`, `organization_members`, `posts`, `user_interests`, `user_subscriptions`, `market_prices`, `push_tokens`, `ad_campaigns`
 - **Storage buckets:** `organization-logos`, `banners`, `post-images`
 - **Esquema y seed:** `supabase/schema.sql`, `supabase/seed.sql` + scripts `fix-*.sql` para migraciones puntuales
-- **Acceso desde la app:** `mobile/lib/supabase.ts` (cliente) y `mobile/lib/supabase-repositories.ts` (queries tipadas: posts, organizations, market_prices, events, banners). Los repos mapean snake_case de la DB → camelCase de los tipos TS.
+- **Acceso desde la app:** `mobile/lib/supabase.ts` (cliente) y `mobile/lib/supabase-repositories.ts` (queries tipadas: posts, organizations, market_prices, events, banners, biblioteca). Los repos usan interfaces de fila locales para datos Supabase, normalizan `null` a `undefined`/fallbacks y mapean snake_case de la DB → camelCase de los tipos TS.
 
 ---
 
@@ -199,19 +214,21 @@ Múltiplos de 4. Base unit = 4px.
 Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya hay).
 
 ### 2. Auth + Onboarding
-- Login Supabase (`mobile/app/(auth)/login.tsx`).
+- Login Supabase (`mobile/app/(auth)/login.tsx`) — solo dos opciones: **Google (OAuth)** y **código por email (OTP de 8 dígitos)**. No hay login con contraseña ni Apple.
 - Onboarding recoge: **nombre, email, teléfono, profesión, departamento, preferencias de noticias, suscripciones a organizaciones/medios**.
 - Al completar: crea `UserProfile`, lo persiste en AsyncStorage y marca `isComplete`.
+- `resolveProfileForCurrentSession()` (en `app-context.tsx`) se llama justo después de un login exitoso: valida que el perfil cacheado en AsyncStorage pertenezca al `auth.uid()` de la sesión actual antes de saltar onboarding — evita que una cuenta nueva en el mismo dispositivo herede el perfil de la cuenta anterior.
 
-### 3. Main — Bottom Tabs (5 tabs)
+### 3. Main — Bottom Tabs (4 tabs) + header
 
 | Tab | Descripción |
 |---|---|
 | Inicio | Feed de noticias con filtros, búsqueda y anuncios segmentados |
+| Descubrir | Tab de Ecosistema — plataformas propias, próximas (Clasificados, Bolsa de Trabajo, Remates Online, Cursos) con pantalla propia + CTA de interés, medios e instituciones |
 | Precios | Precios ganaderos (PYG ₲) + commodities internacionales (USD $) |
-| Videos | Videos y remates (YouTube embeds / WebView) |
-| Ecosistema | Plataformas propias + medios + instituciones |
 | Perfil | Datos del usuario, tema, notificaciones, preferencias |
+
+Videos/Remates (`videos.tsx`, reproductor `react-native-youtube-iframe`) no está en la tab bar — se accede desde el botón "EN VIVO" del header y el drawer.
 
 ---
 
@@ -231,7 +248,7 @@ Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya
 ## Reglas de desarrollo
 
 1. **Light theme como default** (cambiado 2026-07-03); el tema oscuro sigue disponible vía `theme-context` y el usuario puede activarlo desde su perfil.
-2. **TypeScript estricto** — sin `any` en código nuevo (los repos legacy usan `any` en el mapeo de filas; no copiar ese patrón fuera de ahí).
+2. **TypeScript estricto** — sin `any` en código nuevo. Para datos externos, crear tipos de frontera y mapearlos a tipos de dominio antes de llegar a UI.
 3. **Español** — toda la UI en español, contexto paraguayo.
 4. **Mobile-first** — referencia 390px (iPhone 14 Pro).
 5. **Sin comentarios obvios** — comentar el *por qué*, no el *qué*.
@@ -239,6 +256,7 @@ Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya
 7. **Constants extraídas** — nunca hardcodear colores ni strings.
 8. **Moneda:** ganadero en PYG (₲), commodities en USD ($).
 9. **Datos:** preferir los repositorios de Supabase; `mock-data.ts` es solo fallback/desarrollo.
+10. **Perfil de usuario:** AsyncStorage funciona como cache local; al completar onboarding o editar perfil, `app-context` sincroniza best-effort `profiles`, `user_interests` y `user_subscriptions` en Supabase si el usuario tiene UUID valido.
 
 ---
 
@@ -265,7 +283,7 @@ npm run start          # next start -p 3000
 
 ---
 
-## Estado del proyecto (2026-07-03)
+## Estado del proyecto (2026-07-14)
 
 ### App móvil — ✅ funcional
 - [x] Scaffold Expo Router + design system (tokens + componentes base)
@@ -278,22 +296,34 @@ npm run start          # next start -p 3000
 - [x] Notificaciones push activas de punta a punta (registro de token + tap-to-open)
 - [x] Tema claro/oscuro
 - [x] `npm run tsc` pasa sin errores
+- [x] Repositorios Supabase tipados en la frontera de filas y sin `any` explicitos en los mapeadores principales
+- [x] Perfil local sincroniza best-effort a Supabase al completar onboarding/editar perfil
 - [x] EAS configurado (`mobile/eas.json`) — falta generar el primer build
-- [x] Tema claro por defecto, grid de noticias 2 columnas + skeleton, legales, páginas de servicio, ecosistema editable desde admin, campanita persistida, eventos por organizador (2026-07-03)
+- [x] Tema claro por defecto, grid de noticias 2 columnas + skeleton, legales, páginas de servicio, campanita persistida, eventos por organizador (2026-07-03)
+- [x] Login solo Google + código OTP, bug de onboarding con cuenta nueva resuelto, YouTube nativo, pull-to-refresh en pantallas principales, popup de Ecosistema reemplazado por pantalla + CTA de interés, notificaciones con efecto real, redes sociales + WhatsApp en Contacto, tildes de departamentos/profesiones corregidas, edición de profesión, recordatorio de remates (2026-07-14)
+- [x] Biblioteca digital (listado, detalle, "Mis colecciones", URL externa de archivo)
 
 ### Web — ✅ funcional
 - [x] Páginas públicas: home, noticias/[id] (SSR+OG), precios, ecosistema, quiénes-somos
-- [x] Panel admin: login, publicaciones (aprobar/rechazar), organizaciones, precios, banners, eventos (programa + tagging de noticias), ecosistema (logos + disponibilidad)
+- [x] Panel admin: login, publicaciones (aprobar/rechazar), organizaciones, precios, banners, eventos (programa + tagging de noticias), notificaciones (push manual con categoría opcional)
 - [x] SEO: robots.ts, sitemap.ts
 - [x] Deploy Hostinger — build corre en GitHub Actions (no en el servidor), solo se sube el resultado compilado de `web/` en modo standalone
 - [x] Endpoint `POST /api/service-lead` listo para enviar los leads de servicio por email vía Resend (falta cargar `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO`)
 
+> Nota: la sección "Ecosistema" del admin (`ecosystem_sites`, logos + disponibilidad editable) se sacó del panel
+> (ver `web/app/admin/(dashboard)/`, tarea "Eliminar sección Ecosistema del admin") y **no se va a retomar**: las
+> próximas plataformas del ecosistema mobile (`mobile/lib/ecosystem-data.ts`) se agregan hardcodeadas vía
+> actualización nativa de la app, no dinámicamente desde un admin. El SQL `fix-ecosystem-sites.sql` que crea esa
+> tabla quedó obsoleto — no hace falta correrlo.
+
 ### Pendiente
-- [ ] Cursos (listado + inscripción) — diseño en `docs/ESTRUCTURA-Y-ROADMAP.md`
-- [ ] Biblioteca digital tipo Netflix (colección de libros) — diseño en `docs/ESTRUCTURA-Y-ROADMAP.md`
+- [ ] Cursos: se queda como está por ahora (solo la pantalla "Próximamente" + formulario de interés en Ecosistema) — el diseño completo de catálogo/inscripción en `docs/ESTRUCTURA-Y-ROADMAP.md` queda de referencia para cuando se decida retomarlo, sin fecha.
 - [ ] Generar el primer development/production build con EAS
-- [ ] Correr `supabase/fix-ecosystem-sites.sql` y `supabase/fix-organizer-events-and-notify.sql` en Supabase, y cargar el ecosistema desde `/admin/ecosistema`
-- [ ] Cuenta de Resend + secrets `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO` para que el email de leads funcione de punta a punta
-- [ ] Próximas plataformas del ecosistema: AgroClima, AgroMercado, AgroTV
+- [ ] Correr `supabase/fix-organizer-events-and-notify.sql` en Supabase si todavía no se corrió (necesario para eventos por organizador + campanita)
+- [ ] Cuenta de Resend + secrets `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO` para que el email de leads (servicios, oportunidad comercial, interés en Ecosistema) funcione de punta a punta — hoy el insert en Supabase ya funciona, falta el aviso por mail
 - [ ] Formularios de publicación desde la app móvil (hoy solo desde web admin)
-- [ ] Tests (no hay suite todavía)
+- [ ] Tests (no hay suite todavía — evaluar si vale la pena antes de crecer más el código)
+- [ ] Hidratación remota completa del perfil al iniciar sesión en un dispositivo sin AsyncStorage local
+- [ ] Observabilidad/telemetría de errores Supabase en producción
+
+Descartado (decisión de producto, 2026-07-14): próximas plataformas del ecosistema AgroClima, AgroMercado y AgroTV — no se van a construir.

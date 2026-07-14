@@ -1,36 +1,198 @@
 import { supabase } from './supabase'
 import { supabaseEvents } from './supabase-events'
-import type { AdCampaign, AdPlacement, AgroEvent, EventScheduleItem, LibraryItem, MarketPrice, Organization, Post, UserLibraryEntry } from './types'
+import type {
+  AdCampaign,
+  AdPlacement,
+  AgroEvent,
+  AllyCategory,
+  AllyPlan,
+  AuctionStatus,
+  CommercialStatus,
+  ContentType,
+  Department,
+  EditorialStatus,
+  EventScheduleItem,
+  LibraryCategory,
+  LibraryItem,
+  MarketPrice,
+  MarketPriceKind,
+  NewsCategory,
+  Organization,
+  OrganizationType,
+  Post,
+  UserLibraryEntry,
+} from './types'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const POST_SELECT = '*, organizations(name, logo_url, slug)'
 
-function mapPost(row: any): Post {
-  const org = Array.isArray(row.organizations) ? row.organizations[0] : row.organizations
+interface RelatedOrganizationRow {
+  name: string | null
+  logo_url: string | null
+  slug: string | null
+}
+
+type MaybeArray<T> = T | T[] | null
+
+interface PostRow {
+  id: string
+  slug?: string | null
+  title: string
+  summary: string
+  content: string | null
+  category: NewsCategory
+  content_type?: ContentType | null
+  editorial_status?: EditorialStatus | null
+  is_important?: boolean | null
+  is_highlighted?: boolean | null
+  image_url: string | null
+  organization_id?: string | null
+  target_departments?: Department[] | null
+  published_at?: string | null
+  created_at: string
+  youtube_url?: string | null
+  auction_status?: AuctionStatus | null
+  starts_at?: string | null
+  event_tag?: string | null
+  organizations?: MaybeArray<RelatedOrganizationRow>
+}
+
+interface OrganizationRow {
+  id: string
+  slug: string
+  name: string
+  description: string
+  type: OrganizationType
+  is_verified: boolean
+  commercial_status: CommercialStatus
+  plan_name: string
+  plan_started_at?: string | null
+  billing_notes?: string | null
+  logo_url?: string | null
+  events_organizer_slug?: string | null
+  ally_plan?: AllyPlan | null
+  ally_category?: AllyCategory | null
+  ally_founder?: boolean | null
+  contact_phone?: string | null
+}
+
+interface AgroEventRow {
+  id: string
+  title: string
+  description?: string | null
+  long_description?: string | null
+  category?: string | null
+  date: string
+  end_date?: string | null
+  time?: string | null
+  location?: string | null
+  city?: string | null
+  department?: string | null
+  image_url?: string | null
+  internal_banner_url?: string | null
+  slug: string
+  is_premium?: boolean | null
+  speakers?: string[] | null
+  important_links?: { label: string; url: string }[] | null
+  maps_url?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  organization_id?: string | null
+  created_at: string
+}
+
+interface AdCampaignRow {
+  id: string
+  title: string
+  image_url: string
+  placement?: AdPlacement[] | null
+  target_professions?: AdCampaign['targetProfessions'] | null
+  target_departments?: Department[] | null
+  target_categories?: NewsCategory[] | null
+  starts_at?: string | null
+  ends_at?: string | null
+  created_at: string
+  is_active: boolean
+  link_type?: AdCampaign['linkType'] | null
+  link_target?: string | null
+}
+
+interface LibraryItemRow {
+  id: string
+  title: string
+  author?: string | null
+  description: string
+  category: LibraryCategory
+  cover_image_url: string
+  file_url: string
+  file_type: string
+  page_count?: number | null
+  created_at: string
+}
+
+interface UserLibraryRow {
+  item_id: string
+  added_at: string
+  last_opened_at?: string | null
+  progress_percent?: number | string | null
+}
+
+interface EventScheduleItemRow {
+  id: string
+  event_slug: string
+  day_label?: string | null
+  time?: string | null
+  title: string
+  description?: string | null
+  speaker?: string | null
+  order_index: number
+}
+
+interface MarketPriceRow {
+  id: string
+  kind: MarketPriceKind
+  label: string
+  market: string
+  currency: MarketPrice['currency']
+  unit: string
+  value: number | string
+  change: number | string
+  change_percent: number | string
+  updated_at: string
+}
+
+function firstRelation<T>(relation: MaybeArray<T> | undefined): T | null {
+  if (Array.isArray(relation)) return relation[0] ?? null
+  return relation ?? null
+}
+
+function mapPost(row: PostRow): Post {
+  const org = firstRelation(row.organizations)
   return {
     id: row.id,
     slug: row.slug ?? undefined,
     title: row.title,
     summary: row.summary,
-    content: row.content,
+    content: row.content ?? '',
     category: row.category,
-    contentType: row.content_type,
-    editorialStatus: row.editorial_status,
-    isImportant: row.is_important,
-    isHighlighted: row.is_highlighted,
-    imageUrl: row.image_url,
+    contentType: row.content_type ?? undefined,
+    editorialStatus: row.editorial_status ?? undefined,
+    isImportant: row.is_important ?? undefined,
+    isHighlighted: row.is_highlighted ?? undefined,
+    imageUrl: row.image_url ?? '',
     source: org?.name ?? 'Agroconecta',
-    organizationId: row.organization_id,
+    organizationId: row.organization_id ?? undefined,
     organizationLogoUrl: org?.logo_url ?? undefined,
     organizationSlug: org?.slug ?? undefined,
-    publisherId: row.organization_id,
+    publisherId: row.organization_id ?? undefined,
     targetDepartments: row.target_departments ?? [],
     publishedAt: new Date(row.published_at ?? row.created_at),
     readTime: Math.max(2, Math.ceil(String(row.content ?? '').length / 900)),
-    youtubeUrl: row.youtube_url,
-    auctionStatus: row.auction_status,
+    youtubeUrl: row.youtube_url ?? undefined,
+    auctionStatus: row.auction_status ?? undefined,
     startsAt: row.starts_at ? new Date(row.starts_at) : undefined,
+    eventTag: row.event_tag ?? undefined,
   }
 }
 
@@ -42,7 +204,7 @@ export async function fetchPublishedPosts(): Promise<Post[]> {
     .order('published_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map(mapPost)
+  return (data ?? []).map((row) => mapPost(row as PostRow))
 }
 
 export async function fetchPostsByOrganization(orgId: string): Promise<Post[]> {
@@ -54,7 +216,7 @@ export async function fetchPostsByOrganization(orgId: string): Promise<Post[]> {
     .order('published_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map(mapPost)
+  return (data ?? []).map((row) => mapPost(row as PostRow))
 }
 
 // Videos/remates marcados "en vivo" ahora mismo, para el botón EN VIVO del header.
@@ -67,7 +229,7 @@ export async function fetchLiveVideos(): Promise<Post[]> {
     .eq('editorial_status', 'published')
 
   if (error) throw error
-  return (data ?? []).map(mapPost)
+  return (data ?? []).map((row) => mapPost(row as PostRow))
 }
 
 // Acepta tanto el slug legible como el uuid crudo (deep links de push notifications
@@ -83,10 +245,10 @@ export async function fetchPublishedPostBySlug(slugOrId: string): Promise<Post |
 
   if (error) throw error
   if (!data) return null
-  return mapPost(data as any)
+  return mapPost(data as PostRow)
 }
 
-function mapOrganization(row: any): Organization {
+function mapOrganization(row: OrganizationRow): Organization {
   return {
     id: row.id,
     slug: row.slug,
@@ -97,8 +259,8 @@ function mapOrganization(row: any): Organization {
     commercialStatus: row.commercial_status,
     planName: row.plan_name,
     planStartedAt: row.plan_started_at ? new Date(row.plan_started_at) : undefined,
-    billingNotes: row.billing_notes,
-    logoUrl: row.logo_url,
+    billingNotes: row.billing_notes ?? undefined,
+    logoUrl: row.logo_url ?? undefined,
     eventsOrganizerSlug: row.events_organizer_slug ?? undefined,
     allyPlan: row.ally_plan ?? undefined,
     allyCategory: row.ally_category ?? undefined,
@@ -117,7 +279,7 @@ export async function fetchOrganizations(): Promise<Organization[]> {
     .order('name')
 
   if (error) throw error
-  return (data ?? []).map(mapOrganization)
+  return (data ?? []).map((row) => mapOrganization(row as OrganizationRow))
 }
 
 // Directorio de Aliados: organizaciones que pagan el fee anual, independiente de si
@@ -131,7 +293,7 @@ export async function fetchAllyDirectory(): Promise<Organization[]> {
     .order('name')
 
   if (error) throw error
-  return (data ?? []).map(mapOrganization)
+  return (data ?? []).map((row) => mapOrganization(row as OrganizationRow))
 }
 
 export async function fetchOrganizationById(id: string): Promise<Organization | null> {
@@ -143,32 +305,32 @@ export async function fetchOrganizationById(id: string): Promise<Organization | 
 
   if (error) throw error
   if (!data) return null
-  return mapOrganization(data)
+  return mapOrganization(data as OrganizationRow)
 }
 
-function mapEvent(row: any): AgroEvent {
+function mapEvent(row: AgroEventRow): AgroEvent {
   return {
     id: row.id,
     title: row.title,
     description: row.description ?? '',
-    longDescription: row.long_description,
+    longDescription: row.long_description ?? undefined,
     category: row.category ?? '',
     date: row.date,
-    endDate: row.end_date,
-    time: row.time,
+    endDate: row.end_date ?? undefined,
+    time: row.time ?? undefined,
     location: row.location ?? '',
-    city: row.city,
-    department: row.department,
-    imageUrl: row.image_url,
-    internalBannerUrl: row.internal_banner_url,
+    city: row.city ?? undefined,
+    department: row.department ?? undefined,
+    imageUrl: row.image_url ?? undefined,
+    internalBannerUrl: row.internal_banner_url ?? undefined,
     slug: row.slug,
     isPremium: row.is_premium ?? false,
-    speakers: row.speakers,
-    importantLinks: row.important_links,
-    mapsUrl: row.maps_url,
-    contactEmail: row.contact_email,
-    contactPhone: row.contact_phone,
-    organizationId: row.organization_id,
+    speakers: row.speakers ?? undefined,
+    importantLinks: row.important_links ?? undefined,
+    mapsUrl: row.maps_url ?? undefined,
+    contactEmail: row.contact_email ?? undefined,
+    contactPhone: row.contact_phone ?? undefined,
+    organizationId: row.organization_id ?? undefined,
     createdAt: row.created_at,
   }
 }
@@ -184,7 +346,7 @@ export async function fetchUpcomingEvents(limit = 10): Promise<AgroEvent[]> {
     .limit(limit)
 
   if (error) throw error
-  return (data ?? []).map(mapEvent)
+  return (data ?? []).map((row) => mapEvent(row as AgroEventRow))
 }
 
 export async function fetchAllEvents(): Promise<AgroEvent[]> {
@@ -197,7 +359,7 @@ export async function fetchAllEvents(): Promise<AgroEvent[]> {
     .order('date', { ascending: true })
 
   if (error) throw error
-  return (data ?? []).map(mapEvent)
+  return (data ?? []).map((row) => mapEvent(row as AgroEventRow))
 }
 
 export async function fetchEventBySlug(slug: string): Promise<AgroEvent | null> {
@@ -210,7 +372,7 @@ export async function fetchEventBySlug(slug: string): Promise<AgroEvent | null> 
 
   if (error) throw error
   if (!data) return null
-  return mapEvent(data)
+  return mapEvent(data as AgroEventRow)
 }
 
 export async function fetchEventsByOrganizerSlug(organizerSlug: string): Promise<AgroEvent[]> {
@@ -230,7 +392,7 @@ export async function fetchEventsByOrganizerSlug(organizerSlug: string): Promise
     .order('date', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map(mapEvent)
+  return (data ?? []).map((row) => mapEvent(row as AgroEventRow))
 }
 
 export async function fetchSubscriptionNotify(userId: string, organizationId: string): Promise<boolean | null> {
@@ -261,23 +423,26 @@ export async function fetchActiveBanners(placement: AdPlacement = 'home'): Promi
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    title: row.title,
-    imageUrl: row.image_url,
-    placement: row.placement ?? ['home'],
-    targetProfessions: row.target_professions ?? [],
-    targetDepartments: row.target_departments ?? [],
-    targetCategories: row.target_categories ?? [],
-    startsAt: new Date(row.starts_at ?? row.created_at),
-    endsAt: row.ends_at ? new Date(row.ends_at) : undefined,
-    isActive: row.is_active,
-    linkType: row.link_type ?? undefined,
-    linkTarget: row.link_target ?? undefined,
-  }))
+  return (data ?? []).map((row) => {
+    const typed = row as AdCampaignRow
+    return {
+      id: typed.id,
+      title: typed.title,
+      imageUrl: typed.image_url,
+      placement: typed.placement ?? ['home'],
+      targetProfessions: typed.target_professions ?? [],
+      targetDepartments: typed.target_departments ?? [],
+      targetCategories: typed.target_categories ?? [],
+      startsAt: new Date(typed.starts_at ?? typed.created_at),
+      endsAt: typed.ends_at ? new Date(typed.ends_at) : undefined,
+      isActive: typed.is_active,
+      linkType: typed.link_type ?? undefined,
+      linkTarget: typed.link_target ?? undefined,
+    }
+  })
 }
 
-function mapLibraryItem(row: any): LibraryItem {
+function mapLibraryItem(row: LibraryItemRow): LibraryItem {
   return {
     id: row.id,
     title: row.title,
@@ -300,7 +465,7 @@ export async function fetchLibraryItems(): Promise<LibraryItem[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map(mapLibraryItem)
+  return (data ?? []).map((row) => mapLibraryItem(row as LibraryItemRow))
 }
 
 export async function fetchLibraryItemById(id: string): Promise<LibraryItem | null> {
@@ -313,7 +478,7 @@ export async function fetchLibraryItemById(id: string): Promise<LibraryItem | nu
 
   if (error) throw error
   if (!data) return null
-  return mapLibraryItem(data)
+  return mapLibraryItem(data as LibraryItemRow)
 }
 
 export async function fetchUserLibrary(userId: string): Promise<UserLibraryEntry[]> {
@@ -323,12 +488,15 @@ export async function fetchUserLibrary(userId: string): Promise<UserLibraryEntry
     .eq('user_id', userId)
 
   if (error) throw error
-  return (data ?? []).map((row: any) => ({
-    itemId: row.item_id,
-    addedAt: new Date(row.added_at),
-    lastOpenedAt: row.last_opened_at ? new Date(row.last_opened_at) : undefined,
-    progressPercent: Number(row.progress_percent ?? 0),
-  }))
+  return (data ?? []).map((row) => {
+    const typed = row as UserLibraryRow
+    return {
+      itemId: typed.item_id,
+      addedAt: new Date(typed.added_at),
+      lastOpenedAt: typed.last_opened_at ? new Date(typed.last_opened_at) : undefined,
+      progressPercent: Number(typed.progress_percent ?? 0),
+    }
+  })
 }
 
 export async function addToUserLibrary(userId: string, itemId: string): Promise<void> {
@@ -365,16 +533,19 @@ export async function fetchEventSchedule(eventSlug: string): Promise<EventSchedu
     .order('order_index', { ascending: true })
 
   if (error) throw error
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    eventSlug: row.event_slug,
-    dayLabel: row.day_label ?? undefined,
-    time: row.time ?? undefined,
-    title: row.title,
-    description: row.description ?? undefined,
-    speaker: row.speaker ?? undefined,
-    orderIndex: row.order_index,
-  }))
+  return (data ?? []).map((row) => {
+    const typed = row as EventScheduleItemRow
+    return {
+      id: typed.id,
+      eventSlug: typed.event_slug,
+      dayLabel: typed.day_label ?? undefined,
+      time: typed.time ?? undefined,
+      title: typed.title,
+      description: typed.description ?? undefined,
+      speaker: typed.speaker ?? undefined,
+      orderIndex: typed.order_index,
+    }
+  })
 }
 
 export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
@@ -386,7 +557,7 @@ export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
     .order('published_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map(mapPost)
+  return (data ?? []).map((row) => mapPost(row as PostRow))
 }
 
 export async function fetchMarketPrices(): Promise<MarketPrice[]> {
@@ -396,16 +567,19 @@ export async function fetchMarketPrices(): Promise<MarketPrice[]> {
     .order('updated_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    kind: row.kind,
-    label: row.label,
-    market: row.market,
-    currency: row.currency,
-    unit: row.unit,
-    value: Number(row.value),
-    change: Number(row.change),
-    changePercent: Number(row.change_percent),
-    updatedAt: new Date(row.updated_at),
-  }))
+  return (data ?? []).map((row) => {
+    const typed = row as MarketPriceRow
+    return {
+      id: typed.id,
+      kind: typed.kind,
+      label: typed.label,
+      market: typed.market,
+      currency: typed.currency,
+      unit: typed.unit,
+      value: Number(typed.value),
+      change: Number(typed.change),
+      changePercent: Number(typed.change_percent),
+      updatedAt: new Date(typed.updated_at),
+    }
+  })
 }

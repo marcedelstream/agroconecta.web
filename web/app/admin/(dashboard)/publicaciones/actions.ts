@@ -126,7 +126,7 @@ export async function approvePost(formData: FormData) {
       title: post.title,
       body: post.summary || 'Nueva publicación importante en Agroconecta.',
       data: { articleId: id },
-    }).catch(() => null)
+    }, 'breakingNews').catch(() => null)
   }
 
   revalidatePath('/admin/publicaciones')

@@ -207,6 +207,184 @@ eas build --profile production --platform android
 - [ ] Tests (no hay suite todavía)
 - [ ] Configurar `eas.json` si en algún momento se decide usar EAS Build/Submit para Play Store
 
+---
+
+## 8. Feature 4 (propuesta, sin fecha) — Descubrir como módulos reales, no solo "Próximamente"
+
+> **2026-07-14:** anotado a pedido explícito, para retomar en una actualización futura — no arrancar sin
+> confirmar primero, es una propuesta de arquitectura, no un compromiso de sprint.
+
+**Problema a resolver:** hoy Clasificados, Bolsa de Trabajo, Remates Online y Cursos son 4 tiles en Descubrir
+que abren la misma pantalla genérica (`mobile/app/(main)/ecosistema/[slug].tsx`) con descripción + formulario
+de interés (`service_leads`). La propuesta es cómo construir las versiones reales de cada uno sin terminar
+con 4 subsistemas separados, cada uno con su propio schema, su propia cola de moderación y su propio admin.
+
+**La idea central — reusar la columna vertebral que ya existe, no duplicarla.** `posts` ya es un tipo unificado
+(`content_type`: `article | video | auction | institutional_notice`) con todo lo caro ya resuelto: cola de
+moderación (`editorial_status`: draft → pending_review → published → rejected/archived), RLS, ownership por
+`organization_id`, push automático al aprobar, banners segmentados por categoría, admin CRUD en
+`/admin/publicaciones`. Extender ese mismo tipo en vez de inventar 4 tablas + 4 pantallas admin nuevas desde
+cero es lo que lo hace escalable de verdad:
+
+1. **Remates Online — prácticamente gratis.** `content_type: 'auction'` con `auction_status`
+   (`upcoming/live/finished`) **ya existe y ya funciona** (`mobile/app/(main)/video/[id].tsx`,
+   `videos.tsx`). Solo falta exponer ese mismo feed filtrado dentro de la pestaña Descubrir en vez de que
+   viva únicamente en Videos. Esto se podría hacer primero — es casi 100% trabajo de UI, cero schema nuevo.
+
+2. **Clasificados y Bolsa de Trabajo — mismo patrón, un `content_type` nuevo cada uno.** Agregar
+   `classified_listing` y `job_listing` al enum `content_type`, y una columna `metadata jsonb` en `posts`
+   para los campos propios de cada tipo (precio/moneda/ubicación para clasificados; rango salarial/modalidad
+   para empleos) sin tocar el resto de columnas. Se hereda gratis: moderación, RLS, ownership, admin CRUD
+   (solo hay que agregar los campos de `metadata` al formulario del admin), y el feed ya sabe filtrar por
+   `content_type`. El costo real por módulo es: 1-2 pantallas mobile (lista + detalle) + los campos nuevos en
+   el form de `/admin/publicaciones` — no un subsistema nuevo.
+
+3. **Cursos — el único que sí necesita tablas propias.** Inscripción/capacidad/asistencia es una forma de
+   dato genuinamente distinta (no es "contenido editorial", es una relación usuario↔sesión con estado). Acá
+   sí aplica el diseño ya escrito en la sección 3 de este documento — no forzarlo dentro de `posts`.
+
+**Rollout sin bloquear nada:** `UPCOMING_PLATFORMS` (`mobile/lib/ecosystem-data.ts`) pasa a tener un campo
+`status: 'coming_soon' | 'live'`. Mientras un módulo esté en `coming_soon` sigue mostrando la pantalla actual
+de interés (`ecosistema/[slug].tsx`, ya construida) — el día que se activa, ese slug pasa a renderizar la
+pantalla real del módulo. Cada plataforma se prende de forma independiente, sin tocar las otras tres.
+
+**Orden sugerido:** Remates Online (casi gratis) → Clasificados → Bolsa de Trabajo → Cursos (el más caro,
+al final).
+
 Descartado (2026-07-14): AgroClima, AgroMercado, AgroTV — no se van a construir. Las próximas plataformas del
 ecosistema mobile se agregan hardcodeadas vía actualización nativa de la app (`mobile/lib/ecosystem-data.ts`),
 no desde un admin dinámico.
+
+---
+
+## 9. Feature 5 (propuesta, sin fecha) — Evento Especial estilo OneFootball
+
+> **2026-07-14:** anotado a pedido explícito para la **próxima versión** de la app — no arrancar sin
+> confirmar primero. Es la evolución del hub de eventos que ya existe (`event/[slug].tsx`, Info/Programa/
+> Noticias), pensada como feature premium para vender a organizaciones (ver sección de monetización
+> discutida en chat — encaja directo con el modelo "Aliado Cosecha" ya diseñado).
+
+**Alcance confirmado con el usuario (dos preguntas resueltas):**
+- Qué se calca de OneFootball: **timeline en vivo + alertas push** — no el marcador automático (acá no hay
+  un feed de datos que se actualice solo, como el resultado de un partido).
+- Quién publica las actualizaciones: **el organizador, a mano**, como un liveblog — no es automático.
+
+**Restricción de arquitectura a respetar (ya documentada en la sección 1):** los `events` viven en el
+Supabase **externo** de eventosagropy.com — no hay FK real entre ese proyecto y el principal. Igual que
+`event_schedule_items` y `posts.event_tag`, la tabla nueva va en el Supabase **principal**, referenciando el
+evento por `event_slug` (texto), no por FK.
+
+### Schema propuesto (`supabase/`, mismo archivo/patrón que `event_schedule_items`)
+```sql
+create table if not exists public.event_live_updates (
+  id uuid primary key default gen_random_uuid(),
+  event_slug text not null,
+  headline text not null,
+  body text,
+  is_pinned boolean not null default false,   -- para fijar un update arriba de todos (ej. "Remate confirmado")
+  notify boolean not null default false,       -- si true, dispara push al crearse
+  posted_at timestamptz not null default now(),
+  posted_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index event_live_updates_slug_idx on event_live_updates (event_slug, posted_at desc);
+```
+RLS: lectura pública; escritura solo para admins/org_editor de la organización dueña del evento (mismo
+criterio de permisos que ya usa `/admin/eventos`).
+
+### Admin (web) — `/admin/eventos`
+Nueva sub-sección "En vivo" junto a Programa y Tagging de noticias, mismo patrón de formulario + lista
+cronológica ya construido para Programa: título corto + texto opcional + checkbox "fijar arriba" + checkbox
+"enviar notificación". Al crear un update con `notify: true`, el server action llama a `sendPushToAll(...)`
+reusando el filtro por categoría que ya armamos para notificaciones (Fase de notificaciones reales,
+2026-07-14) — no hay que construir esa parte de nuevo.
+
+### Mobile — hub del evento (`event/[slug].tsx`)
+- Nueva pestaña **"En Vivo"**, junto a Info/Programa/Noticias, con el mismo criterio ya usado: solo aparece
+  si el evento tiene updates cargados.
+- Timeline vertical, más reciente arriba; el update fijado (`is_pinned`) se destaca aparte con otro estilo.
+- Pull-to-refresh para traer actualizaciones nuevas sin salir de la pantalla (mismo patrón de la Fase F).
+- Badge "EN VIVO" en el header del hub mientras el evento está en su ventana de fecha activa — reusar el
+  mismo patrón visual que ya existe para remates en vivo en `video/[id].tsx`.
+- El push de cada update deep-linkea directo a la pestaña "En Vivo" del evento (mismo mecanismo que ya usa
+  `articleId` para abrir una noticia al tocar la notificación).
+
+### Orden sugerido
+1. Tabla + RLS + CRUD admin de updates, sin push todavía — pestaña "En Vivo" en mobile solo lectura.
+2. Push al crear un update marcado `notify` (reusa infraestructura ya construida).
+3. Badge "EN VIVO" en el header del hub + deep-link directo a la pestaña.
+4. *(v2, opcional, no de entrada)* auto-refresh/polling mientras la pestaña está abierta, para que se sienta
+   más "en vivo" sin que el usuario tenga que tirar del pull-to-refresh a cada rato.
+
+---
+
+## 10. Feature 6 (propuesta, sin fecha) — Scraping de noticias institucionales (MAG, SENAVE, INFONA)
+
+> **2026-07-14:** anotado a pedido explícito, para la **próxima versión**. Decisiones ya confirmadas con el
+> usuario vía preguntas directas: (1) modelo **resumen + link afuera** (no contenido completo — evita el
+> riesgo legal de republicar notas ajenas), (2) los 3 dominios a monitorear ya están confirmados:
+> `mag.gov.py`, `senave.gov.py`, `infona.gov.py`.
+
+**Por qué "resumen + link" y no "contenido completo":** extraer título/imagen/resumen y linkear afuera es
+el modelo estándar de cualquier agregador (Google News, Flipboard) y no tiene riesgo de copyright. Traer y
+republicar el cuerpo completo de la nota de otro sitio sí lo tiene — la mayoría de los medios prohíben esto
+en sus términos de uso. Se descarta esa opción.
+
+### Auditoría real de los 3 dominios (hecha en esta sesión, navegando cada sitio)
+
+Cada dominio necesita un adaptador distinto porque no todos exponen la misma estructura:
+
+| Dominio | CMS | Método de extracción | Dificultad |
+|---|---|---|---|
+| `senave.gov.py` | WordPress | **API REST nativa** — `GET /wp-json/wp/v2/posts?per_page=10&_embed` devuelve JSON con `title.rendered`, `excerpt.rendered`, `link`, `date`, e imagen destacada en `_embedded['wp:featuredmedia'][0].source_url`. Confirmado funcionando, sin autenticación. | Trivial — no hace falta scraping de HTML, es un fetch + parseo de JSON. |
+| `infona.gov.py` | WordPress | Mismo caso que SENAVE — API REST abierta, mismos campos. Confirmado funcionando. | Trivial, igual que SENAVE. |
+| `mag.gov.py` | Concrete5 (CMS a medida, no WordPress) | **No tiene API ni Open Graph.** Sí tiene: `<meta name="description">` con resumen limpio, URL canónica (`link[rel=canonical]`), listado de notas en `/index.php/noticias` con links a `/index.php/noticias/<slug>`, y la primera imagen dentro del cuerpo del artículo sirve como imagen de portada. Confirmado navegando un artículo real. | Necesita un parser HTML propio (fetch + `cheerio` para leer `<title>`, meta description, primera imagen del contenido) — no es scraping fràgil de "contenido libre", son 3-4 selectores fijos y estables porque el CMS no cambia de estructura seguido. |
+
+**Conclusión de la auditoría: los 3 son viables.** SENAVE e INFONA son el caso fácil (API JSON nativa). MAG
+necesita un adaptador HTML dedicado, pero acotado y estable (no un scraper genérico que se rompe con
+cualquier sitio nuevo).
+
+### Arquitectura propuesta
+
+**Patrón de adaptadores, no un scraper genérico:**
+```ts
+type ScrapeAdapter = 'wordpress-api' | 'mag-html'
+
+interface ScrapeSource {
+  domain: string
+  adapter: ScrapeAdapter
+  baseUrl: string
+  defaultCategory: NewsCategory
+}
+
+const SOURCES: ScrapeSource[] = [
+  { domain: 'senave.gov.py', adapter: 'wordpress-api', baseUrl: 'https://www.senave.gov.py', defaultCategory: 'agricultura' },
+  { domain: 'infona.gov.py', adapter: 'wordpress-api', baseUrl: 'https://infona.gov.py', defaultCategory: 'institucional' },
+  { domain: 'mag.gov.py', adapter: 'mag-html', baseUrl: 'https://www.mag.gov.py', defaultCategory: 'institucional' },
+]
+```
+Agregar un cuarto dominio en el futuro es sumar una entrada a este array (y un adaptador nuevo solo si el
+CMS no es WordPress) — no tocar el resto del sistema.
+
+**Dónde vive lo scrapeado:** en `posts`, con un flag nuevo `source_type: 'manual' | 'scraped'` (o un
+`content_type` nuevo `external_news`, a decidir) + una columna `external_url` (con restricción `unique` para
+deduplicar — si ya existe esa URL, no se reinserta) + `organization_id` **nulo**, usando en cambio el
+`domain` como texto plano en `source` (estas notas no tienen una organización verificada real detrás, a
+diferencia de los medios/gremios que ya publican como `Organization`).
+
+**El cron de dos cortes (6am / 6pt):** no hace falta un endpoint público ni autenticación nueva. La forma
+más simple, sin agregar infraestructura: un **GitHub Actions con `schedule: cron`** (usan `cron: '0 9,21 * *
+*'` en UTC para las 6am/6pm de Paraguay) que corre un script Node (`scripts/scrape-news.mjs`) directo en el
+runner de GitHub, usando el `SUPABASE_SERVICE_ROLE_KEY` que ya está cargado como secret (el mismo que usa el
+deploy) para insertar directo en `posts`. Sin exponer ningún endpoint nuevo a internet.
+
+**Moderación:** las notas scrapeadas entran con `editorial_status: 'pending_review'` igual que cualquier
+otra nota — no se publican solas sin pasar por `/admin/publicaciones`, salvo que el usuario prefiera
+saltear ese paso para estas fuentes institucionales específicas (a decidir cuando se retome).
+
+### Orden sugerido
+1. Adaptador `wordpress-api` (SENAVE + INFONA) — el más rápido de tener funcionando, cero scraping de HTML.
+2. Adaptador `mag-html` — un poco más de trabajo, pero acotado a un solo sitio con estructura estable.
+3. Script + GitHub Action con el cron de dos cortes diarios.
+4. Definir si las notas scrapeadas requieren aprobación manual o se auto-publican para estas 3 fuentes
+   institucionales de confianza.

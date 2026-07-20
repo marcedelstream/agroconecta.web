@@ -10,7 +10,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 | Pieza | Carpeta | Stack | Estado |
 |---|---|---|---|
 | **App móvil** | `mobile/` | React Native + Expo SDK 55 | Funcional, compila sin errores |
-| **Web pública + admin** | `web/` | Next.js 16 (App Router) | Funcional, deploy en Hostinger |
+| **Web pública + admin** | `web/` | Next.js 16 (App Router) | Funcional, deploy en Vercel |
 | **Backend** | `supabase/` | Supabase (Postgres + Auth + Storage) | Operativo |
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
@@ -65,7 +65,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 | Styling | Tailwind CSS 3 |
 | Backend | `@supabase/ssr` + `@supabase/supabase-js` |
 | Auth admin | Supabase Auth (cookies SSR) |
-| Deploy | Hostinger Cloud (PM2 + nginx), CI/CD via GitHub Actions |
+| Deploy | Vercel (Root Directory = `web`, auto-deploy en push a `main`). Método viejo (Hostinger + GitHub Actions) desactivado desde 2026-07-05, ver `DEPLOY.md` sección 8 |
 
 ---
 
@@ -149,9 +149,9 @@ AGROCONECTA APP/
 │
 ├── supabase/                     # schema.sql, seed.sql, fix-*.sql (compartido por mobile/ y web/)
 ├── docs/                         # mvp-implementation.md, ESTRUCTURA-Y-ROADMAP.md, …
-├── DEPLOY.md                     # Guía de deploy Hostinger + CI/CD
+├── DEPLOY.md                     # Guía de deploy (Vercel; método viejo a Hostinger documentado como legacy)
 ├── AGENTS.md                     # Notas para agentes
-└── .github/workflows/deploy-web.yml  # CI/CD a Hostinger (build corre en CI, solo sube el resultado de web/)
+└── .github/workflows/deploy-web.yml  # Deploy a Hostinger — desactivado desde 2026-07-05, solo workflow_dispatch manual
 ```
 
 ---
@@ -307,7 +307,7 @@ npm run start          # next start -p 3000
 - [x] Páginas públicas: home, noticias/[id] (SSR+OG), precios, ecosistema, quiénes-somos
 - [x] Panel admin: login, publicaciones (aprobar/rechazar), organizaciones, precios, banners, eventos (programa + tagging de noticias), notificaciones (push manual con categoría opcional)
 - [x] SEO: robots.ts, sitemap.ts
-- [x] Deploy Hostinger — build corre en GitHub Actions (no en el servidor), solo se sube el resultado compilado de `web/` en modo standalone
+- [x] Deploy en Vercel (Root Directory = `web`, auto-deploy en push a `main`) — desde 2026-07-05, reemplaza al deploy viejo a Hostinger vía GitHub Actions
 - [x] Endpoint `POST /api/service-lead` listo para enviar los leads de servicio por email vía Resend (falta cargar `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO`)
 
 > Nota: la sección "Ecosistema" del admin (`ecosystem_sites`, logos + disponibilidad editable) se sacó del panel

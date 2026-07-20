@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   stepText: { textAlign: 'center' },
   mediaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2], marginTop: Spacing[2] },
   mediaTile: {
-    width: '31.9%',
+    width: '31%',
     minHeight: 126,
     alignItems: 'center',
     justifyContent: 'center',

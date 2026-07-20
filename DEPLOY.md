@@ -15,94 +15,43 @@ git push -u origin main
 
 ---
 
-## 2. Cómo se despliega hoy (build en GitHub Actions, no en el servidor)
+## 2. Cómo se despliega hoy (Vercel — desde 2026-07-05)
 
-El repo es un **monorepo** (app móvil + web). El workflow (`.github/workflows/deploy-web.yml`) solo se dispara
-cuando cambia algo en `web/`, y **el build corre en el runner de GitHub, no en Hostinger**:
+> **La web se migró de Hostinger a Vercel el 2026-07-05.** El workflow de GitHub Actions a Hostinger
+> (`.github/workflows/deploy-web.yml`) quedó **desactivado** (solo corre a mano vía `workflow_dispatch` si
+> alguna vez hiciera falta volver atrás) — no lo uses como referencia para deploys nuevos. La sección 8 de
+> abajo deja el método viejo documentado por si hace falta consultarlo, pero **no es el método actual.**
 
-1. Compila `web/` con `next build` (que usa `output: 'standalone'` — genera un servidor autocontenido con su
-   propio `node_modules` mínimo).
-2. Arma un `.tar.gz` con `server.js` + `.next/standalone` + `public/` + `.next/static` + un `.env` con las
-   variables de producción.
-3. Sube ese único paquete por SSH a `~/domains/agroconecta.com.py/nodejs` y lo extrae ahí.
-4. Toca `tmp/restart.txt` para que Passenger reinicie la app.
+El repo es un **monorepo** (app móvil + web + supabase). Vercel solo necesita saber que el proyecto real
+vive en la subcarpeta `web/`:
 
-**Ni el código de la app móvil ni el resto del monorepo tocan el servidor** — solo el build final de `web/`.
-No hace falta `git clone`, `npm install` ni PM2 en Hostinger; Passenger corre directo `node server.js`.
+1. En [vercel.com](https://vercel.com) → **Add New → Project** → importar este repo de GitHub.
+2. En la pantalla de configuración del proyecto, **Root Directory → `web`** (esto es lo único no-default que
+   hay que tocar; Vercel detecta Next.js solo una vez que le decís dónde está).
+3. Cargar las variables de entorno (Project Settings → Environment Variables, mismas que antes):
 
-### Configuración inicial en hPanel (una sola vez)
+   | Variable | Valor |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://ukodavvtmrrqnfgyvqql.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key de Supabase → Settings → API |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase → Settings → API (¡nunca en un `.env` versionado!) |
+   | `NEXT_PUBLIC_SITE_URL` | `https://agroconecta.com.py` |
+   | `RESEND_API_KEY` | API key de resend.com (opcional — sin esto `/api/service-lead` responde 503 sin romper el resto) |
+   | `SERVICE_LEAD_EMAIL_TO` | Correo interno donde llegan las consultas de servicio (opcional, va con la de arriba) |
 
-En hPanel → **Websites → Node.js** (o "Setup Node.js App"), crear/editar la app con:
+4. Deploy. Cualquier push a `main` que toque `web/` redeploya solo — no hace falta ningún workflow de
+   GitHub Actions, Vercel ya escucha el repo directo.
+5. Dominio propio: Project Settings → Domains → agregar `agroconecta.com.py`, y apuntar el DNS del dominio
+   a los registros que indique Vercel ahí mismo.
 
-| Campo | Valor |
-|---|---|
-| Application root | `domains/agroconecta.com.py/nodejs` |
-| Application startup file | `server.js` |
-| Application URL | `agroconecta.com.py` |
-| Node.js version | 20.x |
-
-No hace falta tocar nginx a mano ni instalar dependencias — Hostinger maneja el proxy interno para las apps
-Node.js registradas ahí.
-
-> `ecosystem.config.js` (PM2) queda obsoleto con este flujo — se puede borrar cuando se confirme que el deploy
-> automático funciona sin él.
-
----
-
-## 3. (Reemplazado por la sección 2 — ya no aplica el proxy manual de nginx)
+**Nota de config ya resuelta:** `next.config.ts` **no** tiene `output: 'standalone'` — se sacó a propósito
+porque rompía el build en Vercel (ver commit `fix: sacar output standalone de next.config, rompia el deploy
+en Vercel`). Esa opción era necesaria para el modo Hostinger/Passenger viejo, no para Vercel — si en algún
+momento alguien la vuelve a agregar "para optimizar", el deploy en Vercel se rompe.
 
 ---
 
-## 4. Configurar GitHub Secrets para CI/CD automático
-
-En GitHub → **Settings → Secrets and variables → Actions**, agregar:
-
-| Secret | Valor |
-|---|---|
-| `HOSTINGER_HOST` | `agroconecta.com.py` |
-| `HOSTINGER_USER` | Tu usuario SSH de Hostinger (empieza con `u...`) |
-| `HOSTINGER_SSH_KEY` | Tu clave SSH privada (ver abajo) |
-| `HOSTINGER_PORT` | Puerto SSH de Hostinger (normalmente `65002`, revisar en hPanel) |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://ukodavvtmrrqnfgyvqql.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key de Supabase → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase → Settings → API (¡nunca subir a un `.env` versionado!) |
-| `NEXT_PUBLIC_SITE_URL` | `https://agroconecta.com.py` |
-| `RESEND_API_KEY` | API key de resend.com — para el envío de emails de los formularios de servicio |
-| `SERVICE_LEAD_EMAIL_TO` | Correo interno de Agroconecta donde llegan las consultas de servicio |
-
-**Importante:** los 4 secrets de Supabase/sitio son necesarios desde que se movió el build a CI — si no están
-cargados en GitHub, el próximo deploy compila la web con las variables de Supabase vacías y el sitio rompe.
-Los 2 de Resend son opcionales: sin ellos, el endpoint `/api/service-lead` responde 503 sin romper el resto del
-sitio (el formulario de la app sigue guardando la consulta en Supabase igual, solo no se manda el email).
-
-### Generar clave SSH para el deploy
-
-En el servidor Hostinger:
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/deploy_key
-cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
-cat ~/.ssh/deploy_key   # <- Copiar este contenido como HOSTINGER_SSH_KEY en GitHub
-```
-
----
-
-## 5. Flujo de trabajo post-setup
-
-Una vez configurado, cualquier push a `main` que toque archivos en `web/` dispara el deploy automáticamente:
-
-```bash
-# Hacer un cambio en web/
-git add web/
-git commit -m "feat: nueva página"
-git push origin main
-# → GitHub Action corre en ~2 minutos
-# → El sitio se actualiza en agroconecta.com.py
-```
-
----
-
-## 6. Acceder al panel admin
+## 3. Acceder al panel admin
 
 - **URL:** `https://agroconecta.com.py/admin`
 - El login redirige a `/admin/login`
@@ -111,7 +60,7 @@ git push origin main
 
 ---
 
-## 7. Acceder al admin localmente (admin-web anterior)
+## 4. Acceder al admin localmente (admin-web anterior)
 
 El panel viejo en `admin-web/` sigue funcionando para pruebas locales:
 
@@ -130,3 +79,34 @@ npm install
 npm run dev
 # Abre: http://localhost:3000/admin
 ```
+
+---
+
+## 8. Método anterior (Hostinger + GitHub Actions) — desactivado, solo referencia
+
+> **No usar esto para deploys nuevos.** Queda documentado por si algún día hace falta volver a Hostinger o
+> entender un deploy viejo. El método actual es la sección 2 (Vercel).
+
+El workflow (`.github/workflows/deploy-web.yml`, hoy con `on: workflow_dispatch` únicamente) compilaba
+`web/` en el runner de GitHub Actions (con `next build` + `output: 'standalone'`, que ya no está en
+`next.config.ts`), armaba un `.tar.gz` con `server.js` + `.next/standalone` + `public/` + `.next/static`, lo
+subía por SSH a `~/domains/agroconecta.com.py/nodejs`, y tocaba `tmp/restart.txt` para que Passenger
+reiniciara la app.
+
+Configuración que tenía en hPanel (**Websites → Node.js**):
+
+| Campo | Valor |
+|---|---|
+| Application root | `domains/agroconecta.com.py/nodejs` |
+| Application startup file | `server.js` |
+| Application URL | `agroconecta.com.py` |
+| Node.js version | 20.x |
+
+GitHub Secrets que usaba (además de los 4 de Supabase/sitio y los 2 de Resend de la sección 2):
+`HOSTINGER_HOST`, `HOSTINGER_USER`, `HOSTINGER_SSH_KEY`, `HOSTINGER_PORT`.
+
+**Importante si algún día se retoma:** la pantalla "Importar repositorio Git" del propio panel de Hostinger
+(distinta del flujo de arriba) **no sirve para este repo** — es un monorepo y Next.js vive en `web/`, no en
+la raíz, así que el auto-detector de framework de Hostinger va a fallar con "el marco no es compatible o la
+estructura de proyecto no es válida" apenas se intente. El método de arriba nunca pasó por esa pantalla:
+crea la app Node.js a mano en hPanel y sube el build ya compilado por SSH.

@@ -5,7 +5,7 @@ import * as Linking from 'expo-linking'
 import * as QueryParams from 'expo-auth-session/build/QueryParams'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
-import type { OnboardingState, UserProfile } from './types'
+import type { Department, NewsCategory, NotificationPreferences, OnboardingState, Profession, UserProfile } from './types'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -82,6 +82,47 @@ function syncUserProfileInBackground(profile: UserProfile) {
   syncUserProfileToSupabase(profile).catch((err) => {
     console.warn('No se pudo sincronizar el perfil con Supabase.', err)
   })
+}
+
+const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
+  breakingNews: true,
+  priceAlerts: true,
+  weatherAlerts: true,
+  institutionalUpdates: false,
+}
+
+// Se usa cuando no hay perfil cacheado en este dispositivo para la cuenta que acaba de iniciar
+// sesion (reinstalacion, dispositivo nuevo, cache borrado) — antes de mandar a onboarding, nos
+// fijamos si esa cuenta ya completo el onboarding antes desde otro dispositivo.
+async function hydrateProfileFromSupabase(authId: string): Promise<UserProfile | null> {
+  const { data: profileRow, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, name, email, phone, profession, department, notification_prefs, created_at')
+    .eq('id', authId)
+    .maybeSingle()
+
+  if (profileError || !profileRow) return null
+
+  const [{ data: interestRows }, { data: subscriptionRows }] = await Promise.all([
+    supabase.from('user_interests').select('category').eq('user_id', authId),
+    supabase.from('user_subscriptions').select('organization_id').eq('user_id', authId),
+  ])
+
+  const organizationIds = (subscriptionRows ?? []).map((row) => row.organization_id as string)
+
+  return {
+    id: profileRow.id,
+    name: profileRow.name,
+    email: profileRow.email ?? undefined,
+    phone: profileRow.phone ?? undefined,
+    profession: profileRow.profession as Profession,
+    department: profileRow.department as Department,
+    preferences: (interestRows ?? []).map((row) => row.category as NewsCategory),
+    organizationSubscriptions: organizationIds,
+    mediaPreferences: organizationIds,
+    notificationPrefs: (profileRow.notification_prefs as NotificationPreferences | null) ?? DEFAULT_NOTIFICATION_PREFS,
+    createdAt: new Date(profileRow.created_at),
+  }
 }
 
 interface AppContextType {
@@ -212,6 +253,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (parsed && parsed.id === authId) {
       setUser(parsed)
+      setOnboarding((prev) => ({ ...prev, isComplete: true }))
+      return false
+    }
+
+    const remote = await hydrateProfileFromSupabase(authId)
+    if (remote) {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
+      setUser(remote)
       setOnboarding((prev) => ({ ...prev, isComplete: true }))
       return false
     }

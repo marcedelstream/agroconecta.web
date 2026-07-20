@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator, Alert, StyleSheet } from 'react-native'
+import { View, ScrollView, TouchableOpacity, Image, useWindowDimensions, ActivityIndicator, Alert, StyleSheet } from 'react-native'
 import YoutubePlayer from 'react-native-youtube-iframe'
 import { useLocalSearchParams, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -7,12 +7,14 @@ import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/card'
 import { ReminderModal } from '@/components/ui/ReminderModal'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
-import { fetchPublishedPostBySlug } from '@/lib/supabase-repositories'
-import type { Post } from '@/lib/types'
+import { mockPublishers } from '@/lib/mock-data'
+import { fetchPublishedPostBySlug, fetchOrganizationById } from '@/lib/supabase-repositories'
+import type { Organization, Post } from '@/lib/types'
 
 function categoryLabel(cat: string) {
   return cat.charAt(0).toUpperCase() + cat.slice(1)
@@ -61,6 +63,7 @@ async function scheduleAuctionReminder(post: Post) {
 export default function VideoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const [post, setPost] = useState<Post | null>(null)
+  const [publisher, setPublisher] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [reminding, setReminding] = useState(false)
   const [reminderModalVisible, setReminderModalVisible] = useState(false)
@@ -78,6 +81,16 @@ export default function VideoDetailScreen() {
       .finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
   }, [id])
+
+  useEffect(() => {
+    setPublisher(null)
+    if (!post?.publisherId) return
+    let mounted = true
+    fetchOrganizationById(post.publisherId)
+      .then((org) => { if (mounted) setPublisher(org ?? mockPublishers.find((p) => p.id === post.publisherId) ?? null) })
+      .catch(() => { if (mounted) setPublisher(mockPublishers.find((p) => p.id === post.publisherId) ?? null) })
+    return () => { mounted = false }
+  }, [post?.publisherId])
 
   const isLive = post?.auctionStatus === 'live'
   const isAuction = post?.contentType === 'auction'
@@ -151,12 +164,35 @@ export default function VideoDetailScreen() {
             </Text>
 
             {/* Meta */}
-            <View style={[styles.metaRow, { borderBottomColor: C.border }]}>
-              <View style={styles.metaItem}>
-                <Ionicons name="business-outline" size={15} color={C.muted} />
-                <Text variant="caption" color={C.muted}>{post.source}</Text>
-              </View>
-              <View style={styles.metaItem}>
+            <View style={[styles.metaBlock, { borderBottomColor: C.border }]}>
+              <TouchableOpacity
+                activeOpacity={publisher ? 0.8 : 1}
+                onPress={() => publisher && router.push(`/publisher/${publisher.id}`)}
+              >
+                <Card style={styles.sourceCard} padding={3}>
+                  <View style={styles.sourceInner}>
+                    {publisher?.logoUrl ? (
+                      <Image source={{ uri: publisher.logoUrl }} style={styles.sourceAvatarImage} />
+                    ) : (
+                      <View style={styles.sourceAvatar}>
+                        <Ionicons name="business-outline" size={20} color={Colors.lime} />
+                      </View>
+                    )}
+                    <View style={styles.sourceText}>
+                      <Text variant="caption" color={C.muted}>Fuente</Text>
+                      <View style={styles.sourceNameRow}>
+                        <Text variant="body" weight="semibold">{post.source}</Text>
+                        {publisher?.isVerified && (
+                          <Ionicons name="checkmark-circle" size={16} color={Colors.lime} />
+                        )}
+                      </View>
+                    </View>
+                    {publisher && <Ionicons name="chevron-forward" size={18} color={C.muted} />}
+                  </View>
+                </Card>
+              </TouchableOpacity>
+
+              <View style={styles.dateRow}>
                 <Ionicons name="calendar-outline" size={15} color={C.muted} />
                 <Text variant="caption" color={C.muted}>{formatDate(post.publishedAt)}</Text>
               </View>
@@ -264,16 +300,33 @@ const styles = StyleSheet.create({
     gap: Spacing[4],
   },
   videoTitle: { lineHeight: 32 },
-  metaRow: {
-    flexDirection: 'row',
-    gap: Spacing[5],
+  metaBlock: {
+    gap: Spacing[2],
     paddingBottom: Spacing[4],
     borderBottomWidth: 1,
   },
-  metaItem: {
+  sourceCard: {},
+  sourceInner: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3] },
+  sourceNameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
+  sourceAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: `${Colors.lime}18`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sourceAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+  },
+  sourceText: { flex: 1 },
+  dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[1],
+    paddingLeft: Spacing[1],
   },
   section: { gap: Spacing[2] },
   sectionTitle: { letterSpacing: 0.6, marginBottom: Spacing[1] },

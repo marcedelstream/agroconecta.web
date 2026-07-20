@@ -12,7 +12,7 @@ const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as NewsCategory[]
 
 export const metadata: Metadata = {
   title: 'Noticias agropecuarias del Paraguay',
-  description: 'Últimas noticias agropecuarias de Paraguay publicadas por Agroconecta y organizaciones verificadas.',
+  description: 'Noticias, precios, eventos y contenidos del ecosistema Agroconecta para el sector agropecuario paraguayo.',
   alternates: {
     canonical: '/',
   },
@@ -95,7 +95,7 @@ export default async function HomePage({ searchParams }: Props) {
                 Noticias
               </p>
               <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground leading-tight">
-                Últimas noticias agropecuarias
+                Agroconecta: información y ecosistema para el campo
               </h1>
               <p className="text-muted text-base mt-3 max-w-2xl">
                 Actualidad del sector, instituciones y organizaciones verificadas de Paraguay.

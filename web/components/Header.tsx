@@ -4,8 +4,9 @@ import { ThemeToggle } from './ThemeToggle'
 
 const NAV_LINKS = [
   { href: '/', label: 'Noticias' },
+  { href: '/precios', label: 'Precios' },
   { href: '/ecosistema', label: 'Ecosistema' },
-  { href: '/quienes-somos', label: 'Quiénes somos' },
+  { href: '/quienes-somos', label: 'Nosotros' },
 ]
 
 export function Header() {

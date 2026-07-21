@@ -102,6 +102,18 @@ export default async function HomePage({ searchParams }: Props) {
               </p>
             </section>
 
+            <section className="mb-7 rounded-2xl border border-lime/25 bg-lime/10 p-5">
+              <p className="text-lime text-xs font-semibold uppercase tracking-[0.18em] mb-2">App Agroconecta</p>
+              <h2 className="font-display font-semibold text-xl text-foreground">Descargá la app para más información</h2>
+              <p className="text-muted text-sm leading-relaxed mt-2 max-w-2xl">
+                En la app vas a encontrar perfil, notificaciones, biblioteca, seguimiento de medios, eventos y navegación diaria del ecosistema.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="badge bg-lime text-bg">iOS</span>
+                <span className="badge bg-lime text-bg">Android</span>
+              </div>
+            </section>
+
             {featured && (
               <section className="mb-6">
                 <NewsCard post={featured} featured />

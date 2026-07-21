@@ -52,8 +52,8 @@ export default function EcosistemaPage() {
         <section className="mt-8 rounded-2xl border border-lime/25 bg-lime/10 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <p className="text-lime text-xs font-semibold uppercase tracking-[0.18em] mb-2">Mobile first</p>
-            <h2 className="font-display font-semibold text-xl text-foreground">La experiencia completa vive en la app</h2>
-            <p className="text-muted text-sm mt-2 max-w-2xl">La web funciona como portal público; la app concentra personalización, perfil, notificaciones, biblioteca y navegación diaria.</p>
+            <h2 className="font-display font-semibold text-xl text-foreground">Descargá la app para más información</h2>
+            <p className="text-muted text-sm mt-2 max-w-2xl">La web funciona como portal público; la app concentra personalización, perfil, notificaciones, biblioteca, eventos y navegación diaria del ecosistema.</p>
           </div>
           <Link href="/" className="btn-primary shrink-0">Ver noticias</Link>
         </section>

@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useTheme } from './ThemeProvider'
 
 export function SplashScreen() {
   const [state, setState] = useState<'visible' | 'fading' | 'gone'>('visible')
+  const { theme } = useTheme()
+  const logoSrc = theme === 'light' ? '/logo-light.png' : '/logo-dark.png'
 
   useEffect(() => {
     if (window.location.pathname.startsWith('/admin')) {
@@ -37,7 +40,7 @@ export function SplashScreen() {
     >
       <div className="animate-fade-up">
         <Image
-          src="/logo.png"
+          src={logoSrc}
           alt="Agroconecta"
           width={180}
           height={54}

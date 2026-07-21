@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 function formatPrice(row: MarketPriceRow) {
-  if (row.currency === 'PYG') return `â‚² ${Number(row.value).toLocaleString('es-PY')}`
+  if (row.currency === 'PYG') return `Gs. ${Number(row.value).toLocaleString('es-PY')}`
   return `US$ ${Number(row.value).toLocaleString('es-PY', { maximumFractionDigits: 2 })}`
 }
 
@@ -89,6 +89,14 @@ export default async function PreciosPage() {
           </h1>
           <p className="text-muted text-base mt-3 leading-relaxed">
             Un resumen web de las referencias que la app organiza para productores y profesionales: ganaderÃ­a local en guaranÃ­es y commodities internacionales en dÃ³lares.
+          </p>
+        </section>
+
+        <section className="mb-8 rounded-2xl border border-lime/25 bg-lime/10 p-5">
+          <p className="text-lime text-xs font-semibold uppercase tracking-[0.18em] mb-2">Más detalle en la app</p>
+          <h2 className="font-display font-semibold text-xl text-foreground">Descargá Agroconecta para seguir precios y alertas</h2>
+          <p className="text-muted text-sm leading-relaxed mt-2 max-w-2xl">
+            La app organiza estas referencias junto con notificaciones, noticias de mercado y contenido personalizado para tu perfil.
           </p>
         </section>
 

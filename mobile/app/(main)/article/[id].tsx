@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/Text'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/card'
 import { AdBanner } from '@/components/ui/AdBanner'
+import { HtmlContent } from '@/components/ui/HtmlContent'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
@@ -27,7 +28,6 @@ Por su parte, las autoridades del Ministerio de Agricultura y Ganadería (MAG) d
 El contexto internacional también ha favorecido al sector, con precios de commodities en niveles históricamente altos y una creciente demanda de alimentos de calidad en los mercados de Asia y Europa.
 
 De cara al futuro, los especialistas proyectan que la tendencia continuará, siempre que se mantengan las condiciones climáticas actuales y se siga apostando por la innovación y la adopción de buenas prácticas agropecuarias.`
-
 function formatDate(date: Date) {
   return date.toLocaleDateString('es-PY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 }
@@ -195,11 +195,7 @@ export default function ArticleScreen() {
           </Text>
 
           <View style={styles.body}>
-            {(article.content || MOCK_CONTENT).split('\n\n').map((paragraph, i) => (
-              <Text key={i} variant="body" style={[styles.paragraph, { color: C.foreground }]}>
-                {paragraph}
-              </Text>
-            ))}
+            <HtmlContent html={article.content || MOCK_CONTENT} />
           </View>
 
           <View style={styles.articleFooter}>

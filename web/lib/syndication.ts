@@ -63,6 +63,19 @@ export interface SyndicationResult {
 }
 
 const FETCH_TIMEOUT_MS = 12000
+const MIN_PUBLISHED_AT_MS = Date.UTC(2026, 6, 1)
+
+function parsePublishedAt(value: string | null) {
+  if (!value) return null
+  const time = Date.parse(value)
+  return Number.isFinite(time) ? time : null
+}
+
+function hasEligiblePublishedDate(item: SyndicatedItem) {
+  const publishedTime = parsePublishedAt(item.publishedAt)
+  return publishedTime !== null && publishedTime >= MIN_PUBLISHED_AT_MS
+}
+
 
 function decodeHtml(value: string) {
   return value
@@ -457,9 +470,7 @@ async function importItem(source: NewsSourceRow, item: SyndicatedItem, dryRun: b
     content_type: 'article',
     editorial_status: source.default_editorial_status,
     image_url: item.imageUrl,
-    published_at: source.default_editorial_status === 'published'
-      ? item.publishedAt || new Date().toISOString()
-      : null,
+    published_at: item.publishedAt,
     source_id: source.id,
     external_url: item.canonicalUrl,
     external_id: item.externalId,
@@ -493,7 +504,7 @@ export async function runSyndication(options: { dryRun?: boolean } = {}) {
     let resultError: string | null = null
 
     try {
-      const items = (await fetchItems(source)).slice(0, source.max_items_per_run)
+      const items = (await fetchItems(source)).filter(hasEligiblePublishedDate).slice(0, source.max_items_per_run)
       checked = items.length
 
       for (const item of items) {
@@ -529,12 +540,4 @@ export async function runSyndication(options: { dryRun?: boolean } = {}) {
     results,
   }
 }
-
-
-
-
-
-
-
-
 

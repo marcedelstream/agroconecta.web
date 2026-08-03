@@ -29,10 +29,13 @@ const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: str
 ]
 
 export default function ProfileScreen() {
-  const { user, signOut, updateUser } = useApp()
+  const { user, signOut, updateUser, deleteAccount } = useApp()
   const C = useColors()
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [savedBooks, setSavedBooks] = useState<LibraryItem[]>([])
   const [libraryLoading, setLibraryLoading] = useState(true)
 
@@ -50,6 +53,19 @@ export default function ProfileScreen() {
   async function confirmLogout() {
     setLogoutModalVisible(false)
     await signOut()
+    router.replace('/(auth)/login')
+  }
+
+  async function confirmDeleteAccount() {
+    setDeleting(true)
+    setDeleteError(null)
+    const error = await deleteAccount()
+    setDeleting(false)
+    if (error) {
+      setDeleteError(error)
+      return
+    }
+    setDeleteModalVisible(false)
     router.replace('/(auth)/login')
   }
 
@@ -187,6 +203,11 @@ export default function ProfileScreen() {
           <Text variant="caption" style={{ color: C.muted, textAlign: 'center' }}>
             Agroconecta v1.0.0
           </Text>
+          <TouchableOpacity onPress={() => setDeleteModalVisible(true)} hitSlop={8}>
+            <Text variant="caption" style={{ color: C.muted, textDecorationLine: 'underline' }}>
+              Eliminar cuenta
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -228,6 +249,21 @@ export default function ProfileScreen() {
         destructive
         onConfirm={confirmLogout}
         onCancel={() => setLogoutModalVisible(false)}
+      />
+
+      <ConfirmModal
+        visible={deleteModalVisible}
+        icon="trash-outline"
+        title="Eliminar cuenta"
+        message={
+          deleteError
+            ?? 'Esta acción es permanente: se borran tu perfil, preferencias y suscripciones. No se puede deshacer. ¿Querés continuar?'
+        }
+        confirmLabel={deleting ? 'Eliminando…' : 'Eliminar cuenta'}
+        cancelLabel="Cancelar"
+        destructive
+        onConfirm={() => { if (!deleting) confirmDeleteAccount() }}
+        onCancel={() => { setDeleteModalVisible(false); setDeleteError(null) }}
       />
     </View>
   )

@@ -140,6 +140,7 @@ interface AppContextType {
   sendEmailOtp: (email: string) => Promise<string | null>
   verifyEmailOtp: (email: string, token: string) => Promise<string | null>
   signOut: () => Promise<void>
+  deleteAccount: () => Promise<string | null>
   session: Session | null
   authUser: User | null
   authLoading: boolean
@@ -327,6 +328,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Perfil queda en AsyncStorage para no repetir onboarding al volver a entrar
   }, [])
 
+  const deleteAccount = useCallback(async () => {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return 'No hay una sesión activa.'
+
+    try {
+      const res = await fetch('https://agroconecta.com.py/api/delete-account', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        return body?.error ?? 'No se pudo eliminar la cuenta.'
+      }
+    } catch (err) {
+      return err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.'
+    }
+
+    await AsyncStorage.removeItem(STORAGE_KEY)
+    await supabase.auth.signOut()
+    setUser(null)
+    setOnboarding(initialOnboarding)
+    return null
+  }, [])
+
   return (
     <AppContext.Provider
       value={{
@@ -344,6 +370,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         sendEmailOtp,
         verifyEmailOtp,
         signOut,
+        deleteAccount,
         session,
         authUser: session?.user ?? null,
         authLoading,

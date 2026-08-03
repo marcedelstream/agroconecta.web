@@ -22,12 +22,13 @@ import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
-type LoginView = 'options' | 'otp'
+type LoginView = 'options' | 'otp' | 'password'
+type PasswordMode = 'signin' | 'signup'
 
 export default function LoginScreen() {
   const C = useColors()
   const { isDark } = useTheme()
-  const { signInWithGoogle, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
+  const { signIn, signUp, signInWithGoogle, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
   const [view, setView] = useState<LoginView>('options')
   const [error, setError] = useState<string | null>(null)
 
@@ -37,6 +38,13 @@ export default function LoginScreen() {
   const [otpCode, setOtpCode] = useState('')
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpError, setOtpError] = useState<string | null>(null)
+
+  const [passwordMode, setPasswordMode] = useState<PasswordMode>('signin')
+  const [passwordEmail, setPasswordEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const logo = isDark
     ? require('@/assets/images/logo-dark.png')
@@ -48,6 +56,15 @@ export default function LoginScreen() {
     setOtpCode('')
     setOtpError(null)
     setView('otp')
+  }
+
+  function goToPassword() {
+    setPasswordMode('signin')
+    setPasswordEmail('')
+    setPassword('')
+    setPasswordConfirm('')
+    setPasswordError(null)
+    setView('password')
   }
 
   async function afterAuth() {
@@ -94,6 +111,29 @@ export default function LoginScreen() {
     await afterAuth()
   }
 
+  async function handlePasswordSubmit() {
+    if (!passwordEmail.includes('@')) {
+      setPasswordError('Ingresá un email válido.')
+      return
+    }
+    if (password.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+    if (passwordMode === 'signup' && password !== passwordConfirm) {
+      setPasswordError('Las contraseñas no coinciden.')
+      return
+    }
+    setPasswordLoading(true)
+    setPasswordError(null)
+    const result = passwordMode === 'signin'
+      ? await signIn(passwordEmail.trim(), password)
+      : await signUp(passwordEmail.trim(), password)
+    setPasswordLoading(false)
+    if (result) { setPasswordError(result); return }
+    await afterAuth()
+  }
+
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: C.background }]}
@@ -136,6 +176,12 @@ export default function LoginScreen() {
               icon="key-outline"
               label="Iniciar sesión con código"
               onPress={goToOtp}
+              C={C}
+            />
+            <AuthBtn
+              icon="mail-outline"
+              label="Continuar con email y contraseña"
+              onPress={goToPassword}
               C={C}
             />
           </View>
@@ -203,6 +249,70 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </>
             )}
+          </View>
+        )}
+
+        {view === 'password' && (
+          /* ── Login con email y contraseña ── */
+          <View style={styles.form}>
+            <View style={styles.formHeader}>
+              <TouchableOpacity onPress={() => setView('options')} hitSlop={8}>
+                <Ionicons name="arrow-back" size={22} color={C.foreground} />
+              </TouchableOpacity>
+              <Text variant="body" weight="semibold" family="poppins">
+                {passwordMode === 'signin' ? 'Iniciar sesión' : 'Crear cuenta'}
+              </Text>
+              <View style={{ width: 22 }} />
+            </View>
+
+            <TextInput
+              value={passwordEmail}
+              onChangeText={setPasswordEmail}
+              placeholder="Correo electrónico"
+              placeholderTextColor={C.muted}
+              style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Contraseña"
+              placeholderTextColor={C.muted}
+              style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {passwordMode === 'signup' && (
+              <TextInput
+                value={passwordConfirm}
+                onChangeText={setPasswordConfirm}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor={C.muted}
+                style={[styles.input, { backgroundColor: C.surface, borderColor: C.border, color: C.foreground }]}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            )}
+            {passwordError && (
+              <Text variant="caption" style={{ color: Colors.destructive }}>{passwordError}</Text>
+            )}
+            <Button onPress={handlePasswordSubmit} fullWidth size="lg" loading={passwordLoading}>
+              {passwordMode === 'signin' ? 'Iniciar sesión' : 'Crear cuenta'}
+            </Button>
+            <TouchableOpacity
+              onPress={() => { setPasswordMode(passwordMode === 'signin' ? 'signup' : 'signin'); setPasswordError(null) }}
+              style={{ alignSelf: 'center' }}
+              disabled={passwordLoading}
+            >
+              <Text variant="body" style={{ color: Colors.lime }}>
+                {passwordMode === 'signin' ? '¿No tenés cuenta? Creá una' : '¿Ya tenés cuenta? Iniciá sesión'}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 

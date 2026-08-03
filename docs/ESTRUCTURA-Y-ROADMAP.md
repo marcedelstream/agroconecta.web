@@ -6,6 +6,11 @@
 > **Nota de rutas:** las secciones de abajo se escribieron antes de la reorganización del 2026-07-03. Todas las
 > rutas de la app móvil (`app/...`, `components/...`, `lib/...`) mencionadas acá son relativas a `mobile/` —
 > por ejemplo `lib/types.ts` es hoy `mobile/lib/types.ts`.
+>
+> **2026-07-22: prioridad número uno es subir la app a las stores** (ver checklist en `CLAUDE.md` sección
+> "Camino a subir a las stores"). Las features de v2.0 (Home personalizable elegido en onboarding, discusión
+> de arquitectura tipo "DLC" por módulo — ambas documentadas en el plan de sesión, no en este archivo
+> todavía) quedan **pausadas hasta después del submit a Play Store/App Store** — no arrancar con eso antes.
 
 ---
 

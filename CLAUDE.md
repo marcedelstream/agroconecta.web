@@ -15,6 +15,20 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-07-22:** trabajo de compliance para subir a las stores. Login: se reactivó email+contraseña
+> (`signIn`/`signUp` ya existían sin usar en `app-context.tsx`, solo faltaba la vista en `login.tsx`) —
+> necesario porque Apple Review pide una credencial fija reutilizable y Google OAuth/OTP no sirven para eso.
+> **Importante:** crear la cuenta demo para Apple desde Supabase Dashboard → Authentication → Users → Add
+> User (auto-confirma el email), no desde el signup de la app, para no depender de la confirmación por mail.
+> Eliminación de cuenta: nuevo endpoint `web/app/api/delete-account/route.ts` (usa `SUPABASE_SERVICE_ROLE_KEY`
+> para `auth.admin.deleteUser`, valida el JWT del usuario antes de borrar) + botón "Eliminar cuenta" en
+> Perfil (mobile) que lo llama. Todas las tablas de usuario (`profiles`, `user_interests`,
+> `user_subscriptions`, `push_tokens`, `user_library`) ya tenían `on delete cascade` sobre `auth.users`, así
+> que borrar el usuario limpia todo solo — no hizo falta tocar el schema. Web: nuevas páginas públicas
+> `/politica` (privacy policy — requerida por Play Console) y `/soporte` (formulario de contacto, reusa
+> `/api/service-lead`; también sirve como vía de solicitar borrado de cuenta sin la app), linkeadas desde el
+> Footer. `web/lib/social-links.ts` centraliza redes sociales/WhatsApp (antes duplicado en `Footer.tsx`).
+>
 > **2026-07-14 (tarde):** login mobile simplificado a solo Google + código por email (se sacó Apple y contraseña);
 > se corrigió un bug donde una cuenta nueva heredaba el perfil cacheado de la sesión anterior en el mismo
 > dispositivo en vez de disparar onboarding (`resolveProfileForCurrentSession` en `app-context.tsx`); reproductor
@@ -49,7 +63,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 | Styling | NativeWind v4 + `global.css` + `tailwind.config.js` |
 | State | React Context API (`lib/app-context.tsx`, `lib/theme-context.tsx`) |
 | Backend client | `@supabase/supabase-js` v2 |
-| Auth | Supabase Auth (email/password) |
+| Auth | Supabase Auth — Google OAuth, código por email (OTP) y email+contraseña (2026-07-22, reactivado para dar credencial de demo a Apple Review) |
 | Persistencia | AsyncStorage (`@agroconecta:user`) |
 | Tipos | TypeScript estricto (`npm run tsc` pasa limpio) |
 | Íconos | `@expo/vector-icons` (Ionicons) |
@@ -73,7 +87,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 - **URL:** `https://ukodavvtmrrqnfgyvqql.supabase.co`
 - **Credenciales:** en `.env.local` (móvil) y `.env.production` en el servidor (web). Gitignoreado.
-- **Tablas:** `profiles`, `organizations`, `organization_members`, `posts`, `user_interests`, `user_subscriptions`, `market_prices`, `push_tokens`, `ad_campaigns`
+- **Tablas:** `profiles` (incluye `notification_prefs` jsonb), `organizations` (incluye columnas de Aliado: `ally_plan`, `ally_category`, `ally_founder`), `organization_members`, `posts`, `user_interests`, `user_subscriptions`, `market_prices`, `push_tokens`, `ad_campaigns`, `service_leads`, `library_items`, `user_library`, `event_schedule_items`
 - **Storage buckets:** `organization-logos`, `banners`, `post-images`
 - **Esquema y seed:** `supabase/schema.sql`, `supabase/seed.sql` + scripts `fix-*.sql` para migraciones puntuales
 - **Acceso desde la app:** `mobile/lib/supabase.ts` (cliente) y `mobile/lib/supabase-repositories.ts` (queries tipadas: posts, organizations, market_prices, events, banners, biblioteca). Los repos usan interfaces de fila locales para datos Supabase, normalizan `null` a `undefined`/fallbacks y mapean snake_case de la DB → camelCase de los tipos TS.
@@ -214,7 +228,7 @@ Múltiplos de 4. Base unit = 4px.
 Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya hay).
 
 ### 2. Auth + Onboarding
-- Login Supabase (`mobile/app/(auth)/login.tsx`) — solo dos opciones: **Google (OAuth)** y **código por email (OTP de 8 dígitos)**. No hay login con contraseña ni Apple.
+- Login Supabase (`mobile/app/(auth)/login.tsx`) — tres opciones: **Google (OAuth)**, **código por email (OTP de 8 dígitos)** y **email + contraseña** (reactivado 2026-07-22 para poder darle una credencial fija a Apple Review — OAuth/OTP no sirven como "usuario/clave" reutilizable para un reviewer). No hay login con Apple.
 - Onboarding recoge: **nombre, email, teléfono, profesión, departamento, preferencias de noticias, suscripciones a organizaciones/medios**.
 - Al completar: crea `UserProfile`, lo persiste en AsyncStorage y marca `isComplete`.
 - `resolveProfileForCurrentSession()` (en `app-context.tsx`) se llama justo después de un login exitoso: valida que el perfil cacheado en AsyncStorage pertenezca al `auth.uid()` de la sesión actual antes de saltar onboarding — evita que una cuenta nueva en el mismo dispositivo herede el perfil de la cuenta anterior.
@@ -288,7 +302,7 @@ npm run start          # next start -p 3000
 ### App móvil — ✅ funcional
 - [x] Scaffold Expo Router + design system (tokens + componentes base)
 - [x] Splash, login Supabase, onboarding multi-paso con persistencia AsyncStorage
-- [x] Tabs: Home, Precios, Videos, Ecosistema, Perfil
+- [x] Tabs: Home, Descubrir (Ecosistema), Precios, Perfil — Videos vive fuera de la tab bar (botón "EN VIVO" del header + drawer)
 - [x] Detalle de artículo, perfil de organización, WebView in-app
 - [x] Eventos: listado, detalle, hub dinámico (Info + Programa + Noticias), recordatorios push
 - [x] Repositorios Supabase (posts, organizations, market_prices, events, banners)
@@ -316,9 +330,16 @@ npm run start          # next start -p 3000
 > actualización nativa de la app, no dinámicamente desde un admin. El SQL `fix-ecosystem-sites.sql` que crea esa
 > tabla quedó obsoleto — no hace falta correrlo.
 
+### Camino a subir a las stores (bloquea la v2.0 — ver `docs/ESTRUCTURA-Y-ROADMAP.md`)
+- [x] Login email+contraseña reactivado (credencial de demo para Apple Review)
+- [x] Eliminación de cuenta (endpoint + botón en Perfil)
+- [x] Páginas web `/politica` y `/soporte` (privacy policy pública + contacto/soporte)
+- [ ] Crear la cuenta demo para Apple en Supabase Dashboard (Authentication → Users → Add User) y cargarla en App Store Connect → App Review Information
+- [ ] Cargar `https://agroconecta.com.py/politica` como Privacy Policy URL en Play Console y App Store Connect
+- [ ] Generar el primer build de producción con EAS y subirlo a Play Store / App Store
+
 ### Pendiente
 - [ ] Cursos: se queda como está por ahora (solo la pantalla "Próximamente" + formulario de interés en Ecosistema) — el diseño completo de catálogo/inscripción en `docs/ESTRUCTURA-Y-ROADMAP.md` queda de referencia para cuando se decida retomarlo, sin fecha.
-- [ ] Generar el primer development/production build con EAS
 - [ ] Correr `supabase/fix-organizer-events-and-notify.sql` en Supabase si todavía no se corrió (necesario para eventos por organizador + campanita)
 - [ ] Cuenta de Resend + secrets `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO` para que el email de leads (servicios, oportunidad comercial, interés en Ecosistema) funcione de punta a punta — hoy el insert en Supabase ya funciona, falta el aviso por mail
 - [ ] Formularios de publicación desde la app móvil (hoy solo desde web admin)

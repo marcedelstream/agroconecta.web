@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { View, SectionList, TextInput, ScrollView, TouchableOpacity, Image, ActivityIndicator, StyleSheet, Linking } from 'react-native'
 import { router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { goBack } from '@/lib/navigation'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { LiveEventsTicker } from '@/components/home/LiveEventsTicker'
+import { HeaderAvatar } from '@/components/navigation/HeaderAvatar'
 import { fetchAllEvents } from '@/lib/supabase-repositories'
-import { useColors } from '@/lib/theme-context'
+import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
 import type { AgroEvent } from '@/lib/types'
 
+const R = Colors.redesign
 const SUGGEST_URL = 'https://eventosagropy.com'
 
 interface DaySection {
@@ -50,7 +51,7 @@ function formatTime(ev: AgroEvent) {
 }
 
 export default function EventsListScreen() {
-  const C = useColors()
+  const { user } = useApp()
   const insets = useSafeAreaInsets()
   const [allEvents, setAllEvents] = useState<AgroEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,61 +100,45 @@ export default function EventsListScreen() {
   const sections = useMemo(() => groupByDay(filtered), [filtered])
 
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing[3], borderBottomColor: C.border, backgroundColor: C.surface }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={C.foreground} />
-        </TouchableOpacity>
-        <Text variant="subtitle" weight="bold" family="poppins" style={{ color: C.foreground }}>
-          Eventos
-        </Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={[styles.root, { backgroundColor: R.background }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.header}>
+          <View style={styles.topRow}>
+            <View style={styles.titleRow}>
+              <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+                <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text family="noto-sans" weight="bold" size={18} color="#FFFFFF">Eventos</Text>
+            </View>
+            {user && <HeaderAvatar name={user.name} />}
+          </View>
 
-      {/* Buscador */}
-      <View style={[styles.searchBar, { backgroundColor: C.surface, borderBottomColor: C.border }]}>
-        <Ionicons name="search-outline" size={17} color={C.muted} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Buscar evento, lugar..."
-          placeholderTextColor={C.muted}
-          style={[styles.searchInput, { color: C.foreground }]}
-          autoCorrect={false}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={C.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filtros por categoría */}
-      {categories.length > 0 && (
-        <View style={[styles.filtersWrap, { borderBottomColor: C.border }]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow}>
-            <TouchableOpacity
-              style={[styles.chip, { borderColor: C.border, backgroundColor: !category ? Colors.lime : C.surface }]}
-              onPress={() => setCategory(null)}
-            >
-              <Text variant="caption" weight="semibold" style={{ color: !category ? '#0A0A13' : C.muted }}>Todas</Text>
-            </TouchableOpacity>
-            {categories.map((cat) => {
-              const active = category === cat
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.chip, { borderColor: active ? Colors.lime : C.border, backgroundColor: active ? Colors.lime : C.surface }]}
-                  onPress={() => setCategory(active ? null : cat)}
-                >
-                  <Text variant="caption" weight="semibold" style={{ color: active ? '#0A0A13' : C.muted }}>{cat}</Text>
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
+          {categories.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+              <TouchableOpacity
+                style={[styles.chip, !category && styles.chipActive]}
+                onPress={() => setCategory(null)}
+                activeOpacity={0.8}
+              >
+                <Text family="noto-sans" weight="semibold" size={12} color={!category ? '#0A0A13' : '#C9C9D2'}>Todas</Text>
+              </TouchableOpacity>
+              {categories.map((cat) => {
+                const active = category === cat
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setCategory(active ? null : cat)}
+                    activeOpacity={0.8}
+                  >
+                    <Text family="noto-sans" weight="semibold" size={12} color={active ? '#0A0A13' : '#C9C9D2'}>{cat}</Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+          )}
         </View>
-      )}
+      </SafeAreaView>
 
       {loading ? (
         <View style={styles.center}>
@@ -161,8 +146,8 @@ export default function EventsListScreen() {
         </View>
       ) : sections.length === 0 ? (
         <View style={styles.center}>
-          <Ionicons name="calendar-outline" size={48} color={C.muted} />
-          <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3], textAlign: 'center' }}>
+          <Ionicons name="calendar-outline" size={44} color={R.mutedForeground} />
+          <Text family="noto-sans" size={14} color={R.mutedForeground} style={styles.emptyText}>
             {allEvents.length === 0 ? 'No hay eventos próximos.' : `Sin resultados para "${search || category}"`}
           </Text>
         </View>
@@ -171,74 +156,88 @@ export default function EventsListScreen() {
           sections={sections}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 32 }]}
           stickySectionHeadersEnabled={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
           ListHeaderComponent={
             <>
+              <View style={styles.searchWrap}>
+                <View style={styles.searchBox}>
+                  <Ionicons name="search-outline" size={17} color={R.mutedForeground} />
+                  <TextInput
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="Buscar evento, lugar..."
+                    placeholderTextColor={R.mutedForeground}
+                    style={styles.searchInput}
+                    autoCorrect={false}
+                  />
+                  {search.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+                      <Ionicons name="close-circle" size={16} color={R.mutedForeground} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
               <LiveEventsTicker events={allEvents} />
-              <TouchableOpacity
-                style={[styles.suggestTop, { borderColor: `${Colors.lime}50` }]}
-                activeOpacity={0.8}
-                onPress={() => Linking.openURL(SUGGEST_URL)}
-              >
+
+              <TouchableOpacity style={styles.suggestRow} activeOpacity={0.8} onPress={() => Linking.openURL(SUGGEST_URL)}>
                 <Ionicons name="add-circle-outline" size={13} color={Colors.lime} />
-                <Text style={[styles.suggestTopText, { color: Colors.lime }]}>Sugerir un evento</Text>
-                <Ionicons name="open-outline" size={11} color={`${Colors.lime}90`} />
+                <Text family="noto-sans" weight="semibold" size={11.5} color={Colors.lime}>Sugerir un evento</Text>
+                <Ionicons name="open-outline" size={11} color={R.mutedForeground} />
               </TouchableOpacity>
             </>
           }
           renderSectionHeader={({ section }) => (
             <View style={styles.dayHeader}>
-              <View style={[styles.dayDot, { backgroundColor: Colors.lime }]} />
-              <Text variant="body" weight="bold" family="poppins" style={{ color: C.foreground }}>
-                {section.title}
-              </Text>
+              <View style={styles.dayDot} />
+              <Text family="noto-sans" weight="bold" size={14} color={R.foreground}>{section.title}</Text>
             </View>
           )}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.card, { backgroundColor: C.surface, borderColor: C.border }]}
+              style={styles.card}
               activeOpacity={0.85}
               onPress={() => router.push(`/(main)/event/${item.slug}` as any)}
             >
               {item.imageUrl ? (
                 <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
               ) : (
-                <View style={[styles.cardImage, styles.cardImagePlaceholder, { backgroundColor: C.secondary }]}>
-                  <Ionicons name="calendar-outline" size={28} color={Colors.lime} />
+                <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+                  <Ionicons name="calendar-outline" size={26} color={Colors.lime} />
                 </View>
               )}
               <View style={styles.cardBody}>
                 <View style={styles.cardMeta}>
                   {item.time ? (
-                    <View style={styles.metaChip}>
-                      <Ionicons name="time-outline" size={12} color={Colors.lime} />
-                      <Text style={[styles.metaText, { color: Colors.lime }]}>{formatTime(item)}</Text>
+                    <View style={styles.metaChipLime}>
+                      <Ionicons name="time-outline" size={11} color={R.limeSoftText} />
+                      <Text family="noto-sans" weight="semibold" size={10} color={R.limeSoftText}>{formatTime(item)}</Text>
                     </View>
                   ) : null}
                   {item.category ? (
-                    <View style={[styles.metaChip, { backgroundColor: `${C.muted}18` }]}>
-                      <Text style={[styles.metaText, { color: C.muted }]}>{item.category}</Text>
+                    <View style={styles.metaChipMuted}>
+                      <Text family="noto-sans" weight="semibold" size={10} color={R.mutedForeground}>{item.category}</Text>
                     </View>
                   ) : null}
                 </View>
-                <Text variant="body" weight="semibold" numberOfLines={2} style={{ color: C.foreground }}>
+                <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} numberOfLines={2}>
                   {item.title}
                 </Text>
                 <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={13} color={C.muted} />
-                  <Text variant="caption" style={{ color: C.muted, flex: 1 }} numberOfLines={1}>
+                  <Ionicons name="location-outline" size={12} color={R.mutedForeground} />
+                  <Text family="noto-sans" size={11} color={R.mutedForeground} numberOfLines={1} style={{ flex: 1 }}>
                     {[item.city, item.location].filter(Boolean).join(' · ')}
                   </Text>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={C.muted} style={styles.chevron} />
+              <Ionicons name="chevron-forward" size={17} color={R.mutedForeground} />
             </TouchableOpacity>
           )}
-          SectionSeparatorComponent={() => <View style={{ height: Spacing[2] }} />}
-          ItemSeparatorComponent={() => <View style={{ height: Spacing[3] }} />}
+          SectionSeparatorComponent={() => <View style={{ height: 6 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         />
       )}
     </View>
@@ -248,84 +247,74 @@ export default function EventsListScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing[5],
-    paddingBottom: Spacing[3],
-    borderBottomWidth: 1,
+    backgroundColor: R.header.bg,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[2],
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[3],
-    borderBottomWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
-  },
-  filtersWrap: { borderBottomWidth: 1 },
-  filtersRow: {
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[3],
-    gap: Spacing[2],
-  },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
   chip: {
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[1.5],
-    borderRadius: Radius.full,
     borderWidth: 1,
+    borderColor: R.header.chipBorder,
+    borderRadius: 9999,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
   },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing[3] },
-  list: { padding: Spacing[5], gap: Spacing[1] },
-  dayHeader: {
+  chipActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 40 },
+  emptyText: { textAlign: 'center' },
+  list: { paddingHorizontal: 20, paddingTop: 4 },
+  searchWrap: { marginTop: 16, marginBottom: 4 },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
-    paddingTop: Spacing[5],
-    paddingBottom: Spacing[3],
+    gap: 9,
+    backgroundColor: R.secondary,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  dayDot: { width: 8, height: 8, borderRadius: 4 },
+  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: R.foreground, padding: 0 },
+  suggestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 14,
+    marginBottom: 16,
+  },
+  dayHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 12, paddingBottom: 4 },
+  dayDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.lime },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
+    gap: 12,
+    backgroundColor: R.surface,
+    borderRadius: 16,
+    padding: 10,
   },
-  cardImage: { width: 88, height: 88 },
-  cardImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  cardBody: { flex: 1, padding: Spacing[3], gap: Spacing[1.5] },
-  cardMeta: { flexDirection: 'row', gap: Spacing[2] },
-  metaChip: {
+  cardImage: { width: 68, height: 68, borderRadius: 12 },
+  cardImagePlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: R.secondary },
+  cardBody: { flex: 1, minWidth: 0, gap: 5 },
+  cardMeta: { flexDirection: 'row', gap: 6 },
+  metaChipLime: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: `${Colors.lime}18`,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing[1.5],
+    gap: 3,
+    backgroundColor: R.limeSoftBg,
+    borderRadius: 5,
+    paddingHorizontal: 6,
     paddingVertical: 2,
   },
-  metaText: { fontSize: 10, fontWeight: '600' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
-  chevron: { marginRight: Spacing[3] },
-  suggestTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[1.5],
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[1.5],
-    marginBottom: Spacing[2],
+  metaChipMuted: {
+    backgroundColor: R.secondary,
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
-  suggestTopText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 })

@@ -9,9 +9,11 @@ export default function MainLayout() {
       <Stack.Screen name="event/[slug]" />
       <Stack.Screen name="service/[slug]" />
       <Stack.Screen name="ecosistema/[slug]" />
+      <Stack.Screen name="listing/[id]" />
+      <Stack.Screen name="sumate" />
+      <Stack.Screen name="publish-form" />
       <Stack.Screen name="events" />
       <Stack.Screen name="media-subscriptions" />
-      <Stack.Screen name="noticias" />
       <Stack.Screen name="videos" />
       <Stack.Screen name="video/[id]" />
       <Stack.Screen name="aliados" />

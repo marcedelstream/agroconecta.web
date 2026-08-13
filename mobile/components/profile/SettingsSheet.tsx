@@ -22,15 +22,15 @@ export function SettingsSheet({ title, onClose, children, heightRatio = 0.6 }: P
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
     ]).start()
   }, [])
 
   function handleClose() {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: SHEET_H, duration: 250, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: SHEET_H, duration: 150, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
     ]).start(onClose)
   }
 

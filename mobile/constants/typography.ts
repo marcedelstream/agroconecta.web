@@ -1,14 +1,19 @@
-// Una sola familia (Lexend) para toda la app. Se mantienen las claves poppins*/dmSans*
-// para no tener que tocar los ~30 componentes que usan family="poppins"/"dm-sans".
+// Una sola familia (Noto Sans, rediseño 2026) para toda la app. Se mantienen las claves
+// poppins*/dmSans* para no tener que tocar los ~30 componentes que usan family="poppins"/"dm-sans".
 export const Fonts = {
-  poppins: 'Lexend-Regular',
-  poppinsMedium: 'Lexend-Medium',
-  poppinsSemiBold: 'Lexend-SemiBold',
-  poppinsBold: 'Lexend-Bold',
-  dmSans: 'Lexend-Regular',
-  dmSansMedium: 'Lexend-Medium',
-  dmSansSemiBold: 'Lexend-SemiBold',
-  dmSansBold: 'Lexend-Bold',
+  poppins: 'NotoSans-Regular',
+  poppinsMedium: 'NotoSans-Medium',
+  poppinsSemiBold: 'NotoSans-SemiBold',
+  poppinsBold: 'NotoSans-Bold',
+  dmSans: 'NotoSans-Regular',
+  dmSansMedium: 'NotoSans-Medium',
+  dmSansSemiBold: 'NotoSans-SemiBold',
+  dmSansBold: 'NotoSans-Bold',
+  notoSans: 'NotoSans-Regular',
+  notoSansMedium: 'NotoSans-Medium',
+  notoSansSemiBold: 'NotoSans-SemiBold',
+  notoSansBold: 'NotoSans-Bold',
+  notoSansExtraBold: 'NotoSans-ExtraBold',
 } as const
 
 export const FontSizes = {

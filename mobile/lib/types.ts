@@ -10,6 +10,10 @@ export interface UserProfile {
   organizationSubscriptions: string[];
   mediaPreferences: string[];
   notificationPrefs?: NotificationPreferences;
+  /** Orden elegido por el usuario para las bandas de Inicio (ver HOME_SECTION_KEYS en lib/home-sections.ts). */
+  sectionOrder?: string[];
+  /** Membresía anual individual — habilita el botón "+" para publicar. Se activa a mano desde Supabase por ahora, no hay pago in-app. */
+  isMember?: boolean;
   createdAt: Date;
 }
 
@@ -185,6 +189,25 @@ export interface MarketPrice {
   change: number;
   changePercent: number;
   updatedAt: Date;
+}
+
+// Ficha única de Ecosistema (boceto 4f): empleo, clasificado y curso comparten un
+// mismo molde de datos — todavía sin backend propio, se carga desde el admin cuando exista.
+export type EcosystemListingKind = 'empleo' | 'clasificado' | 'curso';
+
+export interface EcosystemListing {
+  id: string;
+  slug?: string;
+  kind: EcosystemListingKind;
+  title: string;
+  location: string;
+  modality: string;
+  description: string;
+  imageUrl?: string;
+  categoryLabel: string;
+  publisherName: string;
+  publishedAt: Date;
+  contactUrl?: string;
 }
 
 export type EcosystemCategory = 'eventos' | 'juegos' | 'institucional' | 'streaming'

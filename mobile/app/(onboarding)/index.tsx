@@ -17,6 +17,7 @@ import { Text } from '@/components/ui/Text'
 import { Button } from '@/components/ui/Button'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
+import { Fonts } from '@/constants/typography'
 import { professions, newsCategories, departments, mockOrganizations } from '@/lib/mock-data'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Profession, Department, NewsCategory, Organization } from '@/lib/types'
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[3.5],
     color: Colors.foreground,
     fontSize: 16,
-    fontFamily: 'DMSans-Regular',
+    fontFamily: Fonts.dmSans,
     marginTop: Spacing[2],
   },
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing[2], marginTop: Spacing[2] },

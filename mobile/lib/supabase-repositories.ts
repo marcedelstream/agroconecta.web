@@ -10,6 +10,8 @@ import type {
   CommercialStatus,
   ContentType,
   Department,
+  EcosystemListing,
+  EcosystemListingKind,
   EditorialStatus,
   EventScheduleItem,
   LibraryCategory,
@@ -129,6 +131,23 @@ interface LibraryItemRow {
   file_type: string
   page_count?: number | null
   created_at: string
+}
+
+// Fila de la futura tabla `ecosystem_listings` (empleo/clasificado/curso, boceto 4f) —
+// todavía no existe en Supabase, se carga desde el admin cuando esté lista.
+interface EcosystemListingRow {
+  id: string
+  slug?: string | null
+  kind: EcosystemListingKind
+  title: string
+  location: string
+  modality: string
+  description: string
+  image_url?: string | null
+  category_label: string
+  publisher_name: string
+  published_at: string
+  contact_url?: string | null
 }
 
 interface UserLibraryRow {
@@ -582,4 +601,44 @@ export async function fetchMarketPrices(): Promise<MarketPrice[]> {
       updatedAt: new Date(typed.updated_at),
     }
   })
+}
+
+function mapEcosystemListing(row: EcosystemListingRow): EcosystemListing {
+  return {
+    id: row.id,
+    slug: row.slug ?? undefined,
+    kind: row.kind,
+    title: row.title,
+    location: row.location,
+    modality: row.modality,
+    description: row.description,
+    imageUrl: row.image_url ?? undefined,
+    categoryLabel: row.category_label,
+    publisherName: row.publisher_name,
+    publishedAt: new Date(row.published_at),
+    contactUrl: row.contact_url ?? undefined,
+  }
+}
+
+// La tabla `ecosystem_listings` todavía no existe en Supabase — estas funciones tiran
+// error hasta que el admin la cree y empiece a cargar publicaciones (ver EcosystemListing
+// en lib/types.ts). Las pantallas que las llaman ya hacen fallback a mockEcosystemListings.
+export async function fetchEcosystemListings(kind?: EcosystemListingKind): Promise<EcosystemListing[]> {
+  let query = supabase.from('ecosystem_listings').select('*').order('published_at', { ascending: false })
+  if (kind) query = query.eq('kind', kind)
+  const { data, error } = await query
+
+  if (error) throw error
+  return (data ?? []).map((row) => mapEcosystemListing(row as EcosystemListingRow))
+}
+
+export async function fetchEcosystemListingById(id: string): Promise<EcosystemListing | null> {
+  const { data, error } = await supabase
+    .from('ecosystem_listings')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data ? mapEcosystemListing(data as EcosystemListingRow) : null
 }

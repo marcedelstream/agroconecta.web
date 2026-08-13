@@ -1,82 +1,104 @@
-import { useEffect, useState } from 'react'
-import { View, Platform, StyleSheet } from 'react-native'
-import { Tabs } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Platform, TouchableOpacity, View, StyleSheet } from 'react-native'
+import { Tabs, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { AppHeaderBar } from '@/components/navigation/AppHeaderBar'
-import { DrawerMenu } from '@/components/navigation/DrawerMenu'
+import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs'
 import { useColors } from '@/lib/theme-context'
-import { fetchLiveVideos } from '@/lib/supabase-repositories'
+import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/typography'
-import type { Post } from '@/lib/types'
-
-const LIVE_POLL_INTERVAL = 60_000
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
-const tabs: { name: string; title: string; icon: IconName; activeIcon: IconName }[] = [
-  { name: 'home', title: 'Inicio', icon: 'home-outline', activeIcon: 'home' },
-  { name: 'ecosystem', title: 'Descubrir', icon: 'compass-outline', activeIcon: 'compass' },
-  { name: 'prices', title: 'Precios', icon: 'trending-up-outline', activeIcon: 'trending-up' },
-  { name: 'profile', title: 'Perfil', icon: 'person-circle-outline', activeIcon: 'person-circle' },
+// Inicio y Ecosistema quedan en la tab bar; Precios, Noticias y Perfil siguen siendo rutas
+// navegables (desde "Ver todos" del tablero de precios, el avatar de la cabecera, etc.)
+// pero salen de la barra — ver docs/design_handoff_home_redesign. Cada tab ya trae su
+// propia cabecera embebida — nada de eso vive acá para evitar el parpadeo que causaba
+// decidir el header a mostrar según el pathname en este layout persistente.
+const tabs: { name: string; title: string; icon: IconName; activeIcon: IconName; inTabBar: boolean }[] = [
+  { name: 'ecosystem', title: 'Ecosistema', icon: 'grid-outline', activeIcon: 'grid', inTabBar: true },
+  { name: 'prices', title: 'Precios', icon: 'trending-up-outline', activeIcon: 'trending-up', inTabBar: false },
+  { name: 'noticias', title: 'Noticias', icon: 'newspaper-outline', activeIcon: 'newspaper', inTabBar: false },
+  { name: 'profile', title: 'Perfil', icon: 'person-circle-outline', activeIcon: 'person-circle', inTabBar: false },
 ]
 
-export default function TabsLayout() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [liveVideos, setLiveVideos] = useState<Post[]>([])
-  const C = useColors()
+// Botón "+" flotante del medio. Ojo: NO deja que el tab navigator haga el cambio de tab
+// por default (no llama a props.onPress) — en cambio empuja (push) directo a la pantalla
+// correspondiente. Si dejáramos que cambie de tab y después esa pantalla hiciera un
+// router.replace(), la pantalla quedaba sin historial y "atrás" tiraba el error
+// "GO_BACK was not handled by any navigator".
+function PublishTabButton({ accessibilityState }: BottomTabBarButtonProps) {
+  const { user } = useApp()
 
-  useEffect(() => {
-    let mounted = true
-    function poll() {
-      fetchLiveVideos()
-        .then((data) => { if (mounted) setLiveVideos(data) })
-        .catch(() => { if (mounted) setLiveVideos([]) })
+  function handlePress() {
+    if (user?.isMember) {
+      router.push('/(main)/publish-form' as any)
+    } else {
+      router.push('/(main)/sumate' as any)
     }
-    poll()
-    const interval = setInterval(poll, LIVE_POLL_INTERVAL)
-    return () => { mounted = false; clearInterval(interval) }
-  }, [])
+  }
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={[styles.headerSafe, { backgroundColor: C.surface }]}>
-        <AppHeaderBar onMenuPress={() => setMenuOpen(true)} liveVideos={liveVideos} />
-      </SafeAreaView>
+    <TouchableOpacity
+      onPress={handlePress}
+      activeOpacity={0.85}
+      style={styles.publishButtonWrap}
+      accessibilityState={accessibilityState}
+    >
+      <View style={styles.publishButtonCircle}>
+        <Ionicons name="add" size={30} color="#0A0A13" />
+      </View>
+    </TouchableOpacity>
+  )
+}
 
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          animation: 'none',
-          tabBarStyle: [styles.tabBar, { backgroundColor: C.surface, borderTopColor: C.border }],
-          tabBarActiveTintColor: Colors.lime,
-          tabBarInactiveTintColor: C.muted,
-          tabBarLabelStyle: styles.tabLabel,
+export default function TabsLayout() {
+  const C = useColors()
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        animation: 'none',
+        tabBarStyle: [styles.tabBar, { backgroundColor: C.surface, borderTopColor: C.border }],
+        tabBarActiveTintColor: Colors.lime,
+        tabBarInactiveTintColor: C.muted,
+        tabBarLabelStyle: styles.tabLabel,
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
         }}
-      >
-        {tabs.map((tab) => (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.title,
-              tabBarIcon: ({ focused, color, size }) => (
-                <Ionicons name={focused ? tab.activeIcon : tab.icon} size={size} color={color} />
-              ),
-            }}
-          />
-        ))}
-      </Tabs>
-
-      {menuOpen && <DrawerMenu onClose={() => setMenuOpen(false)} />}
-    </View>
+      />
+      <Tabs.Screen
+        name="publish"
+        options={{
+          title: '',
+          tabBarButton: (props) => <PublishTabButton {...props} />,
+        }}
+      />
+      {tabs.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            href: tab.inTabBar ? undefined : null,
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? tab.activeIcon : tab.icon} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
+    </Tabs>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
-  headerSafe: {},
   tabBar: {
     borderTopWidth: 1,
     paddingTop: 6,
@@ -87,5 +109,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.dmSansMedium,
     fontSize: 11,
     marginTop: 2,
+  },
+  publishButtonWrap: { flex: 1, alignItems: 'center' },
+  publishButtonCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    marginTop: -26,
+    backgroundColor: Colors.lime,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
 })

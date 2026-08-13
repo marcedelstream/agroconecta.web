@@ -1,36 +1,40 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, FlatList, TextInput, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { View, ScrollView, RefreshControl, StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
-import { HeroCarouselSkeleton, NewsCardGridSkeleton } from '@/components/ui/Skeleton'
-import { FeaturedGrid } from '@/components/home/FeaturedGrid'
-import { NewsCardGrid } from '@/components/home/NewsCardGrid'
-import { SectionHeader } from '@/components/home/SectionHeader'
+import { HeroCarouselSkeleton } from '@/components/ui/Skeleton'
+import { HomeTopBar } from '@/components/home/HomeTopBar'
+import { HomeGreetingCard } from '@/components/home/HomeGreetingCard'
+import { PriceBoard } from '@/components/home/PriceBoard'
+import { QuickServicesGrid } from '@/components/home/QuickServicesGrid'
+import { LiveCard } from '@/components/home/LiveCard'
+import { NewsForYou } from '@/components/home/NewsForYou'
 import { EventsSection } from '@/components/home/EventsSection'
-import { EcosistemaSection } from '@/components/home/EcosistemaSection'
-import { OrganizationsSection } from '@/components/home/OrganizationsSection'
-import { useColors } from '@/lib/theme-context'
+import { SectionOrderSheet } from '@/components/home/SectionOrderSheet'
+import { DrawerMenu } from '@/components/navigation/DrawerMenu'
 import { buildSegment, isNewsContent } from '@/lib/feed-utils'
 import { mockNews } from '@/lib/mock-data'
-import { fetchPublishedPosts } from '@/lib/supabase-repositories'
+import { fetchPublishedPosts, fetchLiveVideos } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
+import { normalizeSectionOrder, type HomeSectionKey } from '@/lib/home-sections'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
+import { Spacing } from '@/constants/spacing'
 import type { Post } from '@/lib/types'
 
-const NEWS_PREVIEW = 10
+const R = Colors.redesign
 
 export default function HomeScreen() {
-  const { user } = useApp()
-  const C = useColors()
+  const { user, updateUser } = useApp()
   const [search, setSearch] = useState('')
   const [posts, setPosts] = useState<Post[]>([])
+  const [liveVideo, setLiveVideo] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [adRefreshKey, setAdRefreshKey] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showOrderSheet, setShowOrderSheet] = useState(false)
 
   const loadPosts = useCallback(async () => {
     try {
@@ -42,18 +46,27 @@ export default function HomeScreen() {
     }
   }, [])
 
+  const loadLive = useCallback(async () => {
+    try {
+      const videos = await fetchLiveVideos()
+      setLiveVideo(videos[0] ?? null)
+    } catch {
+      setLiveVideo(null)
+    }
+  }, [])
+
   useEffect(() => {
     let mounted = true
-    loadPosts().finally(() => { if (mounted) setLoading(false) })
+    Promise.all([loadPosts(), loadLive()]).finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [loadPosts])
+  }, [loadPosts, loadLive])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     setAdRefreshKey((k) => k + 1)
-    await loadPosts()
+    await Promise.all([loadPosts(), loadLive()])
     setRefreshing(false)
-  }, [loadPosts])
+  }, [loadPosts, loadLive])
 
   const filtered = useMemo(() => {
     let list = [...posts]
@@ -66,126 +79,106 @@ export default function HomeScreen() {
     return list
   }, [posts, search])
 
-  const featuredPosts = filtered.slice(0, 3)
-  const latestPosts = filtered.slice(3)
-  const previewPosts = latestPosts.slice(0, NEWS_PREVIEW)
-
   const segment = user ? buildSegment(user) : undefined
 
   const goToArticle = useCallback((id: string) => {
     router.push(`/article/${id}`)
   }, [])
 
+  const widgetContent: Record<HomeSectionKey, React.ReactNode> = {
+    market: <PriceBoard />,
+    services: <QuickServicesGrid />,
+    live: liveVideo ? <LiveCard video={liveVideo} /> : null,
+    news: filtered.length > 0 ? <NewsForYou hero={filtered[0]} rows={filtered.slice(1, 4)} onPress={goToArticle} /> : null,
+    agenda: <EventsSection search={search} />,
+  }
+
+  const slots = user
+    ? normalizeSectionOrder(user.sectionOrder)
+        .map((key) => ({ key, node: widgetContent[key] }))
+        .filter((slot) => slot.node !== null)
+    : []
+
+  if (!user) return null
+
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: C.background }]}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
-    >
-      {/* Buscador */}
-      <View style={[styles.searchBox, { backgroundColor: C.surface, borderColor: C.border }]}>
-        <Ionicons name="search-outline" size={18} color={C.muted} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Buscar"
-          placeholderTextColor={C.muted}
-          style={[styles.searchInput, { color: C.foreground }]}
-          autoCorrect={false}
-          blurOnSubmit={false}
+    <View style={[styles.root, { backgroundColor: R.background }]}>
+      {/* Solo tapa el hueco del rebote/pull-to-refresh arriba de todo — el ScrollView
+          vuelve a ser transparente así el rebote de ABAJO no se pinta oscuro también. */}
+      <View style={[styles.topBounceBackdrop, { backgroundColor: R.header.bg }]} pointerEvents="none" />
+
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <HomeTopBar onMenuPress={() => setMenuOpen(true)} />
+      </SafeAreaView>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
+      >
+        <HomeGreetingCard
+          user={user}
+          search={search}
+          onSearchChange={setSearch}
+          onAdjustInterestsPress={() => setShowOrderSheet(true)}
         />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={18} color={C.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
 
-      {loading ? (
-        <>
-          <HeroCarouselSkeleton />
-          <View style={styles.section}>
-            <View style={[styles.bleed, styles.newsCarouselRow]}>
-              {Array.from({ length: 3 }).map((_, i) => <NewsCardGridSkeleton key={i} style={styles.newsCardWidth} />)}
-            </View>
+        {loading ? (
+          <View style={[styles.bandFirst, styles.bandPadded]}>
+            <HeroCarouselSkeleton />
           </View>
-        </>
-      ) : (
-        <>
-          {/* Noticias destacadas */}
-          <FeaturedGrid posts={featuredPosts} onPress={goToArticle} />
-
-          {/* Banner publicitario (posición 3) */}
-          <AdBanner segment={segment} placement="home" refreshKey={adRefreshKey} style={styles.adBanner} />
-
-          {/* ── Más Noticias (posición 4, antes de eventos) — carrusel, igual que Próximos Eventos ── */}
-          {previewPosts.length > 0 && (
-            <View style={styles.section}>
-              <SectionHeader
-                title="Más Noticias"
-                action={{ label: 'Ver todas', onPress: () => router.push('/(main)/noticias' as any) }}
-              />
-              <View style={styles.bleed}>
-                <FlatList
-                  data={previewPosts}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.newsCarouselList}
-                  ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
-                  renderItem={({ item }) => (
-                    <NewsCardGrid article={item} onPress={() => goToArticle(item.id)} style={styles.newsCardWidth} />
-                  )}
-                />
+        ) : (
+          <>
+            {search.trim() !== '' && filtered.length === 0 && (
+              <View style={[styles.bandFirst, styles.bandPadded, styles.empty]}>
+                <Text family="noto-sans" size={14} color={R.mutedForeground} style={{ textAlign: 'center' }}>
+                  Sin resultados para "{search}".
+                </Text>
               </View>
-            </View>
-          )}
-        </>
+            )}
+
+            {slots.map((slot, i) => (
+              <Fragment key={slot.key}>
+                <View style={[i === 0 ? styles.bandFirst : styles.band, styles.bandPadded]}>
+                  {slot.node}
+                </View>
+                {i === 0 && (
+                  <View style={[styles.band, styles.bandPadded]}>
+                    <AdBanner segment={segment} placement="home" refreshKey={adRefreshKey} />
+                  </View>
+                )}
+              </Fragment>
+            ))}
+          </>
+        )}
+      </ScrollView>
+
+      {menuOpen && <DrawerMenu onClose={() => setMenuOpen(false)} />}
+
+      {showOrderSheet && (
+        <SectionOrderSheet
+          order={user.sectionOrder}
+          onChange={(order) => updateUser({ sectionOrder: order })}
+          onClose={() => setShowOrderSheet(false)}
+        />
       )}
-
-      {!loading && search.trim() !== '' && previewPosts.length === 0 && (
-        <View style={styles.empty}>
-          <Ionicons name="search-outline" size={40} color={C.muted} />
-          <Text variant="body" style={{ color: C.muted, textAlign: 'center', marginTop: 12 }}>
-            Sin resultados para "{search}".
-          </Text>
-        </View>
-      )}
-
-      {/* Próximos eventos */}
-      <EventsSection search={search} />
-
-      {/* Ecosistema */}
-      <EcosistemaSection onViewAll={() => router.navigate('/(main)/(tabs)/ecosystem' as any)} />
-
-      {/* Organizaciones */}
-      <OrganizationsSection />
-    </ScrollView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: Spacing[5], gap: Spacing[6], paddingBottom: Spacing[10] },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[2.5],
-    gap: Spacing[2],
-    borderWidth: 1,
-    marginTop: Spacing[3],
-  },
-  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 15 },
-  section: { gap: Spacing[3] },
-  // Rompe el padding lateral de `content` para que el carrusel llegue al borde de la pantalla
-  bleed: { marginHorizontal: -Spacing[5] },
-  newsCarouselList: { paddingLeft: Spacing[5], paddingRight: Spacing[2], paddingBottom: Spacing[2] },
-  newsCarouselRow: { flexDirection: 'row', gap: Spacing[3], paddingLeft: Spacing[5], paddingRight: Spacing[2] },
-  newsCardWidth: { width: 160 },
-  adBanner: { marginVertical: Spacing[1] },
-  empty: { alignItems: 'center', paddingTop: Spacing[8] },
+  // Detrás del ScrollView, solo cubre la franja de arriba: si el usuario tira del
+  // rebote/pull-to-refresh hacia abajo, lo que se asoma es esto (oscuro, continuo con
+  // la cabecera) en vez del fondo claro de la página. No cubre la parte de abajo, así
+  // el rebote al llegar al final del scroll muestra el fondo claro normal.
+  topBounceBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, height: 260 },
+  // Fondo claro explícito acá (no alcanza con `root`): así cualquier hueco entre
+  // widgets tapa por completo el backdrop oscuro de arriba en vez de dejarlo asomar.
+  content: { backgroundColor: R.background, paddingBottom: 26 },
+  bandFirst: { marginTop: 20 },
+  band: { marginTop: 24 },
+  bandPadded: { paddingHorizontal: Spacing[5] },
+  empty: { alignItems: 'center', paddingVertical: Spacing[6] },
 })

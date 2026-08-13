@@ -9,7 +9,8 @@ import type {
   VideoItem,
   Profession,
   Department,
-  NewsCategory
+  NewsCategory,
+  EcosystemListing,
 } from './types';
 
 // Professions list
@@ -476,6 +477,51 @@ export const mockVideos: VideoItem[] = [
     category: 'agricultura',
     views: 7100,
     publishedAt: new Date('2026-05-02'),
+  },
+];
+
+// Fallback de Ecosistema (empleo/clasificado/curso) — todavía no hay tabla propia en
+// Supabase; se usa hasta que el admin empiece a cargar publicaciones reales.
+export const mockEcosystemListings: EcosystemListing[] = [
+  {
+    id: 'listing-1',
+    slug: 'tractor-john-deere-6110j',
+    kind: 'clasificado',
+    title: 'Tractor John Deere 6110J',
+    location: 'Itapúa',
+    modality: 'Usado',
+    description: '4.200 horas de uso, mantenimiento al día y pala frontal incluida. Disponible para ver en el establecimiento durante la semana.',
+    imageUrl: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800',
+    categoryLabel: 'Maquinaria',
+    publisherName: 'Agro Sur S.A.',
+    publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    contactUrl: 'https://wa.me/595981000000',
+  },
+  {
+    id: 'listing-2',
+    slug: 'encargado-establecimiento-ganadero',
+    kind: 'empleo',
+    title: 'Encargado de establecimiento ganadero',
+    location: 'Concepción',
+    modality: 'Presencial',
+    description: 'Buscamos encargado con experiencia en manejo de rodeo, control sanitario y coordinación de personal de campo. Se ofrece vivienda en el establecimiento.',
+    categoryLabel: 'Ganadería',
+    publisherName: 'Estancia San Rafael',
+    publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    contactUrl: 'https://wa.me/595981000001',
+  },
+  {
+    id: 'listing-3',
+    slug: 'sanidad-animal-aplicada',
+    kind: 'curso',
+    title: 'Sanidad animal aplicada',
+    location: 'Online',
+    modality: '6 semanas',
+    description: 'Curso práctico de sanidad animal para productores y técnicos: prevención, diagnóstico a campo y protocolos de tratamiento. Certificado al finalizar.',
+    categoryLabel: 'Capacitación',
+    publisherName: 'Instituto Agropecuario Paraguayo',
+    publishedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+    contactUrl: 'https://wa.me/595981000002',
   },
 ];
 

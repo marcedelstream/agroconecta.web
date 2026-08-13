@@ -38,6 +38,10 @@ function validUuid(value: string): boolean {
 async function syncUserProfileToSupabase(profile: UserProfile): Promise<void> {
   if (!validUuid(profile.id)) return
 
+  // ¡Ojo! `is_member` a propósito NO va en este upsert: es un flag de privilegio que solo
+  // el equipo activa a mano desde Supabase Studio. Si se agrega acá, cualquier cliente podría
+  // otorgarse membresía llamando updateUser({ isMember: true }) — se lee (hydrateProfileFromSupabase
+  // / refreshMembership) pero nunca se escribe desde el dispositivo del usuario.
   const { error: profileError } = await supabase.from('profiles').upsert({
     id: profile.id,
     name: profile.name,
@@ -46,6 +50,7 @@ async function syncUserProfileToSupabase(profile: UserProfile): Promise<void> {
     profession: profile.profession,
     department: profile.department,
     notification_prefs: profile.notificationPrefs,
+    section_order: profile.sectionOrder ?? null,
     updated_at: new Date().toISOString(),
   })
   if (profileError) throw profileError
@@ -97,7 +102,7 @@ const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
 async function hydrateProfileFromSupabase(authId: string): Promise<UserProfile | null> {
   const { data: profileRow, error: profileError } = await supabase
     .from('profiles')
-    .select('id, name, email, phone, profession, department, notification_prefs, created_at')
+    .select('id, name, email, phone, profession, department, notification_prefs, section_order, is_member, created_at')
     .eq('id', authId)
     .maybeSingle()
 
@@ -121,6 +126,8 @@ async function hydrateProfileFromSupabase(authId: string): Promise<UserProfile |
     organizationSubscriptions: organizationIds,
     mediaPreferences: organizationIds,
     notificationPrefs: (profileRow.notification_prefs as NotificationPreferences | null) ?? DEFAULT_NOTIFICATION_PREFS,
+    sectionOrder: (profileRow.section_order as string[] | null) ?? undefined,
+    isMember: (profileRow.is_member as boolean | null) ?? false,
     createdAt: new Date(profileRow.created_at),
   }
 }
@@ -194,6 +201,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => setIsLoading(false))
   }, [])
+
+  // El perfil cacheado en el dispositivo puede tener `isMember` desactualizado si el equipo
+  // activó la membresía desde Supabase Studio después del último login — no hay push para
+  // eso, así que lo refrescamos en silencio al abrir la app.
+  useEffect(() => {
+    if (!user?.id || !validUuid(user.id)) return
+    const userId = user.id
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('profiles').select('is_member').eq('id', userId).maybeSingle()
+        if (!data || typeof data.is_member !== 'boolean' || data.is_member === user?.isMember) return
+        setUser((prev) => {
+          if (!prev) return prev
+          const updated = { ...prev, isMember: data.is_member }
+          AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated)).catch(() => {})
+          return updated
+        })
+      } catch {
+        // Sin conexión o error puntual — se reintenta en el próximo mount.
+      }
+    })()
+    // Solo cuando cambia de usuario — no queremos refetchear en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   const updateOnboarding = useCallback((updates: Partial<OnboardingState>) => {
     setOnboarding((prev) => ({ ...prev, ...updates }))

@@ -3,9 +3,9 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { useColors } from '@/lib/theme-context'
 import type { AgroEvent } from '@/lib/types'
+
+const R = Colors.redesign
 
 function isLiveNow(event: AgroEvent): boolean {
   const today = new Date().toISOString().slice(0, 10)
@@ -18,7 +18,6 @@ interface Props {
 }
 
 export function LiveEventsTicker({ events }: Props) {
-  const C = useColors()
   const live = events.filter(isLiveNow)
 
   if (live.length === 0) return null
@@ -27,7 +26,7 @@ export function LiveEventsTicker({ events }: Props) {
     <View style={styles.wrap}>
       <View style={styles.header}>
         <View style={styles.dot} />
-        <Text variant="label" weight="bold" style={{ color: Colors.destructive, letterSpacing: 0.6 }}>
+        <Text family="noto-sans" weight="bold" size={11.5} color={R.alert} style={styles.headerLabel}>
           EN VIVO AHORA
         </Text>
       </View>
@@ -35,24 +34,26 @@ export function LiveEventsTicker({ events }: Props) {
         {live.map((event) => (
           <TouchableOpacity
             key={event.id}
-            style={[styles.card, { backgroundColor: C.surface, borderColor: Colors.destructive }]}
+            style={styles.card}
             activeOpacity={0.85}
             onPress={() => router.push(`/(main)/event/${event.slug}` as any)}
           >
             {event.imageUrl ? (
               <Image source={{ uri: event.imageUrl }} style={styles.image} resizeMode="cover" />
             ) : (
-              <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: C.secondary }]}>
-                <Ionicons name="calendar-outline" size={22} color={Colors.destructive} />
+              <View style={[styles.image, styles.imagePlaceholder]}>
+                <Ionicons name="calendar-outline" size={22} color={R.alert} />
               </View>
             )}
             <View style={styles.liveBadge}>
               <View style={styles.liveBadgeDot} />
-              <Text style={styles.liveBadgeText}>EN VIVO</Text>
+              <Text family="noto-sans" weight="bold" size={9} color="#FFFFFF">EN VIVO</Text>
             </View>
             <View style={styles.content}>
-              <Text style={[styles.title, { color: C.foreground }]} numberOfLines={2}>{event.title}</Text>
-              <Text variant="label" style={{ color: C.muted }} numberOfLines={1}>
+              <Text family="noto-sans" weight="semibold" size={12.5} lineHeight={16} color={R.foreground} numberOfLines={2}>
+                {event.title}
+              </Text>
+              <Text family="noto-sans" size={10.5} color={R.mutedForeground} numberOfLines={1}>
                 {event.city ?? event.location}
               </Text>
             </View>
@@ -64,27 +65,33 @@ export function LiveEventsTicker({ events }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginBottom: Spacing[4] },
-  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1.5], marginBottom: Spacing[2] },
-  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: Colors.destructive },
-  row: { gap: Spacing[3], paddingBottom: Spacing[1] },
-  card: { width: 148, borderRadius: Radius.base, overflow: 'hidden', borderWidth: 1.5 },
+  wrap: { marginTop: 4, marginBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginBottom: 10 },
+  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: R.alert },
+  headerLabel: { letterSpacing: 0.6 },
+  row: { paddingHorizontal: 20, gap: 12 },
+  card: {
+    width: 148,
+    backgroundColor: R.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: R.border,
+    overflow: 'hidden',
+  },
   image: { width: '100%', aspectRatio: 1 },
-  imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  imagePlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: R.secondary },
   liveBadge: {
     position: 'absolute',
-    top: Spacing[2],
-    left: Spacing[2],
+    top: 8,
+    left: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.destructive,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing[1.5],
-    paddingVertical: 2,
+    backgroundColor: R.alert,
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
-  liveBadgeDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#fff' },
-  liveBadgeText: { fontSize: 9, fontWeight: '700', color: '#fff' },
-  content: { padding: Spacing[2.5], gap: Spacing[1] },
-  title: { fontSize: 12, fontWeight: '600', lineHeight: 16 },
+  liveBadgeDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#FFFFFF' },
+  content: { padding: 10, gap: 3 },
 })

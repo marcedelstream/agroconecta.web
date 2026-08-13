@@ -4,7 +4,8 @@ import {
   StyleSheet, Alert, ActivityIndicator, Linking, Share,
 } from 'react-native'
 import { useLocalSearchParams, router, Stack } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { goBack } from '@/lib/navigation'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import { Text } from '@/components/ui/Text'
@@ -12,10 +13,10 @@ import { ReminderModal } from '@/components/ui/ReminderModal'
 import { NewsCard } from '@/components/home/NewsCard'
 import { fetchEventBySlug, fetchEventSchedule, fetchPostsByEventTag } from '@/lib/supabase-repositories'
 import { isNewsContent } from '@/lib/feed-utils'
-import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
 import type { AgroEvent, EventScheduleItem, Post } from '@/lib/types'
+
+const R = Colors.redesign
 
 type HubTab = 'info' | 'programa' | 'noticias'
 
@@ -56,8 +57,6 @@ async function scheduleReminder(event: AgroEvent) {
 
 export default function EventDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>()
-  const C = useColors()
-  const insets = useSafeAreaInsets()
   const [event, setEvent] = useState<AgroEvent | null>(null)
   const [loading, setLoading] = useState(true)
   const [reminding, setReminding] = useState(false)
@@ -107,9 +106,17 @@ export default function EventDetailScreen() {
     }
   }
 
+  async function handleShare() {
+    if (!event) return
+    await Share.share({
+      message: `${event.title}\n\nhttps://eventosagropy.com/eventos/${event.slug}`,
+      url: `https://eventosagropy.com/eventos/${event.slug}`,
+    })
+  }
+
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: C.background }]}>
+      <View style={[styles.centerFill, { backgroundColor: R.surface }]}>
         <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
         <ActivityIndicator color={Colors.lime} size="large" />
       </View>
@@ -118,12 +125,12 @@ export default function EventDetailScreen() {
 
   if (!event) {
     return (
-      <View style={[styles.center, { backgroundColor: C.background }]}>
+      <View style={[styles.centerFill, { backgroundColor: R.surface }]}>
         <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
-        <Ionicons name="alert-circle-outline" size={48} color={C.muted} />
-        <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3] }}>Evento no encontrado.</Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: Spacing[2] }}>
-          <Text variant="body" style={{ color: Colors.lime }}>Volver</Text>
+        <Ionicons name="alert-circle-outline" size={40} color={R.mutedForeground} />
+        <Text family="noto-sans" size={14} color={R.mutedForeground} style={{ marginTop: 12 }}>Evento no encontrado.</Text>
+        <TouchableOpacity onPress={() => goBack()} style={{ marginTop: 10 }}>
+          <Text family="noto-sans" weight="semibold" size={14} color={Colors.lime}>Volver</Text>
         </TouchableOpacity>
       </View>
     )
@@ -133,181 +140,168 @@ export default function EventDetailScreen() {
   const showReminder = days >= 2
 
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
+    <View style={[styles.root, { backgroundColor: R.surface }]}>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
 
-      {/* Botón volver */}
-      <TouchableOpacity
-        style={[styles.backBtn, { top: insets.top + Spacing[2] }]}
-        onPress={() => router.back()}
-        hitSlop={12}
-      >
-        <Ionicons name="arrow-back" size={22} color="#FFF" />
-      </TouchableOpacity>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText} numberOfLines={1}>
+            Evento
+          </Text>
+          <TouchableOpacity onPress={handleShare} hitSlop={12}>
+            <Ionicons name="share-outline" size={19} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
-      {/* Botón compartir */}
-      <TouchableOpacity
-        style={[styles.floatShareBtn, { top: insets.top + Spacing[2] }]}
-        onPress={() => Share.share({
-          message: `${event.title}\n\nhttps://eventosagropy.com/eventos/${event.slug}`,
-          url: `https://eventosagropy.com/eventos/${event.slug}`,
-        })}
-        hitSlop={12}
-      >
-        <Ionicons name="share-outline" size={22} color="#FFF" />
-      </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {event.imageUrl ? (
+          <Image source={{ uri: event.imageUrl }} style={styles.hero} resizeMode="cover" />
+        ) : (
+          <View style={[styles.hero, styles.heroPlaceholder]}>
+            <Ionicons name="calendar-outline" size={52} color={Colors.lime} />
+          </View>
+        )}
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + Spacing[8] }}>
-        {/* Imagen hero */}
-        <View>
-          {event.imageUrl ? (
-            <Image source={{ uri: event.imageUrl }} style={styles.hero} resizeMode="cover" />
-          ) : (
-            <View style={[styles.hero, styles.heroPlaceholder, { backgroundColor: C.secondary }]}>
-              <Ionicons name="calendar-outline" size={56} color={Colors.lime} />
+        <View style={styles.content}>
+          {event.category && (
+            <View style={styles.chip}>
+              <Text family="noto-sans" weight="bold" size={10} color={R.limeSoftText} style={styles.chipText}>
+                {event.category.toUpperCase()}
+              </Text>
             </View>
           )}
-          <View style={styles.catBadge}>
-            <Text style={styles.catText}>{event.category}</Text>
-          </View>
-        </View>
 
-        <View style={styles.body}>
-          <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground }}>
+          <Text family="noto-sans" weight="extrabold" size={21} lineHeight={27} color={R.foreground} style={styles.title}>
             {event.title}
           </Text>
 
-          {/* Meta */}
-          <View style={[styles.metaCard, { backgroundColor: C.surface }]}>
-            <MetaRow icon="calendar-outline" text={formatFullDate(event.date)} C={C} />
+          <View style={styles.metaCard}>
+            <MetaRow icon="calendar-outline" text={formatFullDate(event.date)} />
             {event.endDate && event.endDate !== event.date && (
-              <MetaRow icon="calendar-clear-outline" text={`Hasta: ${formatFullDate(event.endDate)}`} C={C} />
+              <MetaRow icon="calendar-clear-outline" text={`Hasta: ${formatFullDate(event.endDate)}`} />
             )}
-            {event.time && <MetaRow icon="time-outline" text={event.time} C={C} />}
+            {event.time && <MetaRow icon="time-outline" text={event.time} />}
             <MetaRow
               icon="location-outline"
               text={[event.location, event.city, event.department].filter(Boolean).join(' · ')}
-              C={C}
             />
           </View>
 
-          {/* Tabs — solo aparecen si hay cobertura extra cargada para este evento */}
           {showTabs && (
-            <View style={[styles.tabBar, { backgroundColor: C.surface, borderColor: C.border }]}>
-              {tabs.map((t) => (
-                <TouchableOpacity
-                  key={t.key}
-                  style={[styles.tabItem, tab === t.key && { backgroundColor: Colors.lime }]}
-                  onPress={() => setTab(t.key)}
-                >
-                  <Text
-                    variant="body"
-                    weight="semibold"
-                    style={{ color: tab === t.key ? '#0A0A13' : C.muted }}
+            <View style={styles.tabBar}>
+              {tabs.map((t) => {
+                const active = tab === t.key
+                return (
+                  <TouchableOpacity
+                    key={t.key}
+                    style={[styles.tabItem, active && styles.tabItemActive]}
+                    onPress={() => setTab(t.key)}
+                    activeOpacity={0.85}
                   >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text family="noto-sans" weight="semibold" size={12.5} color={active ? '#FFFFFF' : R.mutedForeground}>
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
             </View>
           )}
 
           {tab === 'info' && (
-            <>
-              {/* Descripción */}
+            <View style={styles.tabContent}>
               {(event.longDescription ?? event.description) ? (
-                <Text variant="body" style={{ color: C.foreground, lineHeight: 24 }}>
+                <Text family="noto-sans" size={13.5} lineHeight={21} color="#43434D">
                   {event.longDescription ?? event.description}
                 </Text>
               ) : null}
 
-              {/* Recordar evento — solo si faltan 2+ días */}
               {showReminder && (
                 <TouchableOpacity
-                  style={[styles.remindBtn, reminding && { opacity: 0.6 }]}
+                  style={[styles.remindBtn, reminding && styles.remindBtnDisabled]}
                   activeOpacity={0.85}
                   onPress={handleReminder}
                   disabled={reminding}
                 >
                   {reminding
                     ? <ActivityIndicator color="#0A0A13" size="small" />
-                    : <Ionicons name="notifications-outline" size={20} color="#0A0A13" />
+                    : <Ionicons name="notifications-outline" size={19} color="#0A0A13" />
                   }
-                  <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
+                  <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">
                     {reminding ? 'Programando…' : 'Recordar este evento'}
                   </Text>
                 </TouchableOpacity>
               )}
 
-              {/* Links importantes */}
               {event.importantLinks && event.importantLinks.length > 0 && (
-                <View style={{ gap: Spacing[2] }}>
-                  <Text variant="body" weight="semibold" style={{ color: C.foreground }}>Links de interés</Text>
+                <View style={styles.linksBlock}>
+                  <Text family="noto-sans" weight="semibold" size={13} color={R.foreground}>Links de interés</Text>
                   {event.importantLinks.map((link, i) => (
                     <TouchableOpacity
                       key={i}
-                      style={[styles.linkRow, { borderColor: C.border }]}
+                      style={styles.linkRow}
                       onPress={() => Linking.openURL(link.url)}
                     >
-                      <Ionicons name="link-outline" size={16} color={Colors.lime} />
-                      <Text variant="body" style={{ color: Colors.lime, flex: 1 }} numberOfLines={1}>{link.label}</Text>
-                      <Ionicons name="open-outline" size={14} color={C.muted} />
+                      <Ionicons name="link-outline" size={15} color={Colors.lime} />
+                      <Text family="noto-sans" size={13} color={Colors.lime} numberOfLines={1} style={{ flex: 1 }}>{link.label}</Text>
+                      <Ionicons name="open-outline" size={13} color={R.mutedForeground} />
                     </TouchableOpacity>
                   ))}
                 </View>
               )}
 
-              {/* Contacto */}
               {(event.contactEmail || event.contactPhone) && (
-                <View style={[styles.contactCard, { backgroundColor: C.surface, borderColor: C.border }]}>
-                  <Text variant="caption" weight="semibold" style={{ color: C.muted }}>CONTACTO</Text>
+                <View style={styles.contactCard}>
+                  <Text family="noto-sans" weight="semibold" size={10.5} color={R.mutedForeground} style={styles.contactLabel}>CONTACTO</Text>
                   {event.contactEmail && (
                     <TouchableOpacity onPress={() => Linking.openURL(`mailto:${event.contactEmail}`)}>
-                      <Text variant="body" style={{ color: Colors.lime }}>{event.contactEmail}</Text>
+                      <Text family="noto-sans" size={13} color={Colors.lime}>{event.contactEmail}</Text>
                     </TouchableOpacity>
                   )}
                   {event.contactPhone && (
                     <TouchableOpacity onPress={() => Linking.openURL(`tel:${event.contactPhone}`)}>
-                      <Text variant="body" style={{ color: C.foreground }}>{event.contactPhone}</Text>
+                      <Text family="noto-sans" size={13} color={R.foreground}>{event.contactPhone}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
               )}
 
-              {/* Ver en mapa */}
               {event.mapsUrl && (
                 <TouchableOpacity
-                  style={[styles.mapBtn, { borderColor: C.border }]}
+                  style={styles.mapBtn}
                   onPress={() => Linking.openURL(event.mapsUrl!)}
                 >
-                  <Ionicons name="map-outline" size={18} color={C.foreground} />
-                  <Text variant="body" weight="medium" style={{ color: C.foreground }}>Ver en el mapa</Text>
+                  <Ionicons name="map-outline" size={17} color={R.foreground} />
+                  <Text family="noto-sans" weight="medium" size={13} color={R.foreground}>Ver en el mapa</Text>
                 </TouchableOpacity>
               )}
-            </>
+            </View>
           )}
 
           {tab === 'programa' && (
-            <View style={{ gap: Spacing[3] }}>
+            <View style={styles.programaWrap}>
               {schedule.map((item, i) => {
                 const showDayLabel = item.dayLabel && (i === 0 || schedule[i - 1].dayLabel !== item.dayLabel)
                 return (
                   <View key={item.id}>
                     {showDayLabel && (
-                      <Text variant="label" weight="semibold" style={{ color: Colors.lime, marginBottom: Spacing[1.5] }}>
+                      <Text family="noto-sans" weight="semibold" size={11} color={Colors.lime} style={styles.dayLabel}>
                         {item.dayLabel!.toUpperCase()}
                       </Text>
                     )}
-                    <View style={[styles.scheduleCard, { backgroundColor: C.surface, borderColor: C.border }]}>
+                    <View style={styles.scheduleCard}>
                       {item.time && (
-                        <Text variant="caption" weight="semibold" style={{ color: Colors.lime }}>{item.time}</Text>
+                        <Text family="noto-sans" weight="semibold" size={11.5} color={Colors.lime}>{item.time}</Text>
                       )}
-                      <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{item.title}</Text>
+                      <Text family="noto-sans" weight="semibold" size={13.5} color={R.foreground}>{item.title}</Text>
                       {item.speaker && (
-                        <Text variant="caption" style={{ color: C.muted }}>{item.speaker}</Text>
+                        <Text family="noto-sans" size={11.5} color={R.mutedForeground}>{item.speaker}</Text>
                       )}
                       {item.description && (
-                        <Text variant="body" style={{ color: C.muted, lineHeight: 20 }}>{item.description}</Text>
+                        <Text family="noto-sans" size={12.5} lineHeight={19} color={R.mutedForeground}>{item.description}</Text>
                       )}
                     </View>
                   </View>
@@ -317,7 +311,7 @@ export default function EventDetailScreen() {
           )}
 
           {tab === 'noticias' && (
-            <View style={{ gap: Spacing[3] }}>
+            <View style={styles.noticiasWrap}>
               {relatedPosts.map((post) => (
                 <NewsCard key={post.id} article={post} onPress={() => router.push(`/article/${post.id}`)} />
               ))}
@@ -335,104 +329,93 @@ export default function EventDetailScreen() {
   )
 }
 
-function MetaRow({ icon, text, C }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string; C: any }) {
+function MetaRow({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
   return (
     <View style={styles.metaRow}>
-      <Ionicons name={icon} size={16} color={Colors.lime} />
-      <Text variant="body" style={{ color: C.foreground, flex: 1 }}>{text}</Text>
+      <Ionicons name={icon} size={15} color={Colors.lime} />
+      <Text family="noto-sans" size={13} color={R.foreground} style={{ flex: 1 }}>{text}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing[3] },
-  backBtn: {
-    position: 'absolute',
-    left: Spacing[5],
-    zIndex: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  floatShareBtn: {
-    position: 'absolute',
-    right: Spacing[5],
-    zIndex: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  hero: { width: '100%', height: 260 },
-  heroPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  catBadge: {
-    position: 'absolute',
-    bottom: Spacing[3],
-    left: Spacing[5],
-    backgroundColor: Colors.lime,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing[2.5],
-    paddingVertical: Spacing[0.5],
-  },
-  catText: { fontSize: 11, fontWeight: '700', color: '#0A0A13', textTransform: 'uppercase' },
-  body: { padding: Spacing[5], gap: Spacing[6] },
-  metaCard: { gap: Spacing[3], padding: Spacing[4], borderRadius: Radius.xl },
-  metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing[3] },
-  remindBtn: {
+  centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing[2],
-    backgroundColor: Colors.lime,
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing[4],
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[2],
-    paddingVertical: Spacing[3],
-    borderBottomWidth: 1,
-  },
-  contactCard: {
-    padding: Spacing[4],
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    gap: Spacing[2],
-  },
-  mapBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing[2],
-    borderWidth: 1,
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing[3.5],
-  },
+  hero: { width: '100%', height: 220 },
+  heroPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: R.secondary },
+  content: { paddingHorizontal: 20, paddingTop: 18, gap: 18 },
+  chip: { alignSelf: 'flex-start', backgroundColor: R.limeSoftBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  chipText: { letterSpacing: 0.5 },
+  title: {},
+  metaCard: { gap: 12, padding: 16, borderRadius: 16, backgroundColor: R.secondary },
+  metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   tabBar: {
     flexDirection: 'row',
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    padding: Spacing[1],
-    gap: Spacing[1],
+    borderRadius: 14,
+    backgroundColor: R.secondary,
+    padding: 4,
+    gap: 4,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing[2.5],
-    borderRadius: Radius.lg,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  scheduleCard: {
-    gap: Spacing[1],
-    padding: Spacing[4],
-    borderRadius: Radius.xl,
+  tabItemActive: { backgroundColor: R.foreground },
+  tabContent: { gap: 16 },
+  remindBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.lime,
+    borderRadius: 16,
+    paddingVertical: 15,
+  },
+  remindBtnDisabled: { opacity: 0.6 },
+  linksBlock: { gap: 2 },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: R.divider,
+  },
+  contactCard: {
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: R.secondary,
+    gap: 4,
+  },
+  contactLabel: { letterSpacing: 0.5, marginBottom: 2 },
+  mapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     borderWidth: 1,
+    borderColor: R.border,
+    borderRadius: 14,
+    paddingVertical: 13,
   },
+  programaWrap: { gap: 12 },
+  dayLabel: { letterSpacing: 0.5, marginBottom: 6 },
+  scheduleCard: {
+    gap: 4,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: R.secondary,
+  },
+  noticiasWrap: { gap: 12 },
 })

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { View, ScrollView, Image, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native'
-import Pdf from 'react-native-pdf'
+import { PdfReader } from '@/components/ui/PdfReader'
 import { useLocalSearchParams, router } from 'expo-router'
+import { goBack } from '@/lib/navigation'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -83,7 +84,7 @@ export default function BookDetailScreen() {
       <View style={[styles.center, { backgroundColor: C.background }]}>
         <Ionicons name="alert-circle-outline" size={40} color={C.muted} />
         <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3] }}>Título no encontrado.</Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: Spacing[4] }}>
+        <TouchableOpacity onPress={() => goBack()} style={{ marginTop: Spacing[4] }}>
           <Text variant="body" style={{ color: Colors.lime }}>Volver</Text>
         </TouchableOpacity>
       </View>
@@ -101,7 +102,7 @@ export default function BookDetailScreen() {
             {item.title}
           </Text>
         </View>
-        <Pdf
+        <PdfReader
           source={{ uri: signedUrl, cache: true }}
           style={styles.pdf}
           trustAllCerts={false}
@@ -115,7 +116,7 @@ export default function BookDetailScreen() {
     <View style={[styles.root, { backgroundColor: C.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing[8] }]}>
         <View style={[styles.topBar, { paddingTop: insets.top + Spacing[2] }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+          <TouchableOpacity onPress={() => goBack()} style={styles.backBtn} hitSlop={12}>
             <Ionicons name="arrow-back" size={22} color={C.foreground} />
           </TouchableOpacity>
         </View>

@@ -3,14 +3,17 @@ import { Fonts, FontSizes, LineHeights } from '@/constants/typography'
 import { useColors } from '@/lib/theme-context'
 
 type Variant = 'display' | 'title' | 'subtitle' | 'body' | 'caption' | 'label'
-type Weight = 'regular' | 'medium' | 'semibold' | 'bold'
-type Family = 'poppins' | 'dm-sans'
+type Weight = 'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold'
+type Family = 'poppins' | 'dm-sans' | 'noto-sans'
 
 interface Props extends TextProps {
   variant?: Variant
   weight?: Weight
   family?: Family
   color?: string
+  /** Tamaño puntual en px, para las medidas específicas del rediseño que no entran en `variant`. */
+  size?: number
+  lineHeight?: number
   children: React.ReactNode
 }
 
@@ -24,10 +27,19 @@ const variantStyles: Record<Variant, { fontSize: number; lineHeight: number }> =
 }
 
 function getFontFamily(family: Family, weight: Weight): string {
-  if (family === 'poppins') {
-    return { regular: Fonts.poppins, medium: Fonts.poppinsMedium, semibold: Fonts.poppinsSemiBold, bold: Fonts.poppinsBold }[weight]
+  if (family === 'noto-sans') {
+    return {
+      regular: Fonts.notoSans,
+      medium: Fonts.notoSansMedium,
+      semibold: Fonts.notoSansSemiBold,
+      bold: Fonts.notoSansBold,
+      extrabold: Fonts.notoSansExtraBold,
+    }[weight]
   }
-  return { regular: Fonts.dmSans, medium: Fonts.dmSansMedium, semibold: Fonts.dmSansSemiBold, bold: Fonts.dmSansBold }[weight]
+  if (family === 'poppins') {
+    return { regular: Fonts.poppins, medium: Fonts.poppinsMedium, semibold: Fonts.poppinsSemiBold, bold: Fonts.poppinsBold, extrabold: Fonts.poppinsBold }[weight]
+  }
+  return { regular: Fonts.dmSans, medium: Fonts.dmSansMedium, semibold: Fonts.dmSansSemiBold, bold: Fonts.dmSansBold, extrabold: Fonts.dmSansBold }[weight]
 }
 
 const defaultFamily: Record<Variant, Family> = {
@@ -48,16 +60,24 @@ const defaultWeight: Record<Variant, Weight> = {
   label: 'medium',
 }
 
-export function Text({ variant = 'body', weight, family, color, style, children, ...props }: Props) {
+export function Text({ variant = 'body', weight, family, color, size, lineHeight, style, children, ...props }: Props) {
   const C = useColors()
   const resolvedFamily = family ?? defaultFamily[variant]
   const resolvedWeight = weight ?? defaultWeight[variant]
   const fontFamily = getFontFamily(resolvedFamily, resolvedWeight)
-  const { fontSize, lineHeight } = variantStyles[variant]
+  const variantSize = variantStyles[variant]
 
   return (
     <RNText
-      style={[{ fontFamily, fontSize, lineHeight, color: color ?? C.foreground }, style]}
+      style={[
+        {
+          fontFamily,
+          fontSize: size ?? variantSize.fontSize,
+          lineHeight: lineHeight ?? (size !== undefined ? undefined : variantSize.lineHeight),
+          color: color ?? C.foreground,
+        },
+        style,
+      ]}
       {...props}
     >
       {children}

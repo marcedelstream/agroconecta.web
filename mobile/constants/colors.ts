@@ -45,4 +45,36 @@ export const Colors = {
     institucional: '#A4D233',
     streaming: '#EF4444',
   },
+
+  // Rediseño 2026 (handoff design_handoff_home_redesign) — tema claro fijo, no depende del toggle de tema.
+  // Se usa hoy en Home (boceto 3a); las pantallas internas (4a-4f) reusan los mismos tokens cuando se aborden.
+  redesign: {
+    background: '#F1F1EC',
+    surface: '#FFFFFF',
+    secondary: '#F5F5F0',
+    foreground: '#101014',
+    mutedForeground: '#7A7A85',
+    mutedForeground2: '#9A9AA3',
+    divider: '#F2F2ED',
+    border: '#E2E2DB',
+    limeSoftBg: '#EAF4D2',
+    limeSoftText: '#4E7014',
+    alert: '#D33A3A',
+    alertBg: '#FDE7E7',
+    positive: '#22C55E',
+    negative: '#FF4D4D',
+    header: {
+      bg: '#101014',
+      chip: '#1C1C24',
+      chipBorder: '#2E2E38',
+      mutedText: '#8C8C99',
+      placeholder: '#7C7C89',
+    },
+    // Ficha única de Ecosistema (boceto 4f) — empleo/clasificado/curso
+    listingKind: {
+      empleo: { bg: '#E3EBFD', text: '#1D4ED8', label: 'EMPLEO' },
+      clasificado: { bg: '#FDF0D8', text: '#9A6200', label: 'CLASIFICADO' },
+      curso: { bg: '#EDE6FD', text: '#6D28D9', label: 'CURSO' },
+    },
+  },
 } as const

@@ -15,6 +15,25 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-08-13:** rediseño completo de la app móvil siguiendo el handoff de diseño
+> `docs/design_handoff_home_redesign/` (bocetos 3a y 4a-4f) — solo `mobile/`, no se tocó `web/`. Tipografía
+> pasó de Lexend a **Noto Sans** en toda la app (`constants/typography.ts` sigue mapeando las claves viejas
+> `poppins`/`dmSans`, mismo truco que antes con Lexend; `Text` ahora también acepta `family="noto-sans"` +
+> `size`/`lineHeight` sueltos). Nuevo namespace `Colors.redesign` con la paleta clara fija del boceto (no
+> depende del toggle de tema). Tab bar bajó a 2 ítems visibles (Inicio, Ecosistema); Precios y Noticias siguen
+> navegables pero fuera de la barra (`href: null`) — Noticias se movió de `app/(main)/noticias.tsx` a
+> `app/(main)/(tabs)/noticias.tsx` para heredar la tab bar del boceto. Inicio, Ecosistema, Precios y Noticias
+> ya tienen cabecera oscura propia embebida; el resto de las pantallas sigue con la `AppHeaderBar` compartida
+> vieja hasta que se rediseñen. Se sacó la publicidad de Mercado/Nota individual (el boceto no la tiene ahí);
+> Noticias reusa el placement `"home"` porque no existe un placement dedicado (agregar uno toca también el
+> admin de `web/`, fuera de este alcance). Se revirtió la decisión de "Ecosistema sin marketplace": ahora
+> Empleos/Clasificados/Cursos muestran publicaciones reales (`EcosystemListing` — ver
+> `supabase/fix-ecosystem-listings.sql`, todavía sin panel admin, se carga por SQL) en vez de la pantalla
+> "Próximamente" + formulario de interés; Remates Online no cambió — ya tenía contenido real vía posts
+> `contentType: 'auction'` y ahora apunta directo a Videos. La sección "Últimas publicaciones" del boceto 4d
+> (feed mezclado de las tres categorías) no se construyó — se decidió mostrar Videos + la lista de
+> plataformas en su lugar, ver la ficha única (`listing/[id].tsx`) para el detalle de cada publicación.
+>
 > **2026-07-22:** trabajo de compliance para subir a las stores. Login: se reactivó email+contraseña
 > (`signIn`/`signUp` ya existían sin usar en `app-context.tsx`, solo faltaba la vista en `login.tsx`) —
 > necesario porque Apple Review pide una credencial fija reutilizable y Google OAuth/OTP no sirven para eso.
@@ -67,7 +86,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 | Persistencia | AsyncStorage (`@agroconecta:user`) |
 | Tipos | TypeScript estricto (`npm run tsc` pasa limpio) |
 | Íconos | `@expo/vector-icons` (Ionicons) |
-| Fuentes | Lexend (`@expo-google-fonts/lexend`) — única familia para toda la app (2026-07) |
+| Fuentes | Noto Sans (`@expo-google-fonts/noto-sans`) — única familia para toda la app (2026-08, reemplazó a Lexend en el rediseño) |
 | Validación | Zod + React Hook Form |
 | Extras | expo-haptics, expo-image, expo-linear-gradient, expo-notifications, react-native-webview, react-native-reanimated 4 |
 
@@ -207,10 +226,12 @@ const colors = {
 
 ### Tipografía
 
-- **Una sola familia: Lexend** (400–700), tanto en mobile como en web.
-- `constants/typography.ts` (mobile) y `app/layout.tsx` (web) mantienen las claves/variables viejas
-  (`poppins`/`dmSans`, `--font-poppins`/`--font-dm-sans`) apuntando a Lexend, para no tener que tocar
-  los componentes que usan `family="poppins"` o las clases `font-display`/`font-sans`.
+- **Mobile: una sola familia, Noto Sans** (400–800, 2026-08). `constants/typography.ts` mantiene las claves
+  viejas (`poppins`/`dmSans`) apuntando a Noto Sans en vez de Lexend, para no tener que tocar los ~30
+  componentes que usan `family="poppins"`/`family="dm-sans"`. `Text` también acepta `family="noto-sans"` +
+  `size`/`lineHeight` puntuales para los tamaños específicos del rediseño (boceto `design_handoff_home_redesign`).
+- **Web: sigue en Lexend** (400–700) — no se tocó en el rediseño mobile. `app/layout.tsx` mantiene las
+  claves/variables viejas (`--font-poppins`/`--font-dm-sans`) apuntando a Lexend.
 
 ### Border radius
 
@@ -233,16 +254,20 @@ Logo + animación, decide ruta inicial (onboarding si no hay usuario, main si ya
 - Al completar: crea `UserProfile`, lo persiste en AsyncStorage y marca `isComplete`.
 - `resolveProfileForCurrentSession()` (en `app-context.tsx`) se llama justo después de un login exitoso: valida que el perfil cacheado en AsyncStorage pertenezca al `auth.uid()` de la sesión actual antes de saltar onboarding — evita que una cuenta nueva en el mismo dispositivo herede el perfil de la cuenta anterior.
 
-### 3. Main — Bottom Tabs (4 tabs) + header
+### 3. Main — Bottom Tabs (2026-08, rediseño: 2 tabs visibles, cabecera propia por pantalla)
 
 | Tab | Descripción |
 |---|---|
-| Inicio | Feed de noticias con filtros, búsqueda y anuncios segmentados |
-| Descubrir | Tab de Ecosistema — plataformas propias, próximas (Clasificados, Bolsa de Trabajo, Remates Online, Cursos) con pantalla propia + CTA de interés, medios e instituciones |
-| Precios | Precios ganaderos (PYG ₲) + commodities internacionales (USD $) |
-| Perfil | Datos del usuario, tema, notificaciones, preferencias |
+| Inicio | Tablero: cabecera propia (saludo, "Ajustar interés", buscador) + Tu mercado hoy + En vivo + Noticias para vos + Agenda del sector + Ecosistema |
+| Ecosistema | Videos (real, `contentType` video/auction) + lista de plataformas (Clasificados, Bolsa de Trabajo, Remates Online, Cursos) |
 
-Videos/Remates (`videos.tsx`, reproductor `react-native-youtube-iframe`) no está en la tab bar — se accede desde el botón "EN VIVO" del header y el drawer.
+Precios, Noticias y Perfil ya no están en la tab bar (`href: null` en `Tabs.Screen`) pero siguen siendo rutas
+navegables dentro del mismo grupo `(tabs)` — se entra desde "Ver todos"/"Mostrar más" en Inicio o el avatar de
+la cabecera — y por eso conservan la barra inferior. Cada una de estas 4 pantallas (Inicio/Ecosistema/Precios/
+Noticias) ya tiene su propia cabecera oscura embebida (`(tabs)/_layout.tsx` la oculta ahí y deja la
+`AppHeaderBar` compartida solo para las que faltan rediseñar). Videos/Remates (`videos.tsx`, reproductor
+`react-native-youtube-iframe`) sigue fuera de la tab bar — se accede desde "Remates Online" en Ecosistema, el
+botón "EN VIVO" del header viejo (pantallas sin rediseñar) y el drawer.
 
 ---
 
@@ -302,7 +327,7 @@ npm run start          # next start -p 3000
 ### App móvil — ✅ funcional
 - [x] Scaffold Expo Router + design system (tokens + componentes base)
 - [x] Splash, login Supabase, onboarding multi-paso con persistencia AsyncStorage
-- [x] Tabs: Home, Descubrir (Ecosistema), Precios, Perfil — Videos vive fuera de la tab bar (botón "EN VIVO" del header + drawer)
+- [x] Tabs: Inicio, Ecosistema en la barra (2026-08); Precios/Noticias/Perfil navegables sin estar en la barra — Videos vive fuera de la tab bar (botón "EN VIVO" del header + drawer)
 - [x] Detalle de artículo, perfil de organización, WebView in-app
 - [x] Eventos: listado, detalle, hub dinámico (Info + Programa + Noticias), recordatorios push
 - [x] Repositorios Supabase (posts, organizations, market_prices, events, banners)
@@ -339,7 +364,7 @@ npm run start          # next start -p 3000
 - [ ] Generar el primer build de producción con EAS y subirlo a Play Store / App Store
 
 ### Pendiente
-- [ ] Cursos: se queda como está por ahora (solo la pantalla "Próximamente" + formulario de interés en Ecosistema) — el diseño completo de catálogo/inscripción en `docs/ESTRUCTURA-Y-ROADMAP.md` queda de referencia para cuando se decida retomarlo, sin fecha.
+- [ ] Correr `supabase/fix-ecosystem-listings.sql` en Supabase (crea `ecosystem_listings` + carga datos de ejemplo) — Empleos/Clasificados/Cursos ya no muestran "Próximamente" (revertido 2026-08, ver entrada arriba), pero sin correr este SQL la app cae al fallback mock local. Falta construir el panel admin para cargar/editar publicaciones reales (hoy solo vía SQL/Supabase Studio).
 - [ ] Correr `supabase/fix-organizer-events-and-notify.sql` en Supabase si todavía no se corrió (necesario para eventos por organizador + campanita)
 - [ ] Cuenta de Resend + secrets `RESEND_API_KEY`/`SERVICE_LEAD_EMAIL_TO` para que el email de leads (servicios, oportunidad comercial, interés en Ecosistema) funcione de punta a punta — hoy el insert en Supabase ya funciona, falta el aviso por mail
 - [ ] Formularios de publicación desde la app móvil (hoy solo desde web admin)

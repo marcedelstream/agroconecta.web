@@ -40,7 +40,13 @@
           "resizeMode": "contain"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Agroconecta necesita acceso a tus fotos para que puedas elegir una foto de perfil. La foto se guarda solo en tu dispositivo."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

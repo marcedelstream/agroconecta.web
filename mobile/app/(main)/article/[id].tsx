@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
-import { ScrollView, View, Image, TouchableOpacity, Share, Linking, StyleSheet } from 'react-native'
+import { ScrollView, View, Image, TouchableOpacity, Share, StyleSheet } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
+import { goBack } from '@/lib/navigation'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Text } from '@/components/ui/Text'
-import { Badge } from '@/components/ui/Badge'
-import { Card } from '@/components/ui/card'
-import { AdBanner } from '@/components/ui/AdBanner'
 import { HtmlContent } from '@/components/ui/HtmlContent'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
-import { useColors } from '@/lib/theme-context'
-import { mockNews, mockPublishers } from '@/lib/mock-data'
-import { fetchPublishedPostBySlug, fetchOrganizationById } from '@/lib/supabase-repositories'
+import { useApp } from '@/lib/app-context'
+import { mockNews, mockPublishers, getCategoryLabel } from '@/lib/mock-data'
+import { fetchPublishedPostBySlug, fetchOrganizationById, fetchPublishedPosts } from '@/lib/supabase-repositories'
 import type { Organization, Post } from '@/lib/types'
+
+const R = Colors.redesign
+const SAVED_ARTICLES_KEY = '@agroconecta:saved_articles'
 
 const MOCK_CONTENT = `El sector agropecuario paraguayo continúa consolidándose como uno de los motores de la economía nacional. Los datos más recientes reflejan un crecimiento sostenido que posiciona al país entre los principales referentes de la región.
 
@@ -28,22 +27,28 @@ Por su parte, las autoridades del Ministerio de Agricultura y Ganadería (MAG) d
 El contexto internacional también ha favorecido al sector, con precios de commodities en niveles históricamente altos y una creciente demanda de alimentos de calidad en los mercados de Asia y Europa.
 
 De cara al futuro, los especialistas proyectan que la tendencia continuará, siempre que se mantengan las condiciones climáticas actuales y se siga apostando por la innovación y la adopción de buenas prácticas agropecuarias.`
-function formatDate(date: Date) {
-  return date.toLocaleDateString('es-PY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+
+function timeAgo(date: Date): string {
+  const h = Math.floor((Date.now() - date.getTime()) / 3600000)
+  if (h < 1) return 'Hace menos de 1h'
+  if (h < 24) return `Hace ${h}h`
+  return `Hace ${Math.floor(h / 24)}d`
 }
-function formatTime(date: Date) {
-  return date.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })
-}
-function categoryLabel(cat: string) {
-  return cat.charAt(0).toUpperCase() + cat.slice(1)
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
+  const { user, updateUser } = useApp()
+
   const [article, setArticle] = useState<Post | null>(null)
   const [publisher, setPublisher] = useState<Organization | null>(null)
-  const C = useColors()
-  const insets = useSafeAreaInsets()
+  const [related, setRelated] = useState<Post[]>([])
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -66,221 +71,200 @@ export default function ArticleScreen() {
     return () => { mounted = false }
   }, [article?.publisherId])
 
+  useEffect(() => {
+    if (!article) return
+    fetchPublishedPosts()
+      .then((posts) => {
+        const others = posts.filter((p) => p.id !== article.id && p.category === article.category)
+        setRelated(others.slice(0, 2))
+      })
+      .catch(() => setRelated([]))
+  }, [article])
+
+  useEffect(() => {
+    if (!id) return
+    AsyncStorage.getItem(SAVED_ARTICLES_KEY)
+      .then((raw) => {
+        const list: string[] = raw ? JSON.parse(raw) : []
+        setSaved(list.includes(id))
+      })
+      .catch(() => {})
+  }, [id])
+
+  async function toggleSaved() {
+    if (!id) return
+    const raw = await AsyncStorage.getItem(SAVED_ARTICLES_KEY)
+    const list: string[] = raw ? JSON.parse(raw) : []
+    const updated = saved ? list.filter((x) => x !== id) : [...list, id]
+    await AsyncStorage.setItem(SAVED_ARTICLES_KEY, JSON.stringify(updated))
+    setSaved(!saved)
+  }
+
+  const isFollowed = user?.organizationSubscriptions?.includes(article?.publisherId ?? '') ?? false
+
+  async function toggleFollow() {
+    if (!user || !article?.publisherId) return
+    const current = user.organizationSubscriptions ?? []
+    const updated = isFollowed
+      ? current.filter((x) => x !== article.publisherId)
+      : [...current, article.publisherId]
+    await updateUser({ organizationSubscriptions: updated, mediaPreferences: updated })
+  }
+
+  async function handleShare() {
+    if (!article) return
+    await Share.share({
+      message: `${article.title}\n\nLeé más en Agroconecta`,
+      url: `https://agroconecta.com.py/noticias/${article.slug ?? article.id}`,
+    })
+  }
+
   if (!article) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.background }}>
-        <Ionicons name="newspaper-outline" size={40} color={C.muted} />
+      <View style={[styles.centerFill, { backgroundColor: R.background }]}>
+        <Ionicons name="newspaper-outline" size={40} color={R.mutedForeground} />
       </View>
     )
   }
 
-  const shareText = `${article.title}\n\nLeé más en Agroconecta`
-  const shareUrl = `https://agroconecta.com.py/noticias/${article.slug ?? article.id}`
-
-  async function handleNativeShare() {
-    await Share.share({ message: shareText, url: shareUrl })
-  }
-  function shareWhatsApp() {
-    Linking.openURL(`whatsapp://send?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`)
-  }
-  function shareTwitter() {
-    Linking.openURL(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`)
-  }
-  function shareFacebook() {
-    Linking.openURL(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`)
-  }
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['bottom']}>
-      {/* Scroll sin bounce — la imagen sube con el contenido pero no rebota al bajar */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        overScrollMode="never"
-      >
-        {/* Banner: parte del scroll, pero sin rebote */}
-        <View style={styles.bannerContainer}>
-          <Image source={{ uri: article.imageUrl }} style={styles.banner} resizeMode="cover" />
-          <View style={styles.bannerOverlay} />
-
-          <TouchableOpacity
-            style={[styles.backBtn, { top: insets.top + Spacing[2] }]}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+    <View style={[styles.root, { backgroundColor: R.surface }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.shareBtn, { top: insets.top + Spacing[2] }]}
-            onPress={handleNativeShare}
-          >
-            <Ionicons name="share-outline" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={handleShare} hitSlop={12}>
+              <Ionicons name="share-outline" size={19} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleSaved} hitSlop={12}>
+              <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={19} color={saved ? Colors.lime : '#FFFFFF'} />
+            </TouchableOpacity>
+          </View>
         </View>
+      </SafeAreaView>
 
-        {/* Contenido del artículo */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Image source={{ uri: article.imageUrl }} style={styles.hero} resizeMode="cover" />
+
         <View style={styles.content}>
-          <View style={styles.metaRow}>
-            <Badge variant={article.category}>{categoryLabel(article.category)}</Badge>
-            <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={13} color={C.muted} />
-              <Text variant="caption" color={C.muted}>{formatDate(article.publishedAt)}</Text>
-            </View>
-            <View style={styles.dateRow}>
-              <Ionicons name="time-outline" size={13} color={C.muted} />
-              <Text variant="caption" color={C.muted}>{formatTime(article.publishedAt)}</Text>
-            </View>
+          <View style={styles.chip}>
+            <Text family="noto-sans" weight="bold" size={10} color={R.limeSoftText} style={styles.chipText}>
+              {getCategoryLabel(article.category).toUpperCase()}
+            </Text>
           </View>
 
-          <Text variant="title" weight="bold" family="poppins" style={styles.title}>
+          <Text family="noto-sans" weight="extrabold" size={23} lineHeight={30} color={R.foreground} style={styles.title}>
             {article.title}
           </Text>
 
           <TouchableOpacity
+            style={styles.authorRow}
             activeOpacity={publisher ? 0.8 : 1}
             onPress={() => publisher && router.push(`/publisher/${publisher.id}`)}
           >
-            <Card style={styles.sourceCard} padding={3}>
-              <View style={styles.sourceInner}>
-                {(publisher?.logoUrl ?? article.organizationLogoUrl) ? (
-                  <Image source={{ uri: publisher?.logoUrl ?? article.organizationLogoUrl }} style={styles.sourceAvatarImage} />
-                ) : (
-                  <View style={styles.sourceAvatar}>
-                    <Ionicons name="newspaper-outline" size={20} color={Colors.lime} />
-                  </View>
-                )}
-                <View style={styles.sourceText}>
-                  <Text variant="caption" color={C.muted}>Fuente</Text>
-                  <View style={styles.sourceNameRow}>
-                    <Text variant="body" weight="semibold">{article.source}</Text>
-                    {publisher?.isVerified && (
-                      <Ionicons name="checkmark-circle" size={16} color={Colors.lime} />
-                    )}
-                  </View>
-                </View>
-                {publisher && <Ionicons name="chevron-forward" size={18} color={C.muted} />}
+            {(publisher?.logoUrl ?? article.organizationLogoUrl) ? (
+              <Image source={{ uri: publisher?.logoUrl ?? article.organizationLogoUrl }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text family="noto-sans" weight="bold" size={12} color={R.limeSoftText}>{initials(article.source)}</Text>
               </View>
-            </Card>
-          </TouchableOpacity>
-
-          <View style={styles.socialSection}>
-            <Text variant="caption" color={C.muted} weight="medium">COMPARTIR</Text>
-            <View style={styles.socialRow}>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={shareWhatsApp}>
-                <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-                <Text variant="caption" style={styles.socialLabel}>WhatsApp</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#000' }]} onPress={shareTwitter}>
-                <Text style={{ fontSize: 18, lineHeight: 20, fontWeight: '800', color: '#fff' }}>X</Text>
-                <Text variant="caption" style={styles.socialLabel}>X</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' }]} onPress={shareFacebook}>
-                <Ionicons name="logo-facebook" size={20} color="#fff" />
-                <Text variant="caption" style={styles.socialLabel}>Facebook</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.socialBtn, { backgroundColor: C.secondary, borderWidth: 1, borderColor: C.border }]}
-                onPress={handleNativeShare}
-              >
-                <Ionicons name="share-social-outline" size={20} color={C.foreground} />
-                <Text variant="caption" style={[styles.socialLabel, { color: C.foreground }]}>Más</Text>
-              </TouchableOpacity>
+            )}
+            <View style={styles.authorText}>
+              <Text family="noto-sans" weight="semibold" size={12.5} color={R.foreground}>{article.source}</Text>
+              <Text family="noto-sans" size={11} color={R.mutedForeground}>
+                {timeAgo(article.publishedAt)} · {article.readTime} min de lectura
+              </Text>
             </View>
-          </View>
-
-          <AdBanner placement="article" />
-
-          <Text variant="body" style={[styles.summary, { color: C.foreground, borderLeftColor: Colors.lime }]}>
-            {article.summary}
-          </Text>
+            {article.publisherId && (
+              <TouchableOpacity
+                style={[styles.followBtn, isFollowed && styles.followBtnActive]}
+                onPress={toggleFollow}
+                activeOpacity={0.8}
+              >
+                <Text family="noto-sans" weight="semibold" size={11.5} color={isFollowed ? '#FFFFFF' : R.foreground}>
+                  {isFollowed ? 'Siguiendo' : 'Seguir'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.body}>
             <HtmlContent html={article.content || MOCK_CONTENT} />
           </View>
-
-          <View style={styles.articleFooter}>
-            <View style={[styles.footerDivider, { backgroundColor: C.border }]} />
-            <Text variant="caption" color={C.muted} style={{ textAlign: 'center' }}>
-              {article.source} · {formatDate(article.publishedAt)}
-            </Text>
-            <Text variant="caption" color={C.muted} style={{ textAlign: 'center' }}>
-              Tiempo de lectura: {article.readTime} min
-            </Text>
-          </View>
         </View>
+
+        {related.length > 0 && (
+          <View style={styles.relatedWrap}>
+            <Text family="noto-sans" weight="bold" size={15} color={R.foreground} style={styles.relatedTitle}>
+              Seguí leyendo
+            </Text>
+            <View style={styles.relatedCard}>
+              {related.map((post, i) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={[styles.relatedRow, i < related.length - 1 && styles.relatedRowDivider]}
+                  activeOpacity={0.75}
+                  onPress={() => router.push(`/article/${post.id}`)}
+                >
+                  <Image source={{ uri: post.imageUrl }} style={styles.relatedThumb} resizeMode="cover" />
+                  <View style={styles.relatedText}>
+                    <Text family="noto-sans" weight="semibold" size={13} lineHeight={17} color={R.foreground} numberOfLines={2}>
+                      {post.title}
+                    </Text>
+                    <Text family="noto-sans" size={11} color={R.mutedForeground} style={styles.relatedMeta}>
+                      {post.source} · {timeAgo(post.publishedAt)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  bannerContainer: { height: 280, position: 'relative' },
-  banner: { width: '100%', height: '100%' },
-  bannerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.28)',
-  },
-  backBtn: {
-    position: 'absolute',
-    left: Spacing[5],
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  root: { flex: 1 },
+  centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  shareBtn: {
-    position: 'absolute',
-    right: Spacing[5],
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  hero: { width: '100%', height: 210 },
+  content: { paddingHorizontal: 20, paddingTop: 18 },
+  chip: { alignSelf: 'flex-start', backgroundColor: R.limeSoftBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  chipText: { letterSpacing: 0.5 },
+  title: { marginTop: 10 },
+  authorRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 10,
+    marginTop: 14,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: R.divider,
   },
-  content: { padding: Spacing[5], gap: Spacing[4], paddingBottom: Spacing[10] },
-  metaRow: { gap: Spacing[2] },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
-  title: { lineHeight: 36 },
-  sourceCard: {},
-  sourceInner: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3] },
-  sourceNameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
-  sourceAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    backgroundColor: `${Colors.lime}18`,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sourceAvatarImage: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-  },
-  sourceText: { flex: 1 },
-  socialSection: { gap: Spacing[2] },
-  socialRow: { flexDirection: 'row', gap: Spacing[2] },
-  socialBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing[2.5],
-    borderRadius: Radius.md,
-    gap: 4,
-  },
-  socialLabel: { color: '#fff', fontSize: 10, fontFamily: Fonts.dmSansMedium },
-  summary: {
-    lineHeight: 24,
-    fontFamily: Fonts.dmSansMedium,
-    fontSize: 16,
-    borderLeftWidth: 3,
-    paddingLeft: Spacing[4],
-  },
-  body: { gap: Spacing[4] },
-  paragraph: { lineHeight: 26 },
-  articleFooter: { gap: Spacing[2], paddingTop: Spacing[4] },
-  footerDivider: { height: 1 },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: R.limeSoftBg, alignItems: 'center', justifyContent: 'center' },
+  avatarImage: { width: 34, height: 34, borderRadius: 17 },
+  authorText: { flex: 1, gap: 1 },
+  followBtn: { borderWidth: 1, borderColor: R.border, borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 6 },
+  followBtnActive: { backgroundColor: R.foreground, borderColor: R.foreground },
+  body: { paddingTop: 18, paddingBottom: 4 },
+  relatedWrap: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 26 },
+  relatedTitle: { marginBottom: 10 },
+  relatedCard: { backgroundColor: R.secondary, borderRadius: 16, paddingHorizontal: 14 },
+  relatedRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  relatedRowDivider: { borderBottomWidth: 1, borderBottomColor: '#E9E9E2' },
+  relatedThumb: { width: 48, height: 48, borderRadius: 10 },
+  relatedText: { flex: 1, minWidth: 0 },
+  relatedMeta: { marginTop: 3 },
 })

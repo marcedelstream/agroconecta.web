@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Stack, router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
@@ -7,11 +8,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import {
   useFonts,
-  Lexend_400Regular,
-  Lexend_500Medium,
-  Lexend_600SemiBold,
-  Lexend_700Bold,
-} from '@expo-google-fonts/lexend'
+  NotoSans_400Regular,
+  NotoSans_500Medium,
+  NotoSans_600SemiBold,
+  NotoSans_700Bold,
+  NotoSans_800ExtraBold,
+} from '@expo-google-fonts/noto-sans'
 import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
 import { registerPushToken, getNotificationPermissionStatus } from '@/lib/push-notifications'
@@ -23,10 +25,11 @@ SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'Lexend-Regular': Lexend_400Regular,
-    'Lexend-Medium': Lexend_500Medium,
-    'Lexend-SemiBold': Lexend_600SemiBold,
-    'Lexend-Bold': Lexend_700Bold,
+    'NotoSans-Regular': NotoSans_400Regular,
+    'NotoSans-Medium': NotoSans_500Medium,
+    'NotoSans-SemiBold': NotoSans_600SemiBold,
+    'NotoSans-Bold': NotoSans_700Bold,
+    'NotoSans-ExtraBold': NotoSans_800ExtraBold,
   })
 
   useEffect(() => {
@@ -36,11 +39,13 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null
 
   return (
-    <ThemeProvider>
-      <AppProvider>
-        <ThemedRoot />
-      </AppProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AppProvider>
+          <ThemedRoot />
+        </AppProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   )
 }
 

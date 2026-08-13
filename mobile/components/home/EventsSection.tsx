@@ -1,19 +1,28 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FlatList, View, ActivityIndicator, StyleSheet } from 'react-native'
+import { FlatList, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
-import { SectionHeader } from './SectionHeader'
-import { EventCard } from './EventCard'
-import { fetchUpcomingEvents } from '@/lib/supabase-repositories'
-import { useColors } from '@/lib/theme-context'
+import { Ionicons } from '@expo/vector-icons'
+import { Text } from '@/components/ui/Text'
+import { Colors } from '@/constants/colors'
 import { Spacing } from '@/constants/spacing'
+import { fetchUpcomingEvents } from '@/lib/supabase-repositories'
 import type { AgroEvent } from '@/lib/types'
+
+const R = Colors.redesign
 
 interface Props {
   search?: string
 }
 
+function dateParts(dateStr: string): { day: string; month: string } {
+  const date = new Date(dateStr + 'T00:00:00')
+  return {
+    day: date.toLocaleDateString('es-PY', { day: '2-digit' }),
+    month: date.toLocaleDateString('es-PY', { month: 'short' }).replace('.', '').toUpperCase(),
+  }
+}
+
 export function EventsSection({ search }: Props) {
-  const C = useColors()
   const [events, setEvents] = useState<AgroEvent[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -42,38 +51,75 @@ export function EventsSection({ search }: Props) {
 
   return (
     <View>
-      <SectionHeader
-        title="Próximos Eventos"
-        action={{ label: 'Ver más', onPress: () => router.push('/(main)/events' as any) }}
-      />
-      {loading ? (
-        <ActivityIndicator color={C.lime} style={styles.loader} />
-      ) : (
-        <View style={styles.bleed}>
-          <FlatList
-            data={filtered}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(e) => e.id}
-            contentContainerStyle={styles.list}
-            ItemSeparatorComponent={() => <View style={{ width: Spacing[3] }} />}
-            renderItem={({ item }) => (
-              <EventCard
-                event={item}
+      <View style={styles.headerRow}>
+        <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Agenda del sector</Text>
+        <TouchableOpacity onPress={() => router.push('/(main)/events' as any)} hitSlop={8}>
+          <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+            Mostrar más
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.bleed}>
+        <FlatList
+          data={filtered}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(e) => e.id}
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={{ width: 10 }} />}
+          renderItem={({ item }) => {
+            const { day, month } = dateParts(item.date)
+            return (
+              <TouchableOpacity
+                style={styles.card}
+                activeOpacity={0.85}
                 onPress={() => router.push(`/(main)/event/${item.slug}` as any)}
-              />
-            )}
-          />
-        </View>
-      )}
+              >
+                <View style={styles.dateRow}>
+                  <Text family="noto-sans" weight="extrabold" size={21} color={R.foreground}>{day}</Text>
+                  <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.month}>
+                    {month}
+                  </Text>
+                </View>
+                <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <View style={styles.cityRow}>
+                  <Ionicons name="location-outline" size={13} color={R.mutedForeground} />
+                  <Text family="noto-sans" size={11.5} color={R.mutedForeground} numberOfLines={1} style={styles.cityText}>
+                    {item.city ?? item.location}
+                  </Text>
+                </View>
+                <View style={styles.agendarBtn}>
+                  <Text family="noto-sans" weight="semibold" size={11.5} color={R.foreground}>Agendar</Text>
+                </View>
+              </TouchableOpacity>
+            )
+          }}
+        />
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  loader: { paddingVertical: Spacing[6] },
-  // Rompe el padding lateral del ScrollView del home para que el carrusel llegue al borde
-  // y la última card quede parcialmente visible (da a entender que hay más deslizando)
+  headerRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 },
+  underline: { textDecorationLine: 'underline' },
   bleed: { marginHorizontal: -Spacing[5] },
-  list: { paddingLeft: Spacing[5], paddingRight: Spacing[2], paddingBottom: Spacing[2] },
+  list: { paddingLeft: Spacing[5], paddingRight: Spacing[2] },
+  card: { width: 182, backgroundColor: R.surface, borderRadius: 16, padding: 15, gap: 9 },
+  dateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  month: { letterSpacing: 0.5 },
+  cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  cityText: { flex: 1 },
+  agendarBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    borderWidth: 1,
+    borderColor: R.border,
+    borderRadius: 9999,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+  },
 })

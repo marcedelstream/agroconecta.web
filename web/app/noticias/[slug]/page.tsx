@@ -4,7 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
-import { CategoryBadge } from '@/components/CategoryBadge'
+import { CategoryEyebrow } from '@/components/CategoryEyebrow'
+import { NewsCard } from '@/components/NewsCard'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
 import { absoluteUrl, isUuid, postPath, postUrl, truncateMeta } from '@/lib/seo'
@@ -22,6 +23,24 @@ async function loadPost(slug: string) {
     .eq('editorial_status', 'published')
     .single()
   return data as PostRow | null
+}
+
+async function loadRelated(post: PostRow) {
+  const supabase = await createSupabaseServer()
+  const { data } = await supabase
+    .from('posts')
+    .select('id,slug,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
+    .eq('editorial_status', 'published')
+    .eq('category', post.category)
+    .neq('id', post.id)
+    .order('published_at', { ascending: false })
+    .limit(3)
+  return (data ?? []) as unknown as PostRow[]
+}
+
+function readingTime(content: string) {
+  const words = content.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.round(words / 200))
 }
 
 function youtubeEmbedUrl(url: string) {
@@ -70,6 +89,7 @@ export default async function ArticlePage({ params }: Props) {
   const post = await loadPost(slug)
   if (!post) notFound()
 
+  const related = await loadRelated(post)
   const org = post.organizations
   const dateStr = post.published_at
     ? new Date(post.published_at).toLocaleDateString('es-PY', {
@@ -112,57 +132,60 @@ export default async function ArticlePage({ params }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Link href="/" className="text-muted text-sm hover:text-foreground transition-colors inline-flex items-center gap-1.5 mb-6">
+        <Link href="/" className="text-muted text-sm hover:text-foreground transition-colors inline-flex items-center gap-1.5 mb-6 max-w-3xl mx-auto lg:mx-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11 12.5L6.5 8 11 3.5 9.5 2l-6 6 6 6z" /></svg>
           Volver a noticias
         </Link>
 
-        <article className="max-w-3xl mx-auto">
-          <header className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <CategoryBadge category={post.category as NewsCategory} size="md" />
-              {post.is_important && (
-                <span className="badge bg-danger/20 text-danger text-xs font-semibold">Importante</span>
-              )}
-            </div>
-            <h1 className="font-display font-bold text-2xl md:text-4xl leading-tight text-foreground">
-              {post.title}
-            </h1>
-            <p className="text-muted text-lg mt-4 leading-relaxed">{post.summary}</p>
-
-            <div className="flex flex-wrap items-center gap-4 mt-5 pt-5 border-t border-bdr text-sm text-muted">
-              {org && (
-                <div className="flex items-center gap-2">
-                  {org.logo_url && (
-                    <Image src={org.logo_url} alt={org.name} width={24} height={24} className="rounded-md w-6 h-6 object-cover" />
-                  )}
-                  <span>{org.name}</span>
-                  {org.is_verified && (
-                    <span title="Organización verificada" className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-lime shrink-0">
-                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                        <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-              )}
-              {dateStr && <time dateTime={post.published_at ?? post.created_at}>{dateStr}</time>}
-            </div>
-          </header>
-
-          {post.image_url && (
-            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden mb-8">
-              <Image
-                src={post.image_url}
-                alt={post.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 768px"
-                priority
-              />
-            </div>
+        <header className="max-w-3xl mx-auto mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <CategoryEyebrow category={post.category as NewsCategory} size="lg" />
+            {post.is_important && (
+              <span className="badge bg-danger text-white text-xs font-semibold">Importante</span>
+            )}
+          </div>
+          <h1 className="font-display font-bold text-3xl md:text-5xl leading-[1.08] text-foreground">
+            {post.title}
+          </h1>
+          {post.summary && (
+            <p className="text-muted text-lg md:text-xl mt-5 leading-relaxed">{post.summary}</p>
           )}
 
+          <div className="flex flex-wrap items-center gap-4 mt-6 pt-5 border-t border-bdr text-sm text-muted">
+            {org && (
+              <div className="flex items-center gap-2">
+                {org.logo_url && (
+                  <Image src={org.logo_url} alt={org.name} width={28} height={28} className="rounded-md w-7 h-7 object-cover" />
+                )}
+                <span className="text-foreground font-medium">Por {org.name}</span>
+                {org.is_verified && (
+                  <span title="Organización verificada" className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-muted/70 shrink-0">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3 5.5L6.5 2" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+            )}
+            {dateStr && <time dateTime={post.published_at ?? post.created_at}>{dateStr}</time>}
+            <span>{readingTime(post.content)} min de lectura</span>
+          </div>
+        </header>
+
+        {post.image_url && (
+          <div className="relative w-full aspect-[16/9] max-w-4xl mx-auto rounded-2xl overflow-hidden mb-8">
+            <Image
+              src={post.image_url}
+              alt={post.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 900px) 100vw, 900px"
+              priority
+            />
+          </div>
+        )}
+
+        <article className="max-w-3xl mx-auto">
           {post.youtube_url && (
             <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-8">
               <iframe
@@ -202,6 +225,17 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           </div>
         </article>
+
+        {related.length > 0 && (
+          <section className="max-w-4xl mx-auto mt-14 pt-10 border-t border-bdr">
+            <h2 className="font-display font-bold text-xl text-foreground mb-5">Seguí leyendo</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-7">
+              {related.map((item) => (
+                <NewsCard key={item.id} post={item} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

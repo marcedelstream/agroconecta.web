@@ -95,4 +95,26 @@
   .prose blockquote cite {
     @apply block text-sm text-muted not-italic mt-3;
   }
+
+  .prose > p:first-of-type::first-letter {
+    @apply font-display font-bold text-lime;
+    float: left;
+    font-size: 3.4em;
+    line-height: 0.85;
+    padding-right: 0.1em;
+    padding-top: 0.05em;
+  }
+
+  .ticker-track {
+    animation: ticker-scroll 38s linear infinite;
+  }
+
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }

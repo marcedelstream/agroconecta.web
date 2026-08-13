@@ -5,6 +5,8 @@ import { Footer } from '@/components/Footer'
 import { NewsCard } from '@/components/NewsCard'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { HomeSidebar } from '@/components/HomeSidebar'
+import { TickerBar } from '@/components/TickerBar'
+import { ShortsSection } from '@/components/ShortsSection'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { CATEGORY_LABELS, type NewsCategory, type PostRow } from '@/lib/types'
 
@@ -59,7 +61,7 @@ async function loadPosts(category?: NewsCategory) {
       .eq('editorial_status', 'published')
       .order('is_important', { ascending: false })
       .order('published_at', { ascending: false })
-      .limit(24)
+      .limit(30)
 
     if (category) query = query.eq('category', category)
 
@@ -81,42 +83,35 @@ export default async function HomePage({ searchParams }: Props) {
   ])
   const activeCategory = requestedCategory
   const featured = posts.find((p) => p.is_highlighted) ?? posts[0]
-  const rest = posts.filter((p) => p.id !== featured?.id)
+  const afterFeatured = posts.filter((p) => p.id !== featured?.id)
+  const secondary = activeCategory ? [] : afterFeatured.slice(0, 3)
+  const remainder = activeCategory ? afterFeatured : afterFeatured.slice(3)
+  const gridPosts = activeCategory ? remainder : remainder.slice(0, 9)
+  const categoryRows = activeCategory
+    ? []
+    : availableCategories
+        .map((cat) => ({ cat, items: posts.filter((p) => p.category === cat).slice(0, 3) }))
+        .filter((row) => row.items.length >= 3)
 
   return (
     <>
       <Header />
+      <TickerBar posts={posts} />
 
       <main className="site-container py-8 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 items-start">
           <div>
-            <section className="mb-7">
-              <p className="text-lime text-xs font-semibold uppercase tracking-[0.2em] mb-3">
-                Noticias
-              </p>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground leading-tight">
-                Agroconecta: información y ecosistema para el campo
-              </h1>
-              <p className="text-muted text-base mt-3 max-w-2xl">
-                Actualidad del sector, instituciones y organizaciones verificadas de Paraguay.
-              </p>
-            </section>
-
-            <section className="mb-7 rounded-2xl border border-lime/25 bg-lime/10 p-5">
-              <p className="text-lime text-xs font-semibold uppercase tracking-[0.18em] mb-2">App Agroconecta</p>
-              <h2 className="font-display font-semibold text-xl text-foreground">Descargá la app para más información</h2>
-              <p className="text-muted text-sm leading-relaxed mt-2 max-w-2xl">
-                En la app vas a encontrar perfil, notificaciones, biblioteca, seguimiento de medios, eventos y navegación diaria del ecosistema.
-              </p>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <span className="badge bg-lime text-bg">iOS</span>
-                <span className="badge bg-lime text-bg">Android</span>
-              </div>
-            </section>
-
             {featured && (
-              <section className="mb-6">
+              <section className="mb-8">
                 <NewsCard post={featured} featured />
+              </section>
+            )}
+
+            {secondary.length > 0 && (
+              <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8 pb-8 border-b border-bdr">
+                {secondary.map((post) => (
+                  <NewsCard key={post.id} post={post} />
+                ))}
               </section>
             )}
 
@@ -144,17 +139,17 @@ export default async function HomePage({ searchParams }: Props) {
                 <p className="text-muted text-sm">{posts.length} publicadas</p>
               </div>
 
-              {rest.length === 0 && !featured ? (
+              {gridPosts.length === 0 && !featured ? (
                 <div className="card text-center py-12 text-muted">
                   No hay publicaciones disponibles por ahora.
                 </div>
-              ) : rest.length === 0 ? (
+              ) : gridPosts.length === 0 ? (
                 <div className="card text-center py-10 text-muted">
                   No hay más publicaciones para este filtro.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {rest.map((post) => (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7">
+                  {gridPosts.map((post) => (
                     <NewsCard key={post.id} post={post} />
                   ))}
                 </div>
@@ -163,9 +158,27 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
 
           <aside className="lg:sticky lg:top-24 hidden lg:block">
-            <HomeSidebar />
+            <HomeSidebar posts={posts} />
           </aside>
         </div>
+
+        <ShortsSection />
+
+        {categoryRows.map(({ cat, items }) => (
+          <section key={cat} className="mt-12 pt-8 border-t border-bdr">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <h2 className="font-display font-bold text-xl text-foreground">{CATEGORY_LABELS[cat]}</h2>
+              <Link href={`/categoria/${cat}`} className="text-xs font-semibold text-lime hover:text-lime-dark transition-colors shrink-0">
+                Ver todo →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7">
+              {items.map((post) => (
+                <NewsCard key={post.id} post={post} />
+              ))}
+            </div>
+          </section>
+        ))}
       </main>
 
       <Footer />

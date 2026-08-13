@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Lexend } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { SplashScreen } from '@/components/SplashScreen'
+import { AppDownloadTab } from '@/components/AppDownloadTab'
 import { siteUrl } from '@/lib/seo'
 import './globals.css'
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <SplashScreen />
           {children}
+          <AppDownloadTab />
         </ThemeProvider>
       </body>
     </html>

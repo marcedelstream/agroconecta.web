@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     title: 'Agroconecta — Noticias agropecuarias del Paraguay',
     description,
     url: '/',
-    images: [{ url: '/logo-dark.png', width: 1200, height: 630, alt: 'Agroconecta' }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Agroconecta — Una nueva forma de vivir el agro' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Agroconecta — Noticias agropecuarias del Paraguay',
     description,
-    images: ['/logo-dark.png'],
+    images: ['/og-default.png'],
   },
   icons: {
     icon: '/favicon.png',

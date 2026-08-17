@@ -10,6 +10,7 @@ import { VideoBanner } from '@/components/VideoBanner'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
 import { absoluteUrl, isUuid, postPath, postUrl, truncateMeta } from '@/lib/seo'
+import { normalizeArticleHtml } from '@/lib/content-html'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -59,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = postUrl(post)
   const images = post.image_url
     ? [{ url: post.image_url, width: 1200, height: 630, alt: post.title }]
-    : [{ url: absoluteUrl('/logo-dark.png'), width: 1200, height: 630, alt: 'Agroconecta' }]
+    : [{ url: absoluteUrl('/og-default.png'), width: 1200, height: 630, alt: 'Agroconecta — Una nueva forma de vivir el agro' }]
 
   return {
     title: post.title,
@@ -204,7 +205,7 @@ export default async function ArticlePage({ params }: Props) {
 
           <div
             className="prose prose-invert prose-lg max-w-none text-foreground/80 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: normalizeArticleHtml(post.content) }}
           />
 
           <div className="mt-12 pt-8 border-t border-bdr">

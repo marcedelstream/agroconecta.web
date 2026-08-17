@@ -11,17 +11,43 @@ export const metadata: Metadata = {
   },
 }
 
-const ADMIN_NAV = [
-  { href: '/admin', label: 'Dashboard', icon: '▦' },
-  { href: '/admin/publicaciones', label: 'Publicaciones', icon: '✦' },
-  { href: '/admin/organizaciones', label: 'Organizaciones', icon: '◈' },
-  { href: '/admin/banners', label: 'Banners', icon: '◎' },
-  { href: '/admin/eventos', label: 'Eventos', icon: '▥' },
-  { href: '/admin/biblioteca', label: 'Biblioteca', icon: '▤' },
-  { href: '/admin/precios', label: 'Precios', icon: '▨' },
-  { href: '/admin/consultas', label: 'Consultas', icon: '◫' },
-  { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },
+const ADMIN_NAV_GROUPS = [
+  {
+    label: null,
+    items: [{ href: '/admin', label: 'Dashboard', icon: '▦' }],
+  },
+  {
+    label: 'Contenido',
+    items: [
+      { href: '/admin/publicaciones', label: 'Publicaciones', icon: '✦' },
+      { href: '/admin/eventos', label: 'Eventos', icon: '▥' },
+      { href: '/admin/biblioteca', label: 'Biblioteca', icon: '▤' },
+      { href: '/admin/precios', label: 'Precios', icon: '▨' },
+    ],
+  },
+  {
+    label: 'Comercial',
+    items: [
+      { href: '/admin/organizaciones', label: 'Organizaciones', icon: '◈' },
+      { href: '/admin/banners', label: 'Banners', icon: '◎' },
+    ],
+  },
+  {
+    label: 'Ecosistema',
+    items: [
+      { href: '/admin/ecosistema', label: 'Listados', icon: '⬡' },
+    ],
+  },
+  {
+    label: 'Comunidad',
+    items: [
+      { href: '/admin/consultas', label: 'Consultas', icon: '◫' },
+      { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },
+    ],
+  },
 ]
+
+const ADMIN_NAV = ADMIN_NAV_GROUPS.flatMap((group) => group.items)
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServer()
@@ -35,16 +61,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <span className="text-xs text-muted mt-1 block">Panel Agroconecta</span>
         </div>
 
-        <nav className="flex-1 p-2 flex flex-col gap-0.5">
-          {ADMIN_NAV.map(({ href, label, icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-muted hover:text-white hover:bg-secondary transition-colors"
-            >
-              <span className="text-sm w-4 text-center">{icon}</span>
-              {label}
-            </Link>
+        <nav className="flex-1 p-2 flex flex-col gap-0.5 overflow-y-auto">
+          {ADMIN_NAV_GROUPS.map((group) => (
+            <div key={group.label ?? 'root'}>
+              {group.label && (
+                <p className="text-[11px] text-muted uppercase tracking-wide px-2.5 pt-3 pb-1">{group.label}</p>
+              )}
+              {group.items.map(({ href, label, icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-muted hover:text-white hover:bg-secondary transition-colors"
+                >
+                  <span className="text-sm w-4 text-center shrink-0">{icon}</span>
+                  <span className="truncate">{label}</span>
+                </Link>
+              ))}
+            </div>
           ))}
         </nav>
 

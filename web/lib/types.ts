@@ -174,6 +174,29 @@ export interface AdCampaignRow {
   link_target: string | null
 }
 
+export type EcosystemListingKind = 'empleo' | 'clasificado' | 'curso'
+
+export const ECOSYSTEM_KIND_LABELS: Record<EcosystemListingKind, string> = {
+  empleo: 'Empleo',
+  clasificado: 'Clasificado',
+  curso: 'Curso',
+}
+
+export interface EcosystemListingRow {
+  id: string
+  kind: EcosystemListingKind
+  title: string
+  location: string
+  modality: string
+  description: string
+  image_url: string | null
+  category_label: string
+  publisher_name: string
+  contact_url: string | null
+  is_active: boolean
+  published_at: string
+}
+
 export interface EventScheduleItemRow {
   id: string
   event_slug: string

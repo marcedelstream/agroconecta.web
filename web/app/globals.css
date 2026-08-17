@@ -24,6 +24,10 @@
   --clr-muted:     139 139 154;   /* #8B8B9A */
   --clr-lime:      164 210 51;    /* #A4D233 */
   --clr-lime-dk:   139 184 43;    /* #8BB82B */
+  /* `color` en <body> se resuelve una sola vez con las variables de :root (tema claro) —
+     sin esto, todo texto sin clase de color explícita (títulos de tabla, etc.) hereda ese
+     negro del tema claro en vez de recalcularse acá adentro, y queda negro sobre fondo oscuro. */
+  color: rgb(var(--clr-fg));
 }
 
 @layer base {

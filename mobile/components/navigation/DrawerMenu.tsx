@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import {
   View,
   Animated,
+  Modal,
   Pressable,
   TouchableOpacity,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native'
 import { router } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -27,6 +29,7 @@ interface Props {
 
 export function DrawerMenu({ onClose }: Props) {
   const C = useColors()
+  const insets = useSafeAreaInsets()
   const { user, signOut } = useApp()
   const initial = user?.name.trim().charAt(0).toUpperCase() ?? '?'
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
@@ -58,18 +61,19 @@ export function DrawerMenu({ onClose }: Props) {
   }
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => handleClose()} />
-      </Animated.View>
+    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={() => handleClose()}>
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => handleClose()} />
+        </Animated.View>
 
-      <Animated.View style={[styles.drawer, { backgroundColor: C.surface, borderLeftColor: C.border, transform: [{ translateX: slideAnim }] }]}>
-        {/* Header */}
-        <View style={[styles.drawerHeader, { borderBottomColor: C.border }]}>
-          <TouchableOpacity onPress={() => handleClose()} hitSlop={12}>
-            <Ionicons name="close" size={22} color={Colors.muted} />
-          </TouchableOpacity>
-        </View>
+        <Animated.View style={[styles.drawer, { backgroundColor: C.surface, borderLeftColor: C.border, transform: [{ translateX: slideAnim }] }]}>
+          {/* Header */}
+          <View style={[styles.drawerHeader, { paddingTop: insets.top + Spacing[2] }]}>
+            <TouchableOpacity onPress={() => handleClose()} hitSlop={12}>
+              <Ionicons name="close" size={22} color={Colors.muted} />
+            </TouchableOpacity>
+          </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.itemsContainer}>
           {/* INSTITUCIONAL */}
@@ -80,7 +84,7 @@ export function DrawerMenu({ onClose }: Props) {
             onPress={() => handleClose('/(main)/nosotros')}
           >
             <View style={styles.menuIconBox}>
-              <Ionicons name="information-circle-outline" size={19} color={Colors.lime} />
+              <Ionicons name="information-circle-outline" size={16} color={Colors.lime} />
             </View>
             <Text variant="caption" weight="medium">Nosotros</Text>
           </TouchableOpacity>
@@ -90,7 +94,7 @@ export function DrawerMenu({ onClose }: Props) {
             onPress={() => handleClose('/(main)/aliados')}
           >
             <View style={styles.menuIconBox}>
-              <Ionicons name="people-outline" size={19} color={Colors.lime} />
+              <Ionicons name="people-outline" size={16} color={Colors.lime} />
             </View>
             <Text variant="caption" weight="medium">Directorio de Aliados</Text>
           </TouchableOpacity>
@@ -100,7 +104,7 @@ export function DrawerMenu({ onClose }: Props) {
             onPress={() => handleClose('/(main)/contacto')}
           >
             <View style={styles.menuIconBox}>
-              <Ionicons name="mail-outline" size={19} color={Colors.lime} />
+              <Ionicons name="mail-outline" size={16} color={Colors.lime} />
             </View>
             <Text variant="caption" weight="medium">Contacto</Text>
           </TouchableOpacity>
@@ -115,7 +119,7 @@ export function DrawerMenu({ onClose }: Props) {
               onPress={() => handleClose(`/(main)/service/${svc.id}`)}
             >
               <View style={styles.menuIconBox}>
-                <Ionicons name={svc.icon} size={19} color={Colors.lime} />
+                <Ionicons name={svc.icon} size={16} color={Colors.lime} />
               </View>
               <Text variant="caption" weight="medium">{svc.label}</Text>
             </TouchableOpacity>
@@ -139,7 +143,7 @@ export function DrawerMenu({ onClose }: Props) {
             onPress={() => setLogoutModalVisible(true)}
           >
             <View style={[styles.menuIconBox, { backgroundColor: `${Colors.destructive}15` }]}>
-              <Ionicons name="log-out-outline" size={19} color={Colors.destructive} />
+              <Ionicons name="log-out-outline" size={16} color={Colors.destructive} />
             </View>
             <Text variant="caption" weight="medium">Cerrar sesión</Text>
           </TouchableOpacity>
@@ -154,10 +158,11 @@ export function DrawerMenu({ onClose }: Props) {
         message="¿Seguro que querés cerrar sesión?"
         confirmLabel="Cerrar sesión"
         cancelLabel="Cancelar"
-        onConfirm={confirmLogout}
-        onCancel={() => setLogoutModalVisible(false)}
-      />
-    </View>
+          onConfirm={confirmLogout}
+          onCancel={() => setLogoutModalVisible(false)}
+        />
+      </View>
+    </Modal>
   )
 }
 
@@ -179,44 +184,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[12],
-    paddingBottom: Spacing[4],
-    borderBottomWidth: 1,
+    paddingBottom: Spacing[1],
   },
-  itemsContainer: { paddingHorizontal: Spacing[4], paddingTop: Spacing[3], paddingBottom: Spacing[10] },
+  itemsContainer: { paddingHorizontal: Spacing[4], paddingTop: Spacing[1], paddingBottom: Spacing[6] },
   sectionLabel: {
     paddingHorizontal: Spacing[2],
-    paddingTop: Spacing[2],
-    paddingBottom: Spacing[1],
+    paddingTop: Spacing[1],
+    paddingBottom: Spacing[0.5],
     letterSpacing: 0.8,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[3],
-    paddingVertical: Spacing[3],
+    gap: Spacing[2.5],
+    paddingVertical: Spacing[2],
     paddingHorizontal: Spacing[2],
     borderRadius: Radius.md,
   },
   menuItemLabel: { flex: 1 },
   menuIconBox: {
-    width: 34,
-    height: 34,
+    width: 28,
+    height: 28,
     borderRadius: Radius.sm,
     backgroundColor: `${Colors.lime}15`,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: `${Colors.lime}15`,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.lime,
   },

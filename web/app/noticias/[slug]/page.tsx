@@ -6,6 +6,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { CategoryEyebrow } from '@/components/CategoryEyebrow'
 import { NewsCard } from '@/components/NewsCard'
+import { VideoBanner } from '@/components/VideoBanner'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { NewsCategory, PostRow } from '@/lib/types'
 import { absoluteUrl, isUuid, postPath, postUrl, truncateMeta } from '@/lib/seo'
@@ -132,6 +133,9 @@ export default async function ArticlePage({ params }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+
+        <VideoBanner className="mb-6" />
+
         <Link href="/" className="text-muted text-sm hover:text-foreground transition-colors inline-flex items-center gap-1.5 mb-6 max-w-3xl mx-auto lg:mx-0">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11 12.5L6.5 8 11 3.5 9.5 2l-6 6 6 6z" /></svg>
           Volver a noticias

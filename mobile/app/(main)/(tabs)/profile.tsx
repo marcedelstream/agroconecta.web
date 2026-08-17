@@ -6,6 +6,7 @@ import { goBack } from '@/lib/navigation'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal'
 import { BookCardSkeleton } from '@/components/ui/Skeleton'
 import { BookCard } from '@/components/library/BookCard'
 import { Colors } from '@/constants/colors'
@@ -15,18 +16,16 @@ import { fetchLibraryItems, fetchUserLibrary } from '@/lib/supabase-repositories
 import { getLocalAvatarUri, pickAndSaveLocalAvatar, removeLocalAvatar } from '@/lib/local-avatar'
 import { MediaSheet } from '@/components/profile/MediaSheet'
 import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
-import { PersonalizationSheet } from '@/components/profile/PersonalizationSheet'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
-import type { LibraryItem, NewsCategory } from '@/lib/types'
+import type { LibraryItem } from '@/lib/types'
 
 const R = Colors.redesign
 
-type ActiveSheet = 'personalization' | 'media' | 'notifications' | 'edit-profile' | null
+type ActiveSheet = 'media' | 'notifications' | 'edit-profile' | null
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: string }[] = [
   { id: 'notifications', icon: 'notifications-outline', label: 'Notificaciones' },
-  { id: 'personalization', icon: 'color-palette-outline', label: 'Personalización' },
   { id: 'media', icon: 'radio-outline', label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
 ]
 
@@ -87,14 +86,21 @@ export default function ProfileScreen() {
   async function confirmDeleteAccount() {
     setDeleting(true)
     setDeleteError(null)
-    const error = await deleteAccount()
-    setDeleting(false)
-    if (error) {
-      setDeleteError(error)
-      return
+    try {
+      const error = await deleteAccount()
+      if (error) {
+        setDeleteError(error)
+        return
+      }
+      setDeleteModalVisible(false)
+      router.replace('/(auth)/login')
+    } catch (err) {
+      // Nunca debería llegar acá (deleteAccount ya captura sus propios errores), pero si
+      // algo inesperado se escapa, no puede dejar el botón trabado en "Eliminando...".
+      setDeleteError(err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.')
+    } finally {
+      setDeleting(false)
     }
-    setDeleteModalVisible(false)
-    router.replace('/(auth)/login')
   }
 
   if (!user) return null
@@ -106,10 +112,10 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
-      {/* Igual que Inicio: solo tapa el rebote/pull de arriba, no el de abajo. */}
-      <View style={[styles.topBounceBackdrop, { backgroundColor: R.header.bg }]} pointerEvents="none" />
-
-      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+      {/* Cabecera estática — no se scrollea con el resto, evita toda la complejidad (y los
+          bugs) de un header oscuro que se mezcla con el contenido claro durante el
+          pull-to-refresh en iOS. */}
+      <SafeAreaView edges={['top']} style={[styles.headerWrap, { backgroundColor: R.header.bg }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
@@ -117,9 +123,7 @@ export default function ProfileScreen() {
           <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Perfil</Text>
           <View style={{ width: 20 }} />
         </View>
-      </SafeAreaView>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <View style={styles.identityCard}>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} style={styles.avatarWrap}>
             {avatarUri ? (
@@ -149,7 +153,13 @@ export default function ProfileScreen() {
             <Text family="noto-sans" weight="semibold" size={11.5} color="#C9C9D2">Editar perfil</Text>
           </TouchableOpacity>
         </View>
+      </SafeAreaView>
 
+      <ScrollView
+        style={styles.scroller}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+      >
         {/* Stats */}
         <View style={styles.statsRow}>
           <StatItem label="Intereses" value={interestsCount} />
@@ -235,12 +245,6 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Sheets */}
-      {activeSheet === 'personalization' && (
-        <PersonalizationSheet
-          selected={user.preferences}
-          onClose={(updated: NewsCategory[]) => { updateUser({ preferences: updated }); setActiveSheet(null) }}
-        />
-      )}
       {activeSheet === 'media' && (
         <MediaSheet
           selected={user.mediaPreferences}
@@ -274,17 +278,10 @@ export default function ProfileScreen() {
         onCancel={() => setLogoutModalVisible(false)}
       />
 
-      <ConfirmModal
+      <DeleteAccountModal
         visible={deleteModalVisible}
-        icon="trash-outline"
-        title="Eliminar cuenta"
-        message={
-          deleteError
-            ?? 'Esta acción es permanente: se borran tu perfil, preferencias y suscripciones. No se puede deshacer. ¿Querés continuar?'
-        }
-        confirmLabel={deleting ? 'Eliminando…' : 'Eliminar cuenta'}
-        cancelLabel="Cancelar"
-        destructive
+        deleting={deleting}
+        error={deleteError}
         onConfirm={() => { if (!deleting) confirmDeleteAccount() }}
         onCancel={() => { setDeleteModalVisible(false); setDeleteError(null) }}
       />
@@ -303,7 +300,9 @@ function StatItem({ label, value }: { label: string; value: number | string }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  topBounceBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, height: 320 },
+  // El redondeo va acá afuera (no en identityCard) — así el corte se nota contra el fondo
+  // claro del scroll de abajo. Puesto adentro, oscuro sobre oscuro, no se veía nada.
+  headerWrap: { borderBottomLeftRadius: 22, borderBottomRightRadius: 22, overflow: 'hidden' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,15 +311,13 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  scroll: { paddingBottom: 40 },
+  scroller: { flex: 1, backgroundColor: R.background },
+  scroll: { paddingTop: 20, paddingBottom: 40 },
   identityCard: {
-    backgroundColor: R.header.bg,
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 22,
     gap: 4,
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
   },
   avatarWrap: { position: 'relative', marginBottom: 6 },
   avatarCircle: {

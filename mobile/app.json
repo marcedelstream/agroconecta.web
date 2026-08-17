@@ -36,6 +36,7 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/splash.png",
           "backgroundColor": "#FAFAFA",
           "resizeMode": "contain"
         }
@@ -46,7 +47,8 @@
         {
           "photosPermission": "Agroconecta necesita acceso a tus fotos para que puedas elegir una foto de perfil. La foto se guarda solo en tu dispositivo."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

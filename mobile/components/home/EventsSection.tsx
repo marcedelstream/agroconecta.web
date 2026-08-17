@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FlatList, TouchableOpacity, View, StyleSheet } from 'react-native'
+import { FlatList, Image, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -76,23 +76,32 @@ export function EventsSection({ search }: Props) {
                 activeOpacity={0.85}
                 onPress={() => router.push(`/(main)/event/${item.slug}` as any)}
               >
-                <View style={styles.dateRow}>
-                  <Text family="noto-sans" weight="extrabold" size={21} color={R.foreground}>{day}</Text>
-                  <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.month}>
-                    {month}
+                {item.imageUrl ? (
+                  <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+                    <Ionicons name="calendar-outline" size={22} color={Colors.lime} />
+                  </View>
+                )}
+                <View style={styles.cardBody}>
+                  <View style={styles.dateRow}>
+                    <Text family="noto-sans" weight="extrabold" size={21} color={R.foreground}>{day}</Text>
+                    <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.month}>
+                      {month}
+                    </Text>
+                  </View>
+                  <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} numberOfLines={2}>
+                    {item.title}
                   </Text>
-                </View>
-                <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <View style={styles.cityRow}>
-                  <Ionicons name="location-outline" size={13} color={R.mutedForeground} />
-                  <Text family="noto-sans" size={11.5} color={R.mutedForeground} numberOfLines={1} style={styles.cityText}>
-                    {item.city ?? item.location}
-                  </Text>
-                </View>
-                <View style={styles.agendarBtn}>
-                  <Text family="noto-sans" weight="semibold" size={11.5} color={R.foreground}>Agendar</Text>
+                  <View style={styles.cityRow}>
+                    <Ionicons name="location-outline" size={13} color={R.mutedForeground} />
+                    <Text family="noto-sans" size={11.5} color={R.mutedForeground} numberOfLines={1} style={styles.cityText}>
+                      {item.city ?? item.location}
+                    </Text>
+                  </View>
+                  <View style={styles.agendarBtn}>
+                    <Text family="noto-sans" weight="semibold" size={11.5} color={R.foreground}>Agendar</Text>
+                  </View>
                 </View>
               </TouchableOpacity>
             )
@@ -108,7 +117,10 @@ const styles = StyleSheet.create({
   underline: { textDecorationLine: 'underline' },
   bleed: { marginHorizontal: -Spacing[5] },
   list: { paddingLeft: Spacing[5], paddingRight: Spacing[2] },
-  card: { width: 182, backgroundColor: R.surface, borderRadius: 16, padding: 15, gap: 9 },
+  card: { width: 182, backgroundColor: R.surface, borderRadius: 16, overflow: 'hidden' },
+  cardImage: { width: '100%', height: 84 },
+  cardImagePlaceholder: { backgroundColor: R.secondary, alignItems: 'center', justifyContent: 'center' },
+  cardBody: { padding: 15, gap: 9 },
   dateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
   month: { letterSpacing: 0.5 },
   cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

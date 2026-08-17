@@ -64,7 +64,7 @@ export const Colors = {
     positive: '#22C55E',
     negative: '#FF4D4D',
     header: {
-      bg: '#101014',
+      bg: '#0A1720',
       chip: '#1C1C24',
       chipBorder: '#2E2E38',
       mutedText: '#8C8C99',

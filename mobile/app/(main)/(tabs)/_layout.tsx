@@ -1,5 +1,6 @@
 import { Platform, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { Tabs, router } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs'
 import { useColors } from '@/lib/theme-context'
@@ -53,13 +54,22 @@ function PublishTabButton({ accessibilityState }: BottomTabBarButtonProps) {
 
 export default function TabsLayout() {
   const C = useColors()
+  const insets = useSafeAreaInsets()
+  // Android no reporta un inset de gesture-nav consistente en `paddingBottom` fijo — algunos
+  // dispositivos quedan con la barra pegada al borde. Usamos el inset real (con un piso de 8)
+  // en vez de un valor fijo; iOS ya lo resuelve solo con el alto de 80 + safe area del sistema.
+  const androidBottomPad = Math.max(insets.bottom, 8)
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         animation: 'none',
-        tabBarStyle: [styles.tabBar, { backgroundColor: C.surface, borderTopColor: C.border }],
+        tabBarStyle: [
+          styles.tabBar,
+          { backgroundColor: C.surface, borderTopColor: C.border },
+          Platform.OS === 'android' && { paddingBottom: androidBottomPad, height: 54 + androidBottomPad },
+        ],
         tabBarActiveTintColor: Colors.lime,
         tabBarInactiveTintColor: C.muted,
         tabBarLabelStyle: styles.tabLabel,
@@ -103,6 +113,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 6,
     paddingBottom: Platform.OS === 'ios' ? 0 : 8,
+    paddingHorizontal: 36,
     height: Platform.OS === 'ios' ? 80 : 62,
   },
   tabLabel: {
@@ -112,18 +123,17 @@ const styles = StyleSheet.create({
   },
   publishButtonWrap: { flex: 1, alignItems: 'center' },
   publishButtonCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    marginTop: -26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginTop: -22,
     backgroundColor: Colors.lime,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    shadowColor: Colors.lime,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
 })

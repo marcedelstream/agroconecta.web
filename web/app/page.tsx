@@ -7,6 +7,7 @@ import { CategoryBadge } from '@/components/CategoryBadge'
 import { HomeSidebar } from '@/components/HomeSidebar'
 import { TickerBar } from '@/components/TickerBar'
 import { ShortsSection } from '@/components/ShortsSection'
+import { VideoBanner } from '@/components/VideoBanner'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { CATEGORY_LABELS, type NewsCategory, type PostRow } from '@/lib/types'
 
@@ -99,6 +100,8 @@ export default async function HomePage({ searchParams }: Props) {
       <TickerBar posts={posts} />
 
       <main className="site-container py-8 md:py-10">
+        <VideoBanner className="mb-8" />
+
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 items-start">
           <div>
             {featured && (

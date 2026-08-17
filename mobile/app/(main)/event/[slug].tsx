@@ -8,6 +8,7 @@ import { goBack } from '@/lib/navigation'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Text } from '@/components/ui/Text'
 import { ReminderModal } from '@/components/ui/ReminderModal'
 import { NewsCard } from '@/components/home/NewsCard'
@@ -17,8 +18,24 @@ import { Colors } from '@/constants/colors'
 import type { AgroEvent, EventScheduleItem, Post } from '@/lib/types'
 
 const R = Colors.redesign
+const REMINDED_EVENTS_KEY = '@agroconecta:reminded_events'
 
 type HubTab = 'info' | 'programa' | 'noticias'
+
+async function getRemindedEvents(): Promise<string[]> {
+  try {
+    const raw = await AsyncStorage.getItem(REMINDED_EVENTS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+async function markEventReminded(slug: string) {
+  const current = await getRemindedEvents()
+  if (current.includes(slug)) return
+  await AsyncStorage.setItem(REMINDED_EVENTS_KEY, JSON.stringify([...current, slug])).catch(() => {})
+}
 
 function formatFullDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -60,6 +77,7 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<AgroEvent | null>(null)
   const [loading, setLoading] = useState(true)
   const [reminding, setReminding] = useState(false)
+  const [alreadyReminded, setAlreadyReminded] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [modalDateLabel, setModalDateLabel] = useState('')
   const [schedule, setSchedule] = useState<EventScheduleItem[]>([])
@@ -78,6 +96,7 @@ export default function EventDetailScreen() {
       .then(setEvent)
       .catch(() => setEvent(null))
       .finally(() => setLoading(false))
+    getRemindedEvents().then((reminded) => setAlreadyReminded(reminded.includes(slug)))
     fetchEventSchedule(slug).then(setSchedule).catch(() => setSchedule([]))
     fetchPostsByEventTag(slug).then((posts) => setRelatedPosts(posts.filter(isNewsContent))).catch(() => setRelatedPosts([]))
   }, [slug])
@@ -90,11 +109,13 @@ export default function EventDetailScreen() {
   const showTabs = tabs.length > 1
 
   const handleReminder = async () => {
-    if (!event) return
+    if (!event || alreadyReminded) return
     setReminding(true)
     try {
       const ok = await scheduleReminder(event)
       if (ok) {
+        await markEventReminded(event.slug)
+        setAlreadyReminded(true)
         const reminderDate = new Date(event.date + 'T00:00:00')
         reminderDate.setDate(reminderDate.getDate() - 1)
         const label = reminderDate.toLocaleDateString('es-PY', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -221,17 +242,26 @@ export default function EventDetailScreen() {
 
               {showReminder && (
                 <TouchableOpacity
-                  style={[styles.remindBtn, reminding && styles.remindBtnDisabled]}
-                  activeOpacity={0.85}
+                  style={[
+                    styles.remindBtn,
+                    alreadyReminded && styles.remindBtnDone,
+                    reminding && styles.remindBtnDisabled,
+                  ]}
+                  activeOpacity={alreadyReminded ? 1 : 0.85}
                   onPress={handleReminder}
-                  disabled={reminding}
+                  disabled={reminding || alreadyReminded}
                 >
-                  {reminding
-                    ? <ActivityIndicator color="#0A0A13" size="small" />
-                    : <Ionicons name="notifications-outline" size={19} color="#0A0A13" />
-                  }
-                  <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">
-                    {reminding ? 'Programando…' : 'Recordar este evento'}
+                  {reminding ? (
+                    <ActivityIndicator color="#0A0A13" size="small" />
+                  ) : (
+                    <Ionicons
+                      name={alreadyReminded ? 'checkmark-circle' : 'notifications-outline'}
+                      size={19}
+                      color={alreadyReminded ? R.mutedForeground : '#0A0A13'}
+                    />
+                  )}
+                  <Text family="noto-sans" weight="bold" size={13.5} color={alreadyReminded ? R.mutedForeground : '#0A0A13'}>
+                    {reminding ? 'Programando…' : alreadyReminded ? 'Ya agendaste este evento' : 'Recordar este evento'}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -383,6 +413,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   remindBtnDisabled: { opacity: 0.6 },
+  remindBtnDone: { backgroundColor: R.secondary },
   linksBlock: { gap: 2 },
   linkRow: {
     flexDirection: 'row',

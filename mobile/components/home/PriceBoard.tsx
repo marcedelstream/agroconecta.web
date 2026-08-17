@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { router } from 'expo-router'
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { ActivityIndicator, Image, View, TouchableOpacity, StyleSheet } from 'react-native'
+import { captureRef } from 'react-native-view-shot'
+import * as Sharing from 'expo-sharing'
+import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { fetchMarketPrices } from '@/lib/supabase-repositories'
 import type { MarketPrice } from '@/lib/types'
 
 const R = Colors.redesign
+// Logo oscuro (variante para fondos claros) — se incluye dentro del área capturada para que
+// quede pegado en el PNG que se comparte. TODO: cuando haya auspiciantes por sección, sumar acá
+// el logo del auspiciante de "Tu mercado hoy" al lado del de Agroconecta.
+const logo = require('@/assets/images/logo-light.png')
 
 function formatValue(price: MarketPrice) {
   if (price.currency === 'PYG') {
@@ -22,6 +29,8 @@ function formatDelta(price: MarketPrice) {
 
 export function PriceBoard() {
   const [prices, setPrices] = useState<MarketPrice[]>([])
+  const [sharing, setSharing] = useState(false)
+  const cardRef = useRef<View>(null)
 
   useEffect(() => {
     let mounted = true
@@ -41,15 +50,39 @@ export function PriceBoard() {
   const markets = Array.from(new Set(board.map((p) => p.market)))
   const updatedLabel = latestUpdate.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })
 
+  async function handleShare() {
+    if (!cardRef.current || sharing) return
+    setSharing(true)
+    try {
+      const uri = await captureRef(cardRef, { format: 'png', quality: 1 })
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Compartir precios de hoy' })
+      }
+    } catch {
+      // Silencioso: si falla la captura o el share, no bloqueamos la UI.
+    } finally {
+      setSharing(false)
+    }
+  }
+
   return (
-    <View style={styles.container}>
+    <View ref={cardRef} collapsable={false} style={styles.container}>
       <View style={styles.headerRow}>
         <Text family="noto-sans" weight="bold" size={15} color={R.foreground}>Tu mercado hoy</Text>
-        <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/prices' as any)} hitSlop={8}>
-          <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-            Ver todos
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleShare} hitSlop={8} disabled={sharing} style={styles.shareBtn}>
+            {sharing ? (
+              <ActivityIndicator size="small" color={R.mutedForeground} />
+            ) : (
+              <Ionicons name="share-outline" size={15} color={R.foreground} />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/prices' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todos
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.grid}>
@@ -69,9 +102,12 @@ export function PriceBoard() {
         })}
       </View>
 
-      <Text family="noto-sans" size={10.5} color={R.mutedForeground2} style={styles.updated}>
-        Actualizado {updatedLabel} · {markets.join(' y ')}
-      </Text>
+      <View style={styles.footerRow}>
+        <Text family="noto-sans" size={10.5} color={R.mutedForeground2} style={styles.updatedText}>
+          Actualizado {updatedLabel} · {markets.join(' y ')}
+        </Text>
+        <Image source={logo} style={styles.watermark} resizeMode="contain" />
+      </View>
     </View>
   )
 }
@@ -79,8 +115,12 @@ export function PriceBoard() {
 const styles = StyleSheet.create({
   container: { backgroundColor: R.surface, borderRadius: 16, padding: 16 },
   headerRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  shareBtn: { paddingVertical: 1 },
   underline: { textDecorationLine: 'underline' },
   grid: { flexDirection: 'row', gap: 8 },
   cell: { flex: 1, backgroundColor: R.secondary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 11, gap: 5 },
-  updated: { marginTop: 10 },
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  updatedText: { flex: 1 },
+  watermark: { width: 62, height: 14, marginLeft: 8, opacity: 0.7 },
 })

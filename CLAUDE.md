@@ -15,6 +15,17 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-08-18: arranca el ciclo v1.1.0.** La v1.0.0 ya está en revisión en las stores (Play Store/App
+> Store) — de acá en más el trabajo de mobile apunta a v1.1.0, en paralelo a esa revisión. Primer fix del
+> ciclo: `mobile/assets/images/splash.png` tenía una imagen incorrecta (un isologo "V2" ajeno a la marca,
+> con fondo negro sólido en vez de transparente — probablemente un asset de boilerplate que nunca se
+> reemplazó) — se regeneró a partir de `logo-light.png` (wordmark completo, transparente, para el
+> `backgroundColor: "#FAFAFA"` que ya tenía configurado `expo-splash-screen`). **Importante:** como
+> `mobile/android/` ya estaba generado (prebuild corrido antes de este fix), reemplazar el PNG en
+> `assets/` no alcanza — hace falta un `npx expo run:android` (o build de EAS) nuevo para que el recurso
+> nativo de splash se regenere con la imagen correcta. `version` en `app.json`/`package.json` pasó a
+> `1.1.0`.
+>
 > **2026-08-13:** rediseño completo de la app móvil siguiendo el handoff de diseño
 > `docs/design_handoff_home_redesign/` (bocetos 3a y 4a-4f) — solo `mobile/`, no se tocó `web/`. Tipografía
 > pasó de Lexend a **Noto Sans** en toda la app (`constants/typography.ts` sigue mapeando las claves viejas

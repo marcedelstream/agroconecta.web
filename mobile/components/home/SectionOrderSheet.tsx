@@ -68,34 +68,35 @@ export function SectionOrderSheet({ title = 'Ajustar interés', sections, order,
           </TouchableOpacity>
         </View>
 
-        <DraggableFlatList
-          data={items}
-          style={styles.listFlex}
-          keyExtractor={(key) => key}
-          contentContainerStyle={styles.list}
-          onDragEnd={({ data }) => handleDragEnd(data)}
-          renderItem={({ item, drag, isActive }: RenderItemParams<string>) => {
-            const meta = sections.find((s) => s.key === item)!
-            return (
-              <ScaleDecorator>
-                <TouchableOpacity
-                  style={[styles.row, isActive && styles.rowActive]}
-                  onLongPress={drag}
-                  delayLongPress={150}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.iconBox}>
-                    <Ionicons name={meta.icon} size={18} color={R.foreground} />
-                  </View>
-                  <Text family="noto-sans" weight="semibold" size={14} color={R.foreground} style={styles.rowLabel}>
-                    {meta.label}
-                  </Text>
-                  <Ionicons name="reorder-three-outline" size={22} color="#A8A8B2" />
-                </TouchableOpacity>
-              </ScaleDecorator>
-            )
-          }}
-        />
+        <View style={styles.listWrap}>
+          <DraggableFlatList
+            data={items}
+            keyExtractor={(key) => key}
+            contentContainerStyle={styles.list}
+            onDragEnd={({ data }) => handleDragEnd(data)}
+            renderItem={({ item, drag, isActive }: RenderItemParams<string>) => {
+              const meta = sections.find((s) => s.key === item)!
+              return (
+                <ScaleDecorator>
+                  <TouchableOpacity
+                    style={[styles.row, isActive && styles.rowActive]}
+                    onLongPress={drag}
+                    delayLongPress={150}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.iconBox}>
+                      <Ionicons name={meta.icon} size={18} color={R.foreground} />
+                    </View>
+                    <Text family="noto-sans" weight="semibold" size={14} color={R.foreground} style={styles.rowLabel}>
+                      {meta.label}
+                    </Text>
+                    <Ionicons name="reorder-three-outline" size={22} color="#A8A8B2" />
+                  </TouchableOpacity>
+                </ScaleDecorator>
+              )
+            }}
+          />
+        </View>
       </Animated.View>
     </View>
   )
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
     borderBottomColor: R.divider,
   },
   subtitle: { marginTop: 3 },
-  listFlex: { flex: 1 },
+  listWrap: { flex: 1 },
   list: { padding: 20, gap: 10 },
   row: {
     flexDirection: 'row',

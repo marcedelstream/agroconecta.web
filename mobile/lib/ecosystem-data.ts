@@ -14,7 +14,7 @@ export interface EcosystemPlatform {
   externalUrl?: string
 }
 
-// Clasificados/Bolsa de Trabajo/Cursos muestran EcosystemListing reales (ver
+// Clasificados/Empleos/Cursos muestran EcosystemListing reales (ver
 // lib/supabase-repositories.ts); Remates ya tiene contenido propio vía posts (contentType
 // 'auction') y apunta directo a Videos; Eventos Agro apunta a la pantalla de eventos ya
 // existente; Agrojuego es el único externo (`externalUrl`, se abre embebido vía WebView).
@@ -28,7 +28,7 @@ export const ECOSYSTEM_PLATFORMS: EcosystemPlatform[] = [
   },
   {
     id: 'bolsa-trabajo',
-    name: 'Bolsa de Trabajo',
+    name: 'Empleos',
     icon: 'briefcase-outline',
     description: 'Conectate con oportunidades laborales del sector agropecuario paraguayo — el LinkedIn del agro.',
     listingKind: 'empleo',

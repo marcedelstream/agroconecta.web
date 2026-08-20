@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { AdBanner } from '@/components/ui/AdBanner'
+import { ShortCard } from '@/components/videos/ShortCard'
 import { Colors } from '@/constants/colors'
 import { fetchPublishedPosts } from '@/lib/supabase-repositories'
+import { fetchAgroconectaShorts, type ShortVideo } from '@/lib/shorts'
 import type { Post, NewsCategory } from '@/lib/types'
 
 const R = Colors.redesign
@@ -31,6 +33,7 @@ function videoDuration(post: Post) {
 
 export default function VideosScreen() {
   const [posts, setPosts] = useState<Post[]>([])
+  const [shorts, setShorts] = useState<ShortVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [adRefreshKey, setAdRefreshKey] = useState(0)
@@ -47,6 +50,7 @@ export default function VideosScreen() {
   useEffect(() => {
     let mounted = true
     loadPosts().finally(() => { if (mounted) setLoading(false) })
+    fetchAgroconectaShorts().then((data) => { if (mounted) setShorts(data) })
     return () => { mounted = false }
   }, [loadPosts])
 
@@ -75,7 +79,7 @@ export default function VideosScreen() {
     return list
   }, [auctions, regularPosts])
 
-  const isEmpty = !loading && posts.length === 0
+  const isEmpty = !loading && posts.length === 0 && shorts.length === 0
 
   return (
     <View style={[styles.root, { backgroundColor: R.surface }]}>
@@ -105,6 +109,19 @@ export default function VideosScreen() {
               <Text family="noto-sans" size={14} color={R.mutedForeground} style={styles.emptyText}>
                 No hay videos disponibles todavía.
               </Text>
+            </View>
+          )}
+
+          {shorts.length > 0 && (
+            <View style={styles.section}>
+              <Text family="noto-sans" weight="bold" size={17} color={R.foreground} style={styles.sectionTitle}>
+                Shorts de Agroconecta
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shortsRow}>
+                {shorts.map((short) => (
+                  <ShortCard key={short.id} {...short} />
+                ))}
+              </ScrollView>
             </View>
           )}
 
@@ -178,6 +195,7 @@ const styles = StyleSheet.create({
   emptyText: { marginTop: 12, textAlign: 'center' },
   section: { marginBottom: 24 },
   sectionTitle: { marginHorizontal: 20, marginBottom: 12 },
+  shortsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 20 },
   card: { width: '47%', flexGrow: 1 },
   thumbWrap: { borderRadius: 14, overflow: 'hidden', aspectRatio: 16 / 9, position: 'relative' },

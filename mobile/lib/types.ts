@@ -210,6 +210,8 @@ export interface EcosystemListing {
   publisherName: string;
   publishedAt: Date;
   contactUrl?: string;
+  /** Contenido gratuito (ej. educación financiera y guías para productores) — se destaca en la tarjeta. */
+  isFree?: boolean;
 }
 
 export type EcosystemCategory = 'eventos' | 'juegos' | 'institucional' | 'streaming'
@@ -375,6 +377,14 @@ export interface EventScheduleItem {
   description?: string
   speaker?: string
   orderIndex: number
+}
+
+// Foto de perfil + banner promocional de un evento (gestionado en Agroconecta, asociado
+// por slug al evento externo) — igual patrón que EventScheduleItem.
+export interface EventMedia {
+  eventSlug: string
+  profileImageUrl?: string
+  bannerImageUrl?: string
 }
 
 // Onboarding state

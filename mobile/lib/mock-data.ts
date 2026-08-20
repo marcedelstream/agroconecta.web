@@ -523,6 +523,20 @@ export const mockEcosystemListings: EcosystemListing[] = [
     publishedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
     contactUrl: 'https://wa.me/595981000002',
   },
+  {
+    id: 'listing-4',
+    slug: 'educacion-financiera-productores-primeros-pasos',
+    kind: 'curso',
+    title: 'Educación financiera para productores: primeros pasos',
+    location: 'Online',
+    modality: 'Autogestionado',
+    description: 'Guía introductoria gratuita sobre manejo de flujo de caja, ahorro y financiamiento agropecuario, pensada para productores que recién empiezan a llevar sus cuentas.',
+    categoryLabel: 'Educación financiera',
+    publisherName: 'Agroconecta',
+    publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    contactUrl: 'https://wa.me/595986945816',
+    isFree: true,
+  },
 ];
 
 // Helper function to get category label

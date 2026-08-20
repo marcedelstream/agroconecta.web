@@ -19,10 +19,19 @@ export function ListingCard({ listing, onPress }: Props) {
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={onPress}>
       <View style={styles.topRow}>
-        <View style={[styles.chip, { backgroundColor: kindColors.bg }]}>
-          <Text family="noto-sans" weight="bold" size={9.5} color={kindColors.text} style={styles.chipText}>
-            {kindColors.label}
-          </Text>
+        <View style={styles.chipsRow}>
+          <View style={[styles.chip, { backgroundColor: kindColors.bg }]}>
+            <Text family="noto-sans" weight="bold" size={9.5} color={kindColors.text} style={styles.chipText}>
+              {kindColors.label}
+            </Text>
+          </View>
+          {listing.isFree && (
+            <View style={[styles.chip, styles.freeChip]}>
+              <Text family="noto-sans" weight="bold" size={9.5} color={Colors.lime} style={styles.chipText}>
+                GRATIS
+              </Text>
+            </View>
+          )}
         </View>
         <Ionicons name="chevron-forward" size={17} color="#A8A8B2" />
       </View>
@@ -45,7 +54,9 @@ export function ListingCard({ listing, onPress }: Props) {
 const styles = StyleSheet.create({
   card: { backgroundColor: R.surface, borderRadius: 16, padding: 14, gap: 7 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  chipsRow: { flexDirection: 'row', gap: 6 },
   chip: { alignSelf: 'flex-start', borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3 },
+  freeChip: { backgroundColor: `${Colors.lime}18` },
   chipText: { letterSpacing: 0.5 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 })

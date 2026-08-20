@@ -13,6 +13,7 @@ import type {
   EcosystemListing,
   EcosystemListingKind,
   EditorialStatus,
+  EventMedia,
   EventScheduleItem,
   LibraryCategory,
   LibraryItem,
@@ -148,6 +149,7 @@ interface EcosystemListingRow {
   publisher_name: string
   published_at: string
   contact_url?: string | null
+  is_free?: boolean | null
 }
 
 interface UserLibraryRow {
@@ -166,6 +168,12 @@ interface EventScheduleItemRow {
   description?: string | null
   speaker?: string | null
   order_index: number
+}
+
+interface EventMediaRow {
+  event_slug: string
+  profile_image_url?: string | null
+  banner_image_url?: string | null
 }
 
 interface MarketPriceRow {
@@ -567,6 +575,24 @@ export async function fetchEventSchedule(eventSlug: string): Promise<EventSchedu
   })
 }
 
+export async function fetchEventMedia(eventSlug: string): Promise<EventMedia | null> {
+  const { data, error } = await supabase
+    .from('event_media')
+    .select('*')
+    .eq('event_slug', eventSlug)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+
+  const typed = data as EventMediaRow
+  return {
+    eventSlug: typed.event_slug,
+    profileImageUrl: typed.profile_image_url ?? undefined,
+    bannerImageUrl: typed.banner_image_url ?? undefined,
+  }
+}
+
 export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
@@ -617,6 +643,7 @@ function mapEcosystemListing(row: EcosystemListingRow): EcosystemListing {
     publisherName: row.publisher_name,
     publishedAt: new Date(row.published_at),
     contactUrl: row.contact_url ?? undefined,
+    isFree: row.is_free ?? false,
   }
 }
 

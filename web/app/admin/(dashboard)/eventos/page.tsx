@@ -1,6 +1,12 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { EventScheduleItemRow, PostRow } from '@/lib/types'
-import { addScheduleItem, deleteScheduleItem, tagPostToEvent } from './actions'
+import { addScheduleItem, deleteScheduleItem, tagPostToEvent, saveEventMedia } from './actions'
+
+interface EventMediaRow {
+  event_slug: string
+  profile_image_url: string | null
+  banner_image_url: string | null
+}
 
 async function loadKnownSlugs() {
   const supabase = await createSupabaseServer()
@@ -18,7 +24,7 @@ type PostPick = Pick<PostRow, 'id' | 'title'>
 
 async function loadEventData(slug: string) {
   const supabase = await createSupabaseServer()
-  const [schedule, taggedPosts, recentPosts] = await Promise.all([
+  const [schedule, taggedPosts, recentPosts, media] = await Promise.all([
     supabase
       .from('event_schedule_items')
       .select('*')
@@ -36,12 +42,18 @@ async function loadEventData(slug: string) {
       .is('event_tag', null)
       .order('published_at', { ascending: false })
       .limit(15),
+    supabase
+      .from('event_media')
+      .select('*')
+      .eq('event_slug', slug)
+      .maybeSingle(),
   ])
 
   return {
     schedule: (schedule.data ?? []) as EventScheduleItemRow[],
     taggedPosts: (taggedPosts.data ?? []) as PostPick[],
     recentPosts: (recentPosts.data ?? []) as PostPick[],
+    media: (media.data ?? null) as EventMediaRow | null,
   }
 }
 
@@ -96,6 +108,65 @@ export default async function EventosPage({
 
       {slug && data && (
         <div className="space-y-6">
+          {/* Imágenes del evento */}
+          <div className="card">
+            <h2 className="font-display font-semibold text-base text-foreground mb-1">
+              Imágenes — <code>{slug}</code>
+            </h2>
+            <p className="text-muted text-xs mb-4">
+              Foto de perfil (círculo sobre la portada) y banner promocional del hub del evento en la app.
+              No tocan eventosagropy.com — quedan solo del lado de Agroconecta.
+            </p>
+
+            <form action={saveEventMedia} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <input type="hidden" name="event_slug" value={slug} />
+              <input type="hidden" name="existing_profile_url" value={data.media?.profile_image_url ?? ''} />
+              <input type="hidden" name="existing_banner_url" value={data.media?.banner_image_url ?? ''} />
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Foto de perfil</label>
+                {data.media?.profile_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={data.media.profile_image_url}
+                    alt="Foto de perfil actual"
+                    className="w-16 h-16 rounded-full object-cover border border-bdr mb-2"
+                  />
+                )}
+                <input
+                  name="profile_image_file"
+                  type="file"
+                  accept="image/*"
+                  className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:text-sm file:font-medium file:text-bg hover:file:bg-lime-dark"
+                />
+                <p className="text-xs text-muted mt-1">Imagen cuadrada recomendada. Máximo 8 MB.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Banner promocional</label>
+                {data.media?.banner_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={data.media.banner_image_url}
+                    alt="Banner actual"
+                    className="w-full h-20 rounded-lg object-cover border border-bdr mb-2"
+                  />
+                )}
+                <input
+                  name="banner_image_file"
+                  type="file"
+                  accept="image/*"
+                  className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:text-sm file:font-medium file:text-bg hover:file:bg-lime-dark"
+                />
+                <p className="text-xs text-muted mt-1">Se usa como portada del hub del evento. Máximo 8 MB.</p>
+              </div>
+
+              <button type="submit" className="btn-primary text-xs sm:col-span-2 justify-self-start">
+                Guardar imágenes
+              </button>
+            </form>
+          </div>
+
           {/* Programa */}
           <div className="card">
             <h2 className="font-display font-semibold text-base text-foreground mb-4">

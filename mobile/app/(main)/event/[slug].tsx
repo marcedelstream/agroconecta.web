@@ -12,10 +12,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Text } from '@/components/ui/Text'
 import { ReminderModal } from '@/components/ui/ReminderModal'
 import { NewsCard } from '@/components/home/NewsCard'
-import { fetchEventBySlug, fetchEventSchedule, fetchPostsByEventTag } from '@/lib/supabase-repositories'
+import { fetchEventBySlug, fetchEventSchedule, fetchEventMedia, fetchPostsByEventTag } from '@/lib/supabase-repositories'
 import { isNewsContent } from '@/lib/feed-utils'
 import { Colors } from '@/constants/colors'
-import type { AgroEvent, EventScheduleItem, Post } from '@/lib/types'
+import type { AgroEvent, EventMedia, EventScheduleItem, Post } from '@/lib/types'
 
 const R = Colors.redesign
 const REMINDED_EVENTS_KEY = '@agroconecta:reminded_events'
@@ -81,6 +81,7 @@ export default function EventDetailScreen() {
   const [modalVisible, setModalVisible] = useState(false)
   const [modalDateLabel, setModalDateLabel] = useState('')
   const [schedule, setSchedule] = useState<EventScheduleItem[]>([])
+  const [media, setMedia] = useState<EventMedia | null>(null)
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
   const [tab, setTab] = useState<HubTab>('info')
 
@@ -89,6 +90,7 @@ export default function EventDetailScreen() {
     if (!slug) return
     setEvent(null)
     setSchedule([])
+    setMedia(null)
     setRelatedPosts([])
     setTab('info')
     setLoading(true)
@@ -98,6 +100,7 @@ export default function EventDetailScreen() {
       .finally(() => setLoading(false))
     getRemindedEvents().then((reminded) => setAlreadyReminded(reminded.includes(slug)))
     fetchEventSchedule(slug).then(setSchedule).catch(() => setSchedule([]))
+    fetchEventMedia(slug).then(setMedia).catch(() => setMedia(null))
     fetchPostsByEventTag(slug).then((posts) => setRelatedPosts(posts.filter(isNewsContent))).catch(() => setRelatedPosts([]))
   }, [slug])
 
@@ -179,15 +182,20 @@ export default function EventDetailScreen() {
       </SafeAreaView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        {event.imageUrl ? (
-          <Image source={{ uri: event.imageUrl }} style={styles.hero} resizeMode="cover" />
-        ) : (
-          <View style={[styles.hero, styles.heroPlaceholder]}>
-            <Ionicons name="calendar-outline" size={52} color={Colors.lime} />
-          </View>
-        )}
+        <View style={styles.heroWrap}>
+          {media?.bannerImageUrl || event.imageUrl ? (
+            <Image source={{ uri: media?.bannerImageUrl ?? event.imageUrl }} style={styles.hero} resizeMode="cover" />
+          ) : (
+            <View style={[styles.hero, styles.heroPlaceholder]}>
+              <Ionicons name="calendar-outline" size={52} color={Colors.lime} />
+            </View>
+          )}
+          {media?.profileImageUrl && (
+            <Image source={{ uri: media.profileImageUrl }} style={styles.profileAvatar} />
+          )}
+        </View>
 
-        <View style={styles.content}>
+        <View style={[styles.content, media?.profileImageUrl && styles.contentWithAvatar]}>
           {event.category && (
             <View style={styles.chip}>
               <Text family="noto-sans" weight="bold" size={10} color={R.limeSoftText} style={styles.chipText}>
@@ -379,9 +387,22 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
+  heroWrap: { position: 'relative' },
   hero: { width: '100%', height: 220 },
   heroPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: R.secondary },
+  profileAvatar: {
+    position: 'absolute',
+    left: 20,
+    bottom: -26,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
+    borderColor: R.surface,
+    backgroundColor: R.secondary,
+  },
   content: { paddingHorizontal: 20, paddingTop: 18, gap: 18 },
+  contentWithAvatar: { paddingTop: 40 },
   chip: { alignSelf: 'flex-start', backgroundColor: R.limeSoftBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   chipText: { letterSpacing: 0.5 },
   title: {},

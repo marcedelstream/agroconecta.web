@@ -1,12 +1,73 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 
+const EVENT_MEDIA_BUCKET = 'event-media'
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024
+
 async function requireAdmin() {
   const auth = await getAuthContext()
   if (!auth) throw new Error('No tenés permiso para administrar eventos.')
+}
+
+async function uploadEventImage(
+  file: FormDataEntryValue | null,
+  supabase: ReturnType<typeof createSupabaseAdmin>,
+  prefix: 'profile' | 'banner'
+): Promise<string | null> {
+  if (!(file instanceof File) || file.size === 0) return null
+  if (!file.type.startsWith('image/') || file.size > MAX_IMAGE_SIZE) {
+    console.error(`Imagen de evento (${prefix}) inválida: tipo o tamaño fuera de rango.`)
+    return null
+  }
+
+  await supabase.storage.createBucket(EVENT_MEDIA_BUCKET, { public: true }).catch(() => null)
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${prefix}/${randomUUID()}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  const { error } = await supabase.storage
+    .from(EVENT_MEDIA_BUCKET)
+    .upload(path, buffer, { contentType: file.type, upsert: false })
+
+  if (error) {
+    console.error(`No se pudo subir la imagen de evento (${prefix}):`, error.message)
+    return null
+  }
+
+  const { data } = supabase.storage.from(EVENT_MEDIA_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}
+
+export async function saveEventMedia(formData: FormData) {
+  await requireAdmin()
+  const supabase = createSupabaseAdmin()
+  const eventSlug = String(formData.get('event_slug') ?? '').trim()
+  if (!eventSlug) return
+
+  const [profileUrl, bannerUrl] = await Promise.all([
+    uploadEventImage(formData.get('profile_image_file'), supabase, 'profile'),
+    uploadEventImage(formData.get('banner_image_file'), supabase, 'banner'),
+  ])
+
+  const existingProfileUrl = String(formData.get('existing_profile_url') ?? '').trim() || null
+  const existingBannerUrl = String(formData.get('existing_banner_url') ?? '').trim() || null
+
+  await supabase.from('event_media').upsert(
+    {
+      event_slug: eventSlug,
+      profile_image_url: profileUrl ?? existingProfileUrl,
+      banner_image_url: bannerUrl ?? existingBannerUrl,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'event_slug' }
+  )
+
+  revalidatePath('/admin/eventos')
 }
 
 export async function addScheduleItem(formData: FormData) {

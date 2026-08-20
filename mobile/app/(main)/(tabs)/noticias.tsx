@@ -106,7 +106,7 @@ export default function NoticiasScreen() {
             />
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroller} contentContainerStyle={styles.chipsRow}>
             <TouchableOpacity
               style={[styles.chip, !activeCategory && styles.chipActive]}
               onPress={() => setActiveCategory(null)}
@@ -239,7 +239,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
-  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingRight: 16 },
+  chipsScroller: { marginHorizontal: -20 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingHorizontal: 20, paddingRight: 28 },
   chip: {
     borderWidth: 1,
     borderColor: R.header.chipBorder,

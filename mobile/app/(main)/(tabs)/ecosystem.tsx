@@ -150,11 +150,16 @@ export default function EcosystemScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.listingsStack}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listingsRow}>
           {empleos.map((item) => (
-            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+            <ListingCard
+              key={item.id}
+              listing={item}
+              style={styles.listingCardFixed}
+              onPress={() => router.push(`/(main)/listing/${item.id}` as any)}
+            />
           ))}
-        </View>
+        </ScrollView>
       </View>
     ) : null,
 
@@ -168,11 +173,16 @@ export default function EcosystemScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.listingsStack}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listingsRow}>
           {clasificados.map((item) => (
-            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+            <ListingCard
+              key={item.id}
+              listing={item}
+              style={styles.listingCardFixed}
+              onPress={() => router.push(`/(main)/listing/${item.id}` as any)}
+            />
           ))}
-        </View>
+        </ScrollView>
       </View>
     ) : null,
 
@@ -186,11 +196,16 @@ export default function EcosystemScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.listingsStack}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listingsRow}>
           {cursos.map((item) => (
-            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+            <ListingCard
+              key={item.id}
+              listing={item}
+              style={styles.listingCardFixed}
+              onPress={() => router.push(`/(main)/listing/${item.id}` as any)}
+            />
           ))}
-        </View>
+        </ScrollView>
       </View>
     ) : null,
 
@@ -221,7 +236,7 @@ export default function EcosystemScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+      <SafeAreaView edges={['top']} style={[styles.headerWrap, { backgroundColor: R.header.bg }]}>
         <View style={styles.header}>
           <View style={styles.topRow}>
             <Text family="noto-sans" weight="bold" size={20} color="#FFFFFF">Ecosistema</Text>
@@ -265,7 +280,7 @@ export default function EcosystemScreen() {
           <View style={styles.introSection}>
             <View style={styles.introHeadRow}>
               <Text family="noto-sans" weight="medium" size={10} color={R.mutedForeground2} style={styles.introEyebrow}>
-                MÁS QUE NOTICIAS
+                TODO LO QUE TENEMOS PARA VOS
               </Text>
               <TouchableOpacity onPress={() => setShowOrderSheet(true)} style={styles.adjustChip} activeOpacity={0.8}>
                 <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground}>Ajustar interés</Text>
@@ -310,13 +325,12 @@ export default function EcosystemScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  headerWrap: { borderBottomLeftRadius: 22, borderBottomRightRadius: 22, overflow: 'hidden' },
   header: {
     backgroundColor: R.header.bg,
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 18,
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
+    paddingBottom: 34,
   },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   searchBox: {
@@ -340,7 +354,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 12 },
   underline: { textDecorationLine: 'underline' },
-  listingsStack: { paddingHorizontal: 20, gap: 10 },
+  listingsRow: { flexDirection: 'row', gap: 10, paddingLeft: 20, paddingRight: 8 },
+  listingCardFixed: { width: 220, height: 168 },
   // Mismo patrón "peek" que la Agenda del sector (EventsSection): padding chico a la
   // derecha en vez de simétrico, así la última tarjeta queda visible entera al llegar al
   // final del scroll en vez de quedar recortada contra el borde de la pantalla.

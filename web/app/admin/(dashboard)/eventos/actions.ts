@@ -49,19 +49,16 @@ export async function saveEventMedia(formData: FormData) {
   const eventSlug = String(formData.get('event_slug') ?? '').trim()
   if (!eventSlug) return
 
-  const [profileUrl, bannerUrl] = await Promise.all([
-    uploadEventImage(formData.get('profile_image_file'), supabase, 'profile'),
-    uploadEventImage(formData.get('banner_image_file'), supabase, 'banner'),
-  ])
-
-  const existingProfileUrl = String(formData.get('existing_profile_url') ?? '').trim() || null
+  // Foto de perfil (profile_image_url) fuera de uso por ahora — se omite del payload a
+  // propósito para no pisar un valor ya cargado antes; la columna sigue existiendo por si
+  // se retoma más adelante.
+  const bannerUrl = await uploadEventImage(formData.get('banner_image_file'), supabase, 'banner')
   const existingBannerUrl = String(formData.get('existing_banner_url') ?? '').trim() || null
   const isActive = formData.get('is_active') === 'on'
 
   await supabase.from('event_media').upsert(
     {
       event_slug: eventSlug,
-      profile_image_url: profileUrl ?? existingProfileUrl,
       banner_image_url: bannerUrl ?? existingBannerUrl,
       is_active: isActive,
       updated_at: new Date().toISOString(),

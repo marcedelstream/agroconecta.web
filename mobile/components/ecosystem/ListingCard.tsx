@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet } from 'react-native'
+import { TouchableOpacity, View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
@@ -9,15 +9,16 @@ const R = Colors.redesign
 interface Props {
   listing: EcosystemListing
   onPress: () => void
+  style?: StyleProp<ViewStyle>
 }
 
 // Molde único para empleo/clasificado/curso (boceto 4f) — solo cambia la
 // etiqueta de categoría y su color.
-export function ListingCard({ listing, onPress }: Props) {
+export function ListingCard({ listing, onPress, style }: Props) {
   const kindColors = R.listingKind[listing.kind]
 
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={onPress}>
+    <TouchableOpacity style={[styles.card, style]} activeOpacity={0.85} onPress={onPress}>
       <View style={styles.topRow}>
         <View style={styles.chipsRow}>
           <View style={[styles.chip, { backgroundColor: kindColors.bg }]}>
@@ -35,12 +36,12 @@ export function ListingCard({ listing, onPress }: Props) {
         </View>
         <Ionicons name="chevron-forward" size={17} color="#A8A8B2" />
       </View>
-      <Text family="noto-sans" weight="bold" size={14.5} lineHeight={19} color={R.foreground}>
+      <Text family="noto-sans" weight="bold" size={14.5} lineHeight={19} color={R.foreground} numberOfLines={2}>
         {listing.title}
       </Text>
       <View style={styles.locationRow}>
         <Ionicons name="location-outline" size={11.5} color={R.mutedForeground} />
-        <Text family="noto-sans" size={11.5} color={R.mutedForeground}>
+        <Text family="noto-sans" size={11.5} color={R.mutedForeground} numberOfLines={1} style={{ flex: 1 }}>
           {listing.location} · {listing.modality}
         </Text>
       </View>

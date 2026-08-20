@@ -30,7 +30,7 @@ export const ECOSYSTEM_PLATFORMS: EcosystemPlatform[] = [
     id: 'bolsa-trabajo',
     name: 'Empleos',
     icon: 'briefcase-outline',
-    description: 'Conectate con oportunidades laborales del sector agropecuario paraguayo — el LinkedIn del agro.',
+    description: 'Conectate con oportunidades laborales del sector agropecuario paraguayo.',
     listingKind: 'empleo',
   },
   {

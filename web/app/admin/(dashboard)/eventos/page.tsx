@@ -115,16 +115,14 @@ export default async function EventosPage({
               Imágenes — <code>{slug}</code>
             </h2>
             <p className="text-muted text-xs mb-4">
-              Foto de perfil (círculo sobre la portada) y banner promocional del hub del evento en la app.
-              No tocan eventosagropy.com — quedan solo del lado de Agroconecta.
+              Banner promocional del hub del evento en la app. No toca eventosagropy.com — queda solo del lado de Agroconecta.
             </p>
 
-            <form action={saveEventMedia} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <form action={saveEventMedia} className="grid grid-cols-1 gap-5">
               <input type="hidden" name="event_slug" value={slug} />
-              <input type="hidden" name="existing_profile_url" value={data.media?.profile_image_url ?? ''} />
               <input type="hidden" name="existing_banner_url" value={data.media?.banner_image_url ?? ''} />
 
-              <label className="sm:col-span-2 flex items-start gap-3 rounded-lg border border-bdr px-4 py-3 cursor-pointer">
+              <label className="flex items-start gap-3 rounded-lg border border-bdr px-4 py-3 cursor-pointer">
                 <input
                   type="checkbox"
                   name="is_active"
@@ -139,25 +137,6 @@ export default async function EventosPage({
                   </span>
                 </span>
               </label>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Foto de perfil</label>
-                {data.media?.profile_image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={data.media.profile_image_url}
-                    alt="Foto de perfil actual"
-                    className="w-16 h-16 rounded-full object-cover border border-bdr mb-2"
-                  />
-                )}
-                <input
-                  name="profile_image_file"
-                  type="file"
-                  accept="image/*"
-                  className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:text-sm file:font-medium file:text-bg hover:file:bg-lime-dark"
-                />
-                <p className="text-xs text-muted mt-1">Imagen cuadrada recomendada. Máximo 8 MB.</p>
-              </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Banner promocional</label>
@@ -178,7 +157,7 @@ export default async function EventosPage({
                 <p className="text-xs text-muted mt-1">Se usa como portada del hub del evento. Máximo 8 MB.</p>
               </div>
 
-              <button type="submit" className="btn-primary text-xs sm:col-span-2 justify-self-start">
+              <button type="submit" className="btn-primary text-xs justify-self-start">
                 Guardar imágenes
               </button>
             </form>

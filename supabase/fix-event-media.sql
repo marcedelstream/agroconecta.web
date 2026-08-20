@@ -7,8 +7,12 @@ create table if not exists public.event_media (
   event_slug text primary key,
   profile_image_url text,
   banner_image_url text,
+  is_active boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+-- Por si esta migración ya se corrió antes de sumar el toggle "activo" (banner destacado en Home).
+alter table public.event_media add column if not exists is_active boolean not null default false;
 
 alter table public.event_media enable row level security;
 

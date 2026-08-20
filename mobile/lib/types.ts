@@ -385,6 +385,7 @@ export interface EventMedia {
   eventSlug: string
   profileImageUrl?: string
   bannerImageUrl?: string
+  isActive?: boolean
 }
 
 // Onboarding state

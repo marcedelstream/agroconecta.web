@@ -56,12 +56,19 @@ export async function saveEventMedia(formData: FormData) {
 
   const existingProfileUrl = String(formData.get('existing_profile_url') ?? '').trim() || null
   const existingBannerUrl = String(formData.get('existing_banner_url') ?? '').trim() || null
+  const isActive = formData.get('is_active') === 'on'
+
+  // Un solo evento destacado en Home a la vez — activar este apaga cualquier otro.
+  if (isActive) {
+    await supabase.from('event_media').update({ is_active: false }).neq('event_slug', eventSlug)
+  }
 
   await supabase.from('event_media').upsert(
     {
       event_slug: eventSlug,
       profile_image_url: profileUrl ?? existingProfileUrl,
       banner_image_url: bannerUrl ?? existingBannerUrl,
+      is_active: isActive,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'event_slug' }

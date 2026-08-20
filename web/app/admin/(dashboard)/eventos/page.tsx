@@ -6,6 +6,7 @@ interface EventMediaRow {
   event_slug: string
   profile_image_url: string | null
   banner_image_url: string | null
+  is_active: boolean
 }
 
 async function loadKnownSlugs() {
@@ -122,6 +123,22 @@ export default async function EventosPage({
               <input type="hidden" name="event_slug" value={slug} />
               <input type="hidden" name="existing_profile_url" value={data.media?.profile_image_url ?? ''} />
               <input type="hidden" name="existing_banner_url" value={data.media?.banner_image_url ?? ''} />
+
+              <label className="sm:col-span-2 flex items-start gap-3 rounded-lg border border-bdr px-4 py-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  defaultChecked={data.media?.is_active ?? false}
+                  className="mt-0.5 h-4 w-4 accent-lime"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">Evento activo (destacado en el Home de la app)</span>
+                  <span className="block text-xs text-muted mt-0.5">
+                    Mientras esté sin marcar podés probar el hub del evento tranquilo — no se muestra en el Home.
+                    Activarlo acá apaga automáticamente cualquier otro evento que estuviera destacado.
+                  </span>
+                </span>
+              </label>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Foto de perfil</label>

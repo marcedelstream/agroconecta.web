@@ -174,6 +174,7 @@ interface EventMediaRow {
   event_slug: string
   profile_image_url?: string | null
   banner_image_url?: string | null
+  is_active?: boolean | null
 }
 
 interface MarketPriceRow {
@@ -590,6 +591,28 @@ export async function fetchEventMedia(eventSlug: string): Promise<EventMedia | n
     eventSlug: typed.event_slug,
     profileImageUrl: typed.profile_image_url ?? undefined,
     bannerImageUrl: typed.banner_image_url ?? undefined,
+    isActive: typed.is_active ?? false,
+  }
+}
+
+// Evento único destacado en el Home (banner estilo OneFootball) — el admin lo activa/desactiva
+// desde /admin/eventos, útil para preparar y probar un evento antes de mostrarlo públicamente.
+export async function fetchFeaturedEventMedia(): Promise<EventMedia | null> {
+  const { data, error } = await supabase
+    .from('event_media')
+    .select('*')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+
+  const typed = data as EventMediaRow
+  return {
+    eventSlug: typed.event_slug,
+    profileImageUrl: typed.profile_image_url ?? undefined,
+    bannerImageUrl: typed.banner_image_url ?? undefined,
+    isActive: typed.is_active ?? false,
   }
 }
 

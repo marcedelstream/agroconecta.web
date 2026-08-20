@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import {
   View,
   Animated,
+  Image,
   Modal,
   Pressable,
   TouchableOpacity,
@@ -17,6 +18,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { Colors } from '@/constants/colors'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
+import { useLocalAvatar } from '@/lib/local-avatar-context'
 import { Radius, Spacing } from '@/constants/spacing'
 import { SERVICES } from '@/lib/services-data'
 
@@ -31,6 +33,7 @@ export function DrawerMenu({ onClose }: Props) {
   const C = useColors()
   const insets = useSafeAreaInsets()
   const { user, signOut } = useApp()
+  const { avatarUri } = useLocalAvatar()
   const initial = user?.name.trim().charAt(0).toUpperCase() ?? '?'
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)
   const slideAnim = useRef(new Animated.Value(DRAWER_W)).current
@@ -132,9 +135,13 @@ export function DrawerMenu({ onClose }: Props) {
             activeOpacity={0.7}
             onPress={() => handleClose('/(main)/(tabs)/profile')}
           >
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{initial}</Text>
-            </View>
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarCircle}>
+                <Text family="noto-sans" weight="bold" size={12} color={Colors.lime}>{initial}</Text>
+              </View>
+            )}
             <Text variant="caption" weight="medium">Ver perfil</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -218,9 +225,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.lime,
-  },
+  avatarImage: { width: 28, height: 28, borderRadius: 14 },
 })

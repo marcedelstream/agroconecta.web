@@ -17,7 +17,16 @@ export function PlatformList() {
           key={platform.id}
           style={[styles.row, i < ECOSYSTEM_PLATFORMS.length - 1 && styles.rowDivider]}
           activeOpacity={0.75}
-          onPress={() => router.push((platform.route ?? `/(main)/ecosistema/${platform.id}`) as any)}
+          onPress={() => {
+            if (platform.externalUrl) {
+              router.push({
+                pathname: '/(main)/webview',
+                params: { url: platform.externalUrl, title: platform.name },
+              } as any)
+              return
+            }
+            router.push((platform.route ?? `/(main)/ecosistema/${platform.id}`) as any)
+          }}
         >
           <View style={styles.iconBox}>
             <Ionicons name={platform.icon} size={19} color={R.foreground} />

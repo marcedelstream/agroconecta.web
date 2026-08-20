@@ -12,6 +12,8 @@ export interface UserProfile {
   notificationPrefs?: NotificationPreferences;
   /** Orden elegido por el usuario para las bandas de Inicio (ver HOME_SECTION_KEYS en lib/home-sections.ts). */
   sectionOrder?: string[];
+  /** Orden elegido por el usuario para las secciones de Ecosistema (ver lib/ecosystem-sections.ts). */
+  ecosystemSectionOrder?: string[];
   /** Membresía anual individual — habilita el botón "+" para publicar. Se activa a mano desde Supabase por ahora, no hay pago in-app. */
   isMember?: boolean;
   createdAt: Date;

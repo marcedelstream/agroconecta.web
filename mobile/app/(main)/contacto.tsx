@@ -1,23 +1,19 @@
 import { useState } from 'react'
 import { View, ScrollView, TouchableOpacity, TextInput, Linking, StyleSheet } from 'react-native'
-import { router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { goBack } from '@/lib/navigation'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
-import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
 import { supabase } from '@/lib/supabase'
 import { SOCIAL_LINKS, WHATSAPP_NUMBER, WHATSAPP_URL } from '@/lib/social-links'
 
+const R = Colors.redesign
 const SERVICE_TYPE = 'oportunidad_comercial'
 const SERVICE_LABEL = 'Oportunidad comercial'
 
 export default function ContactoScreen() {
-  const C = useColors()
-  const insets = useSafeAreaInsets()
   const { user } = useApp()
 
   const [phone, setPhone] = useState('')
@@ -53,75 +49,74 @@ export default function ContactoScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing[3], borderBottomColor: C.border, backgroundColor: C.surface }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={C.foreground} />
-        </TouchableOpacity>
-        <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>Contacto</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={[styles.root, { backgroundColor: R.surface }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Contacto</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      </SafeAreaView>
 
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing[8] }]}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {sent ? (
           <View style={styles.successBox}>
-            <Ionicons name="checkmark-circle" size={56} color={Colors.lime} />
-            <Text variant="title" weight="bold" family="poppins" style={{ textAlign: 'center' }}>
+            <Ionicons name="checkmark-circle" size={52} color={Colors.lime} />
+            <Text family="noto-sans" weight="bold" size={19} color={R.foreground} style={{ textAlign: 'center' }}>
               ¡Mensaje enviado!
             </Text>
-            <Text variant="body" color={C.muted} style={{ textAlign: 'center' }}>
+            <Text family="noto-sans" size={13.5} color={R.mutedForeground} style={{ textAlign: 'center' }}>
               Nos comunicaremos a la brevedad al número proporcionado.
             </Text>
             <TouchableOpacity
-              style={[styles.submitBtn, { marginTop: Spacing[2] }]}
+              style={[styles.submitBtn, { marginTop: 8 }]}
               onPress={() => { setSent(false); setPhone(''); setMessage('') }}
               activeOpacity={0.85}
             >
-              <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviar otro mensaje</Text>
+              <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">Enviar otro mensaje</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>CONTACTO</Text>
-            <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground, lineHeight: 30 }}>
+            <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>CONTACTO</Text>
+            <Text family="noto-sans" weight="extrabold" size={20} lineHeight={27} color={R.foreground} style={{ marginTop: 4 }}>
               ¿Tenés una oportunidad comercial o una sugerencia?
             </Text>
-            <Text variant="body" style={{ color: C.muted, lineHeight: 22 }}>
+            <Text family="noto-sans" size={13.5} lineHeight={21} color={R.mutedForeground} style={{ marginTop: 8 }}>
               Contanos qué tenés en mente — una propuesta, una idea o algo que creas que puede sumar
               al ecosistema. Te respondemos por el número que nos dejes.
             </Text>
 
             <View style={styles.formFields}>
               <View style={styles.field}>
-                <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+                <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
                   NÚMERO DE TELÉFONO *
                 </Text>
-                <View style={[styles.inputBox, { backgroundColor: C.secondary, borderColor: C.border }]}>
-                  <Ionicons name="call-outline" size={18} color={C.muted} />
+                <View style={styles.inputBox}>
+                  <Ionicons name="call-outline" size={18} color={R.mutedForeground} />
                   <TextInput
-                    style={[styles.textInput, { color: C.foreground }]}
+                    style={styles.textInput}
                     value={phone}
                     onChangeText={setPhone}
                     placeholder="+595 9xx xxx xxx"
-                    placeholderTextColor={C.muted}
+                    placeholderTextColor={R.mutedForeground}
                     keyboardType="phone-pad"
                   />
                 </View>
               </View>
 
               <View style={styles.field}>
-                <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+                <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
                   MENSAJE
                 </Text>
                 <TextInput
-                  style={[styles.textArea, { backgroundColor: C.secondary, borderColor: C.border, color: C.foreground }]}
+                  style={styles.textArea}
                   value={message}
                   onChangeText={setMessage}
                   placeholder="Contanos tu idea u oportunidad..."
-                  placeholderTextColor={C.muted}
+                  placeholderTextColor={R.mutedForeground}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
@@ -134,42 +129,40 @@ export default function ContactoScreen() {
                 disabled={loading || !phone.trim()}
                 activeOpacity={0.85}
               >
-                {loading ? (
-                  <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviando...</Text>
-                ) : (
-                  <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviar mensaje</Text>
-                )}
+                <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">
+                  {loading ? 'Enviando...' : 'Enviar mensaje'}
+                </Text>
               </TouchableOpacity>
             </View>
           </>
         )}
 
-        <View style={[styles.divider, { backgroundColor: C.border }]} />
+        <View style={styles.divider} />
 
         <View style={styles.socialSection}>
-          <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+          <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
             SEGUINOS
           </Text>
           <View style={styles.socialRow}>
             {SOCIAL_LINKS.map((social) => (
               <TouchableOpacity
                 key={social.id}
-                style={[styles.socialBtn, { backgroundColor: C.secondary, borderColor: C.border }]}
+                style={styles.socialBtn}
                 onPress={() => Linking.openURL(social.url).catch(() => {})}
                 hitSlop={4}
               >
-                <Ionicons name={social.icon} size={20} color={C.foreground} />
+                <Ionicons name={social.icon} size={19} color={R.foreground} />
               </TouchableOpacity>
             ))}
           </View>
 
           <TouchableOpacity
-            style={[styles.whatsappBtn, { borderColor: C.border }]}
+            style={styles.whatsappBtn}
             onPress={() => Linking.openURL(WHATSAPP_URL).catch(() => {})}
             activeOpacity={0.85}
           >
-            <Ionicons name="logo-whatsapp" size={20} color={Colors.success} />
-            <Text variant="body" weight="semibold" style={{ color: C.foreground }}>{WHATSAPP_NUMBER}</Text>
+            <Ionicons name="logo-whatsapp" size={19} color={R.positive} />
+            <Text family="noto-sans" weight="semibold" size={13.5} color={R.foreground}>{WHATSAPP_NUMBER}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -179,77 +172,70 @@ export default function ContactoScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing[5],
-    paddingBottom: Spacing[3],
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
-  content: { padding: Spacing[5], gap: Spacing[3] },
-  formFields: { gap: Spacing[4], marginTop: Spacing[2] },
-  field: { gap: Spacing[1.5] },
-  fieldLabel: { letterSpacing: 0.6, fontSize: 11 },
+  content: { padding: 20, paddingBottom: 40 },
+  eyebrow: { letterSpacing: 0.6 },
+  formFields: { gap: 16, marginTop: 16 },
+  field: { gap: 6 },
+  fieldLabel: { letterSpacing: 0.6 },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    gap: Spacing[2],
+    borderRadius: 13,
+    backgroundColor: R.secondary,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 9,
   },
-  textInput: {
-    flex: 1,
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
-  },
+  textInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 14, color: R.foreground },
   textArea: {
-    borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
+    borderRadius: 13,
+    backgroundColor: R.secondary,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: 'NotoSans-Regular',
+    fontSize: 14,
+    color: R.foreground,
     minHeight: 100,
   },
   submitBtn: {
     backgroundColor: Colors.lime,
-    borderRadius: Radius.base,
+    borderRadius: 13,
     alignItems: 'center',
-    paddingVertical: Spacing[4],
-    marginTop: Spacing[2],
+    paddingVertical: 15,
+    marginTop: 6,
   },
   submitBtnDisabled: { opacity: 0.5 },
-  successBox: {
-    alignItems: 'center',
-    gap: Spacing[4],
-    paddingVertical: Spacing[8],
-  },
-  divider: { height: 1, marginTop: Spacing[2] },
-  socialSection: { gap: Spacing[3] },
-  socialRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing[2.5],
-  },
+  successBox: { alignItems: 'center', gap: 12, paddingVertical: 40 },
+  divider: { height: 1, backgroundColor: R.divider, marginTop: 28 },
+  socialSection: { gap: 12, marginTop: 20 },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   socialBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
+    borderColor: R.border,
+    backgroundColor: R.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   whatsappBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
+    gap: 8,
     borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
+    borderColor: R.border,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     alignSelf: 'flex-start',
   },
 })

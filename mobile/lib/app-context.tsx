@@ -365,20 +365,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!token) return 'No hay una sesión activa.'
 
     try {
-      const res = await fetch('https://agroconecta.com.py/api/delete-account', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      // El token va en el header Y en el body: si algún redirect de dominio en el camino
+      // pisa el header Authorization, el body de un POST igual sobrevive. Timeout propio:
+      // fetch no tiene uno por defecto — si el server nunca responde, la promesa quedaba
+      // colgada para siempre (ni resuelve ni rechaza, así que ningún try/catch la agarra).
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
+      let res: Response
+      try {
+        res = await fetch('https://agroconecta.com.py/api/delete-account', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+          signal: controller.signal,
+        })
+      } finally {
+        clearTimeout(timeout)
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => null)
-        return body?.error ?? 'No se pudo eliminar la cuenta.'
+        return body?.error ?? `No se pudo eliminar la cuenta (${res.status}).`
       }
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return 'El servidor no respondió a tiempo. Probá de nuevo en unos minutos.'
+      }
       return err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.'
     }
 
-    await AsyncStorage.removeItem(STORAGE_KEY)
-    await supabase.auth.signOut()
+    // La cuenta ya se borró en el servidor acá arriba (irreversible) — de acá en más todo
+    // es limpieza local best-effort. signOut() le pide al servidor revocar la sesión de un
+    // usuario que ya no existe, y en vez de fallar rápido puede quedarse reintentando sin
+    // resolver nunca (por eso el try/catch de más arriba no alcanzaba) — scope:'local' evita
+    // el viaje al servidor directamente, y el timeout es un piso de seguridad extra.
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // best-effort
+    }
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: 'local' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+      ])
+    } catch {
+      // best-effort — la cuenta ya no existe, puede que el propio signOut falle o cuelgue
+    }
     setUser(null)
     setOnboarding(initialOnboarding)
     return null

@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { captureRef } from 'react-native-view-shot'
+import * as Sharing from 'expo-sharing'
 import { goBack } from '@/lib/navigation'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -12,6 +14,9 @@ import { useApp } from '@/lib/app-context'
 import type { MarketPrice, MarketPriceKind } from '@/lib/types'
 
 const R = Colors.redesign
+// Mismo logo (variante para fondos claros) que usa el widget "Tu mercado hoy" de Inicio —
+// se incluye dentro del área capturada para que quede pegado en el PNG que se comparte.
+const logo = require('@/assets/images/logo-light.png')
 
 const TABS: { value: MarketPriceKind; label: string }[] = [
   { value: 'cattle', label: 'Ganado' },
@@ -36,6 +41,9 @@ export default function PricesScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [tab, setTab] = useState<MarketPriceKind>('cattle')
+  const [search, setSearch] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const shareCardRef = useRef<View>(null)
 
   const loadPrices = useCallback(async () => {
     try {
@@ -58,13 +66,41 @@ export default function PricesScreen() {
     setRefreshing(false)
   }, [loadPrices])
 
-  const list = useMemo(() => prices.filter((p) => p.kind === tab), [prices, tab])
+  const list = useMemo(() => {
+    const byTab = prices.filter((p) => p.kind === tab)
+    const q = search.trim().toLowerCase()
+    if (!q) return byTab
+    return byTab.filter((p) => p.label.toLowerCase().includes(q) || p.market.toLowerCase().includes(q))
+  }, [prices, tab, search])
   const featured = useMemo(() => prices.find((p) => p.kind === 'cattle'), [prices])
 
   const latestUpdate = useMemo(() => {
     if (prices.length === 0) return null
     return prices.reduce((latest, p) => (p.updatedAt > latest ? p.updatedAt : latest), prices[0].updatedAt)
   }, [prices])
+
+  // Solo la fuente base (ej. "Valor Agro"), sin la variante completa de cada mercado
+  // ("Ganado a frigorífico", "max/min", etc.) — esa lista completa hacía un pie gigante.
+  const shareSource = useMemo(
+    () => Array.from(new Set(list.map((p) => p.market.split(' - ')[0].trim()))).join(' y '),
+    [list]
+  )
+  const shareTitle = tab === 'cattle' ? 'Precios de Ganado' : 'Precios Internacionales'
+
+  async function handleShare() {
+    if (!shareCardRef.current || sharing) return
+    setSharing(true)
+    try {
+      const uri = await captureRef(shareCardRef, { format: 'png', quality: 1 })
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Compartir precios de hoy' })
+      }
+    } catch {
+      // Silencioso: si falla la captura o el share, no bloqueamos la UI.
+    } finally {
+      setSharing(false)
+    }
+  }
 
   if (!user) return null
 
@@ -79,15 +115,74 @@ export default function PricesScreen() {
               </TouchableOpacity>
               <Text family="noto-sans" weight="bold" size={18} color="#FFFFFF">Mercado</Text>
             </View>
-            <HeaderAvatar name={user.name} />
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={handleShare} hitSlop={10} disabled={sharing || list.length === 0}>
+                {sharing ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="share-outline" size={20} color="#FFFFFF" />
+                )}
+              </TouchableOpacity>
+              <HeaderAvatar name={user.name} />
+            </View>
           </View>
           <Text family="noto-sans" size={12} color={R.header.mutedText} style={styles.updatedLabel}>
             {latestUpdate
               ? `Actualizado hoy ${latestUpdate.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })}`
               : 'Sin actualizaciones'}
           </Text>
+
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={17} color={R.header.placeholder} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Buscar precios"
+              placeholderTextColor={R.header.placeholder}
+              style={styles.searchInput}
+              autoCorrect={false}
+            />
+          </View>
         </View>
       </SafeAreaView>
+
+      {/* Fuera de pantalla, solo para la captura de "Compartir" — mismo patrón que el
+          widget "Tu mercado hoy" de Inicio (PriceBoard), pero con la lista completa de la
+          categoría activa en vez de estar limitado a 3 ítems. */}
+      {list.length > 0 && (
+        <View style={styles.shareOffscreen} pointerEvents="none">
+          <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
+            <View style={styles.shareHeader}>
+              <Image source={logo} style={styles.shareLogo} resizeMode="contain" />
+              <Text family="noto-sans" weight="bold" size={17} color={R.foreground} style={styles.shareTitle}>
+                {shareTitle}
+              </Text>
+            </View>
+            {list.map((price, i) => {
+              const isUp = price.changePercent >= 0
+              return (
+                <View key={price.id} style={[styles.row, i < list.length - 1 && styles.rowDivider]}>
+                  <Text family="noto-sans" weight="semibold" size={14} color={R.foreground}>{price.label}</Text>
+                  <View style={styles.rowRight}>
+                    <Text family="noto-sans" weight="bold" size={14} color={R.foreground}>{formatValue(price)}</Text>
+                    <Text family="noto-sans" weight="semibold" size={11.5} color={isUp ? R.positive : R.negative} style={styles.rowDelta}>
+                      {formatDelta(price)}
+                    </Text>
+                  </View>
+                </View>
+              )
+            })}
+            <View style={styles.shareFooterRow}>
+              <Text family="noto-sans" size={10.5} color={R.mutedForeground2} style={styles.shareFooterText}>
+                {latestUpdate
+                  ? `${latestUpdate.toLocaleDateString('es-PY', { day: '2-digit', month: 'short' })}, ${latestUpdate.toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Hoy'}
+                {shareSource ? ` · ${shareSource}` : ''}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.centerFill}>
@@ -192,7 +287,26 @@ const styles = StyleSheet.create({
   },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   updatedLabel: { marginTop: 6 },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    backgroundColor: R.header.chip,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 14,
+  },
+  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  shareOffscreen: { position: 'absolute', top: -9999, left: 0, width: '100%' },
+  shareCard: { backgroundColor: R.surface, borderRadius: 16, marginHorizontal: 20, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
+  shareHeader: { alignItems: 'center', marginBottom: 16 },
+  shareLogo: { width: 168, height: 38, marginBottom: 10 },
+  shareTitle: { textAlign: 'center' },
+  shareFooterRow: { paddingTop: 10, borderTopWidth: 1, borderTopColor: R.divider },
+  shareFooterText: { textAlign: 'center' },
   centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: {
     flex: 1,

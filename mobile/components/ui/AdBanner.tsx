@@ -3,10 +3,12 @@ import { View, TouchableOpacity, useWindowDimensions, StyleSheet, Linking, type 
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { Text } from './Text'
-import { useColors } from '@/lib/theme-context'
+import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { fetchActiveBanners } from '@/lib/supabase-repositories'
 import type { AdCampaign, AdPlacement, AdSegment } from '@/lib/types'
+
+const R = Colors.redesign
 
 function openBanner(banner: AdCampaign) {
   if (!banner.linkType || !banner.linkTarget) return
@@ -49,7 +51,6 @@ interface Props {
 }
 
 export function AdBanner({ segment, placement = 'home', refreshKey, style }: Props) {
-  const C = useColors()
   const { width } = useWindowDimensions()
   const bannerWidth = width - Spacing[5] * 2
   const [banner, setBanner] = useState<AdCampaign | null>(null)
@@ -67,11 +68,11 @@ export function AdBanner({ segment, placement = 'home', refreshKey, style }: Pro
     return (
       <View style={[styles.container, style]}>
         <View style={styles.labelRow}>
-          <Text variant="label" style={[styles.labelText, { color: C.muted }]}>Publicidad</Text>
+          <Text family="noto-sans" size={9} color={R.mutedForeground} style={styles.labelText}>Publicidad</Text>
         </View>
-        <View style={[styles.placeholder, { backgroundColor: C.secondary, borderColor: C.border, width: bannerWidth }]}>
-          <Text variant="body" weight="semibold" style={{ color: C.muted }}>Espacio disponible</Text>
-          <Text variant="caption" style={{ color: C.muted }}>640 × 200 px</Text>
+        <View style={[styles.placeholder, { backgroundColor: R.secondary, borderColor: R.border, width: bannerWidth }]}>
+          <Text family="noto-sans" weight="semibold" size={14} color={R.mutedForeground}>Espacio disponible</Text>
+          <Text family="noto-sans" size={12} color={R.mutedForeground}>640 × 200 px</Text>
         </View>
       </View>
     )
@@ -80,7 +81,7 @@ export function AdBanner({ segment, placement = 'home', refreshKey, style }: Pro
   return (
     <View style={[styles.container, style]}>
       <View style={styles.labelRow}>
-        <Text variant="label" style={[styles.labelText, { color: C.muted }]}>Publicidad</Text>
+        <Text family="noto-sans" size={9} color={R.mutedForeground} style={styles.labelText}>Publicidad</Text>
       </View>
 
       <TouchableOpacity
@@ -102,7 +103,7 @@ export function AdBanner({ segment, placement = 'home', refreshKey, style }: Pro
 const styles = StyleSheet.create({
   container: { width: '100%' },
   labelRow: { alignSelf: 'flex-end', marginBottom: 3 },
-  labelText: { fontSize: 9, letterSpacing: 0.5 },
+  labelText: { letterSpacing: 0.5 },
   placeholder: {
     height: 100,
     borderRadius: Radius.md,

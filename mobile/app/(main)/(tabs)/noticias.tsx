@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { View, ScrollView, Image, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { goBack } from '@/lib/navigation'
@@ -40,6 +40,7 @@ export default function NoticiasScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [adRefreshKey, setAdRefreshKey] = useState(0)
   const [activeCategory, setActiveCategory] = useState<NewsCategory | null>(null)
+  const [search, setSearch] = useState('')
 
   const loadPosts = useCallback(async () => {
     try {
@@ -63,9 +64,11 @@ export default function NoticiasScreen() {
   }, [loadPosts])
 
   const filtered = useMemo(() => {
-    if (!activeCategory) return posts
-    return posts.filter((p) => p.category === activeCategory)
-  }, [posts, activeCategory])
+    let list = activeCategory ? posts.filter((p) => p.category === activeCategory) : posts
+    const q = search.trim().toLowerCase()
+    if (q) list = list.filter((p) => p.title.toLowerCase().includes(q) || p.summary.toLowerCase().includes(q))
+    return list
+  }, [posts, activeCategory, search])
 
   const hero = filtered[0]
   const rows = filtered.slice(1)
@@ -89,6 +92,18 @@ export default function NoticiasScreen() {
               <Text family="noto-sans" weight="bold" size={18} color="#FFFFFF">Noticias</Text>
             </View>
             <HeaderAvatar name={user.name} />
+          </View>
+
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={17} color={R.header.placeholder} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Buscar noticias"
+              placeholderTextColor={R.header.placeholder}
+              style={styles.searchInput}
+              autoCorrect={false}
+            />
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
@@ -213,7 +228,18 @@ const styles = StyleSheet.create({
   },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    backgroundColor: R.header.chip,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 14,
+  },
+  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingRight: 16 },
   chip: {
     borderWidth: 1,
     borderColor: R.header.chipBorder,

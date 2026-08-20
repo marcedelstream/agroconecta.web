@@ -17,7 +17,7 @@ export const HOME_SECTIONS: HomeSectionMeta[] = [
   { key: 'services', label: 'Remates, empleos y más', icon: 'grid-outline' },
   { key: 'live', label: 'En vivo', icon: 'radio-outline' },
   { key: 'news', label: 'Noticias para vos', icon: 'newspaper-outline' },
-  { key: 'agenda', label: 'Agenda del sector', icon: 'calendar-outline' },
+  { key: 'agenda', label: 'Eventos Agro', icon: 'calendar-outline' },
 ]
 
 // Normaliza un sectionOrder guardado: saca claves que ya no existen y agrega al final

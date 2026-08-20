@@ -4,15 +4,15 @@ import {
   StyleSheet, ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { goBack } from '@/lib/navigation'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
-import { useColors } from '@/lib/theme-context'
 import { fetchAllyDirectory } from '@/lib/supabase-repositories'
 import { ALLY_CATEGORY_LABELS, ALLY_PLAN_LABELS, type AllyCategory, type Organization } from '@/lib/types'
+
+const R = Colors.redesign
 
 const CATEGORIES: { value: AllyCategory; label: string }[] = (
   Object.entries(ALLY_CATEGORY_LABELS) as [AllyCategory, string][]
@@ -23,9 +23,6 @@ function whatsappUrl(phone: string) {
 }
 
 export default function AliadosScreen() {
-  const C = useColors()
-  const insets = useSafeAreaInsets()
-
   const [orgs, setOrgs] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -62,63 +59,57 @@ export default function AliadosScreen() {
   }, [orgs, category, search])
 
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing[3], borderBottomColor: C.border, backgroundColor: C.surface }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={C.foreground} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>
-            Directorio de Aliados
-          </Text>
-          <Text variant="caption" style={{ color: C.muted }}>
-            Organizaciones que sostienen Agroconecta
-          </Text>
-        </View>
-      </View>
+    <View style={[styles.root, { backgroundColor: R.background }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Directorio de Aliados</Text>
+          </View>
 
-      {/* Buscador */}
-      <View style={[styles.searchBar, { backgroundColor: C.surface, borderBottomColor: C.border }]}>
-        <Ionicons name="search-outline" size={17} color={C.muted} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Buscar Aliado..."
-          placeholderTextColor={C.muted}
-          style={[styles.searchInput, { color: C.foreground }]}
-          autoCorrect={false}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={C.muted} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filtros por categoría */}
-      <View style={[styles.filtersWrap, { borderBottomColor: C.border }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow}>
-          <TouchableOpacity
-            style={[styles.chip, { borderColor: C.border, backgroundColor: !category ? Colors.lime : C.surface }]}
-            onPress={() => setCategory(null)}
-          >
-            <Text variant="caption" weight="semibold" style={{ color: !category ? '#0A0A13' : C.muted }}>Todas</Text>
-          </TouchableOpacity>
-          {CATEGORIES.map((cat) => {
-            const active = category === cat.value
-            return (
-              <TouchableOpacity
-                key={cat.value}
-                style={[styles.chip, { borderColor: active ? Colors.lime : C.border, backgroundColor: active ? Colors.lime : C.surface }]}
-                onPress={() => setCategory(active ? null : cat.value)}
-              >
-                <Text variant="caption" weight="semibold" style={{ color: active ? '#0A0A13' : C.muted }}>{cat.label}</Text>
+          <View style={styles.searchBox}>
+            <Ionicons name="search-outline" size={17} color={R.header.placeholder} />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Buscar Aliado..."
+              placeholderTextColor={R.header.placeholder}
+              style={styles.searchInput}
+              autoCorrect={false}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+                <Ionicons name="close-circle" size={16} color={R.header.placeholder} />
               </TouchableOpacity>
-            )
-          })}
-        </ScrollView>
-      </View>
+            )}
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+            <TouchableOpacity
+              style={[styles.chip, !category && styles.chipActive]}
+              onPress={() => setCategory(null)}
+              activeOpacity={0.8}
+            >
+              <Text family="noto-sans" weight="semibold" size={12} color={!category ? '#0A0A13' : '#C9C9D2'}>Todas</Text>
+            </TouchableOpacity>
+            {CATEGORIES.map((cat) => {
+              const active = category === cat.value
+              return (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setCategory(active ? null : cat.value)}
+                  activeOpacity={0.8}
+                >
+                  <Text family="noto-sans" weight="semibold" size={12} color={active ? '#0A0A13' : '#C9C9D2'}>{cat.label}</Text>
+                </TouchableOpacity>
+              )
+            })}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
 
       {loading ? (
         <View style={styles.center}>
@@ -129,50 +120,45 @@ export default function AliadosScreen() {
           data={filtered}
           keyExtractor={(o) => o.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Spacing[8] }]}
+          contentContainerStyle={styles.list}
           refreshing={refreshing}
           onRefresh={onRefresh}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.item, { backgroundColor: C.surface, borderColor: C.border }]}
+              style={styles.item}
               activeOpacity={0.85}
               onPress={() => router.push(`/publisher/${item.id}` as any)}
             >
               {item.logoUrl ? (
                 <Image source={{ uri: item.logoUrl }} style={styles.avatarImage} />
               ) : (
-                <View style={[styles.avatar, { backgroundColor: `${Colors.lime}18` }]}>
-                  <Text style={[styles.avatarText, { color: Colors.lime }]}>{item.name.slice(0, 2).toUpperCase()}</Text>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{item.name.slice(0, 2).toUpperCase()}</Text>
                 </View>
               )}
               <View style={styles.info}>
                 <View style={styles.nameRow}>
-                  <Text variant="body" weight="semibold" style={{ color: C.foreground, flexShrink: 1 }} numberOfLines={1}>
+                  <Text family="noto-sans" weight="semibold" size={14} color={R.foreground} style={{ flexShrink: 1 }} numberOfLines={1}>
                     {item.name}
                   </Text>
                   {item.isVerified && <Ionicons name="checkmark-circle" size={14} color={Colors.lime} />}
                 </View>
                 <View style={styles.badgeRow}>
                   {item.allyPlan && (
-                    <View style={[
-                      styles.planBadge,
-                      item.allyPlan === 'cosecha'
-                        ? { backgroundColor: Colors.lime }
-                        : { backgroundColor: `${Colors.lime}18` },
-                    ]}>
-                      <Text variant="label" style={{ color: item.allyPlan === 'cosecha' ? '#0A0A13' : Colors.lime, fontSize: 10 }}>
+                    <View style={[styles.planBadge, item.allyPlan === 'cosecha' ? { backgroundColor: Colors.lime } : { backgroundColor: R.limeSoftBg }]}>
+                      <Text family="noto-sans" weight="bold" size={9.5} color={item.allyPlan === 'cosecha' ? '#0A0A13' : R.limeSoftText}>
                         {ALLY_PLAN_LABELS[item.allyPlan]}
                       </Text>
                     </View>
                   )}
                   {item.allyFounder && (
-                    <View style={[styles.planBadge, { backgroundColor: `${Colors.warning}20` }]}>
-                      <Text variant="label" style={{ color: Colors.warning, fontSize: 10 }}>Fundador</Text>
+                    <View style={[styles.planBadge, { backgroundColor: '#FDF0D8' }]}>
+                      <Text family="noto-sans" weight="bold" size={9.5} color="#9A6200">Fundador</Text>
                     </View>
                   )}
                 </View>
                 {item.description ? (
-                  <Text variant="caption" style={{ color: C.muted }} numberOfLines={1}>{item.description}</Text>
+                  <Text family="noto-sans" size={12} color={R.mutedForeground} numberOfLines={1}>{item.description}</Text>
                 ) : null}
               </View>
               {item.contactPhone && (
@@ -181,15 +167,15 @@ export default function AliadosScreen() {
                   hitSlop={8}
                   onPress={() => Linking.openURL(whatsappUrl(item.contactPhone!)).catch(() => {})}
                 >
-                  <Ionicons name="logo-whatsapp" size={20} color={Colors.success} />
+                  <Ionicons name="logo-whatsapp" size={20} color={R.positive} />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Ionicons name="people-outline" size={40} color={C.muted} />
-              <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3], textAlign: 'center' }}>
+              <Ionicons name="people-outline" size={38} color={R.mutedForeground} />
+              <Text family="noto-sans" size={13.5} color={R.mutedForeground} style={styles.emptyText}>
                 {orgs.length === 0 ? 'Todavía no hay Aliados.' : `Sin resultados para "${search}"`}
               </Text>
             </View>
@@ -203,74 +189,47 @@ export default function AliadosScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
+    backgroundColor: R.header.bg,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+  },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[3],
-    paddingHorizontal: Spacing[5],
-    paddingBottom: Spacing[3],
-    borderBottomWidth: 1,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[2],
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[3],
-    borderBottomWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
-  },
-  filtersWrap: { borderBottomWidth: 1 },
-  filtersRow: {
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[3],
-    gap: Spacing[2],
-  },
-  chip: {
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[1.5],
-    borderRadius: Radius.full,
+    gap: 9,
+    backgroundColor: R.header.chip,
     borderWidth: 1,
+    borderColor: R.header.chipBorder,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginTop: 14,
   },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: Spacing[10] },
-  list: { padding: Spacing[4], gap: Spacing[2] },
+  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingRight: 16 },
+  chip: { borderWidth: 1, borderColor: R.header.chipBorder, borderRadius: 9999, paddingHorizontal: 13, paddingVertical: 7 },
+  chipActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40 },
+  emptyText: { marginTop: 12, textAlign: 'center' },
+  list: { padding: 16, gap: 10 },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[3],
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    padding: Spacing[3.5],
+    gap: 12,
+    backgroundColor: R.surface,
+    borderRadius: 16,
+    padding: 14,
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImage: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-  },
-  avatarText: { fontSize: 15, fontWeight: '700' },
+  avatar: { width: 44, height: 44, borderRadius: 12, backgroundColor: R.limeSoftBg, alignItems: 'center', justifyContent: 'center' },
+  avatarImage: { width: 44, height: 44, borderRadius: 12 },
+  avatarText: { fontSize: 14, fontWeight: '700', color: Colors.lime },
   info: { flex: 1, gap: 3 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[1] },
-  badgeRow: { flexDirection: 'row', gap: Spacing[1.5] },
-  planBadge: {
-    paddingHorizontal: Spacing[1.5],
-    paddingVertical: 2,
-    borderRadius: Radius.sm,
-  },
-  contactBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  badgeRow: { flexDirection: 'row', gap: 6 },
+  planBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5 },
+  contactBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 })

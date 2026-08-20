@@ -1,4 +1,4 @@
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
 import { Stack } from 'expo-router'
 import { goBack } from '@/lib/navigation'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -11,13 +11,16 @@ const R = Colors.redesign
 
 const BENEFITS: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }[] = [
   { icon: 'megaphone-outline', text: 'Publicá remates, empleos, clasificados y cursos en el Ecosistema' },
-  { icon: 'calendar-outline', text: 'Cargá tus propios eventos en la Agenda del sector' },
+  { icon: 'calendar-outline', text: 'Cargá tus propios eventos en Eventos Agro' },
   { icon: 'heart-outline', text: 'Apoyás el desarrollo de una plataforma gratuita para todo el agro paraguayo' },
 ]
 
 export default function SumateScreen() {
   return (
-    <View style={[styles.root, { backgroundColor: R.surface }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: R.surface }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
       <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
         <View style={styles.headerRow}>
@@ -27,7 +30,11 @@ export default function SumateScreen() {
         </View>
       </SafeAreaView>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.iconBox}>
           <Ionicons name="ribbon-outline" size={28} color={Colors.lime} />
         </View>
@@ -68,7 +75,7 @@ export default function SumateScreen() {
           />
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 

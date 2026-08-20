@@ -4,20 +4,28 @@ import { Ionicons } from '@expo/vector-icons'
 import DraggableFlatList, { ScaleDecorator, type RenderItemParams } from 'react-native-draggable-flatlist'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { HOME_SECTIONS, normalizeSectionOrder, type HomeSectionKey } from '@/lib/home-sections'
 
 const { height: SCREEN_H } = Dimensions.get('window')
 const SHEET_H = SCREEN_H * 0.62
 const R = Colors.redesign
 
+interface SectionMeta {
+  key: string
+  label: string
+  icon: React.ComponentProps<typeof Ionicons>['name']
+}
+
 interface Props {
+  title?: string
+  sections: SectionMeta[]
   order: string[] | undefined
-  onChange: (order: HomeSectionKey[]) => void
+  normalize: (order: string[] | undefined) => string[]
+  onChange: (order: string[]) => void
   onClose: () => void
 }
 
-export function SectionOrderSheet({ order, onChange, onClose }: Props) {
-  const [items, setItems] = useState<HomeSectionKey[]>(() => normalizeSectionOrder(order))
+export function SectionOrderSheet({ title = 'Ajustar interés', sections, order, normalize, onChange, onClose }: Props) {
+  const [items, setItems] = useState<string[]>(() => normalize(order))
   const slideAnim = useRef(new Animated.Value(SHEET_H)).current
   const overlayAnim = useRef(new Animated.Value(0)).current
 
@@ -35,7 +43,7 @@ export function SectionOrderSheet({ order, onChange, onClose }: Props) {
     ]).start(onClose)
   }
 
-  function handleDragEnd(data: HomeSectionKey[]) {
+  function handleDragEnd(data: string[]) {
     setItems(data)
     onChange(data)
   }
@@ -50,7 +58,7 @@ export function SectionOrderSheet({ order, onChange, onClose }: Props) {
         <View style={styles.handle} />
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Ajustar interés</Text>
+            <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>{title}</Text>
             <Text family="noto-sans" size={12} color={R.mutedForeground} style={styles.subtitle}>
               Mantené presionado y arrastrá para reordenar
             </Text>
@@ -65,8 +73,8 @@ export function SectionOrderSheet({ order, onChange, onClose }: Props) {
           keyExtractor={(key) => key}
           contentContainerStyle={styles.list}
           onDragEnd={({ data }) => handleDragEnd(data)}
-          renderItem={({ item, drag, isActive }: RenderItemParams<HomeSectionKey>) => {
-            const meta = HOME_SECTIONS.find((s) => s.key === item)!
+          renderItem={({ item, drag, isActive }: RenderItemParams<string>) => {
+            const meta = sections.find((s) => s.key === item)!
             return (
               <ScaleDecorator>
                 <TouchableOpacity

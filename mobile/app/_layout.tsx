@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { Stack, router } from 'expo-router'
+import { Stack, router, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as Notifications from 'expo-notifications'
@@ -16,6 +16,7 @@ import {
 } from '@expo-google-fonts/noto-sans'
 import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
+import { LocalAvatarProvider } from '@/lib/local-avatar-context'
 import { registerPushToken, getNotificationPermissionStatus } from '@/lib/push-notifications'
 import '../global.css'
 
@@ -42,41 +43,59 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AppProvider>
-          <ThemedRoot />
+          <LocalAvatarProvider>
+            <ThemedRoot />
+          </LocalAvatarProvider>
         </AppProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   )
 }
 
+const NOTIF_PROMPT_DELAY_MS = 3500
+
 function ThemedRoot() {
   const { isDark } = useTheme()
   const { user, isLoading } = useApp()
+  const pathname = usePathname()
   const bg = isDark ? '#0A0A13' : '#FAFAFA'
   const tokenRegistered = useRef(false)
+  const promptArmed = useRef(false)
   const [notifModalVisible, setNotifModalVisible] = useState(false)
 
-  // Al tener usuario disponible: si el permiso de notificaciones todavía no se pidió
-  // ni se le mostró el aviso propio, mostramos un explicador antes del prompt nativo.
+  // Si el permiso ya está concedido de antes, no hay nada que preguntar — solo registramos
+  // el token en segundo plano, sin esperar a que llegue a Inicio (no es un prompt visible).
   useEffect(() => {
     if (isLoading || !user?.id || tokenRegistered.current) return
-    tokenRegistered.current = true
 
     ;(async () => {
+      const status = await getNotificationPermissionStatus()
+      if (status === 'granted') {
+        tokenRegistered.current = true
+        registerPushToken(user.id).catch(() => null)
+      }
+    })()
+  }, [user?.id, isLoading])
+
+  // El explicador propio (y el prompt nativo que dispara) recién se arma cuando el usuario
+  // llega a Inicio, y con una demora — pedirlo en frío justo al registrarse/loguearse es
+  // motivo de rechazo en App Store Review.
+  useEffect(() => {
+    if (isLoading || !user?.id || tokenRegistered.current || promptArmed.current) return
+    if (!pathname?.includes('/home')) return
+    promptArmed.current = true
+
+    const timer = setTimeout(async () => {
       const [status, alreadyShown] = await Promise.all([
         getNotificationPermissionStatus(),
         AsyncStorage.getItem(NOTIF_PROMPT_KEY),
       ])
-
-      if (status === 'granted') {
-        registerPushToken(user.id).catch(() => null)
-        return
-      }
-      if (status === 'denied' || alreadyShown) return
-
+      if (status === 'granted' || status === 'denied' || alreadyShown) return
       setNotifModalVisible(true)
-    })()
-  }, [user?.id, isLoading])
+    }, NOTIF_PROMPT_DELAY_MS)
+
+    return () => clearTimeout(timer)
+  }, [user?.id, isLoading, pathname])
 
   async function acceptNotifications() {
     setNotifModalVisible(false)
@@ -118,6 +137,7 @@ function ThemedRoot() {
         <Stack.Screen name="(main)" />
         <Stack.Screen name="article/[id]" />
         <Stack.Screen name="publisher/[id]" />
+        <Stack.Screen name="auth/callback" />
       </Stack>
 
       <ConfirmModal

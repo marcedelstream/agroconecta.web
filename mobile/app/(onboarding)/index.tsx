@@ -9,6 +9,7 @@ import {
   Platform,
   Animated,
   Image,
+  ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -18,7 +19,7 @@ import { Button } from '@/components/ui/Button'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
-import { professions, newsCategories, departments, mockOrganizations } from '@/lib/mock-data'
+import { professions, newsCategories, departments } from '@/lib/mock-data'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Profession, Department, NewsCategory, Organization } from '@/lib/types'
 
@@ -249,24 +250,24 @@ function StepPreferences({ selected, onToggle }: { selected: NewsCategory[]; onT
   )
 }
 
-const mediaPublishers = mockOrganizations.filter((org) =>
-  ['media', 'asociacion', 'institucion', 'gremio', 'rematadora'].includes(org.category),
-)
+const FOLLOWABLE_CATEGORIES = ['media', 'asociacion', 'institucion', 'gremio', 'rematadora']
 
 function StepMedia({ selected, onToggle }: { selected: string[]; onToggle: (id: string) => void }) {
-  const [organizations, setOrganizations] = useState<Organization[]>(mediaPublishers)
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
     fetchOrganizations()
       .then((remoteOrganizations) => {
-        const followable = remoteOrganizations.filter((org) =>
-          ['media', 'asociacion', 'institucion', 'gremio', 'rematadora'].includes(org.category),
-        )
-        if (mounted && followable.length > 0) setOrganizations(followable)
+        if (!mounted) return
+        setOrganizations(remoteOrganizations.filter((org) => FOLLOWABLE_CATEGORIES.includes(org.category)))
       })
       .catch(() => {
-        if (mounted) setOrganizations(mediaPublishers)
+        if (mounted) setOrganizations([])
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
       })
     return () => {
       mounted = false
@@ -280,6 +281,13 @@ function StepMedia({ selected, onToggle }: { selected: string[]; onToggle: (id: 
       <Text variant="body" color={Colors.muted} style={styles.stepDesc}>
         Elegí asociaciones, instituciones, medios o rematadoras. Podés saltear este paso.
       </Text>
+      {loading ? (
+        <ActivityIndicator color={Colors.lime} style={{ marginTop: Spacing[4] }} />
+      ) : organizations.length === 0 ? (
+        <Text variant="body" color={Colors.muted} style={{ marginTop: Spacing[4] }}>
+          No hay cuentas disponibles por el momento.
+        </Text>
+      ) : (
       <View style={styles.mediaGrid}>
         {organizations.map((pub) => {
           const isActive = selected.includes(pub.id)
@@ -312,6 +320,7 @@ function StepMedia({ selected, onToggle }: { selected: string[]; onToggle: (id: 
           )
         })}
       </View>
+      )}
     </View>
   )
 }

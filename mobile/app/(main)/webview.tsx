@@ -8,17 +8,15 @@ import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
-import { mockEcosystemSites } from '@/lib/mock-data'
 
 export default function WebViewScreen() {
-  const { siteId } = useLocalSearchParams<{ siteId: string }>()
-  const site = mockEcosystemSites.find((s) => s.id === siteId)
+  const { url, title } = useLocalSearchParams<{ url: string; title?: string }>()
   const [loading, setLoading] = useState(true)
   const [canGoBack, setCanGoBack] = useState(false)
   const webViewRef = useRef<WebView>(null)
   const C = useColors()
 
-  if (!site) {
+  if (!url) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: C.background }]} edges={['top', 'bottom']}>
         <View style={styles.error}>
@@ -44,8 +42,8 @@ export default function WebViewScreen() {
         </TouchableOpacity>
 
         <View style={styles.navTitle}>
-          <Text variant="body" weight="semibold" numberOfLines={1}>{site.name}</Text>
-          <Text variant="label" color={C.muted} numberOfLines={1}>{site.url.replace(/^https?:\/\//, '')}</Text>
+          {title && <Text variant="body" weight="semibold" numberOfLines={1}>{title}</Text>}
+          <Text variant="label" color={C.muted} numberOfLines={1}>{url.replace(/^https?:\/\//, '')}</Text>
         </View>
 
         <TouchableOpacity onPress={() => router.back()} style={styles.navBtn} hitSlop={8}>
@@ -62,7 +60,7 @@ export default function WebViewScreen() {
 
       <WebView
         ref={webViewRef}
-        source={{ uri: site.url }}
+        source={{ uri: url }}
         style={styles.webview}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}

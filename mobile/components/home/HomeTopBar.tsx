@@ -10,8 +10,6 @@ interface Props {
   onMenuPress: () => void
 }
 
-// Única parte fija de la cabecera de Inicio — todo lo demás (saludo, buscador) scrollea
-// dentro de HomeGreetingCard.
 export function HomeTopBar({ onMenuPress }: Props) {
   return (
     <View style={styles.bar}>

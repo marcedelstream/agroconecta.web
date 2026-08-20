@@ -1,12 +1,12 @@
 import { ScrollView, View, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType } from 'react-native'
 import { router } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { goBack } from '@/lib/navigation'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { Card } from '@/components/ui/card'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { useColors } from '@/lib/theme-context'
+
+const R = Colors.redesign
 
 const FOUNDERS: { name: string; role: string; image: string | ImageSourcePropType; bio: string }[] = [
   {
@@ -48,88 +48,84 @@ const VALUES = [
 ]
 
 export default function NosotrosScreen() {
-  const C = useColors()
-  const insets = useSafeAreaInsets()
-
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing[3], borderBottomColor: C.border, backgroundColor: C.surface }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={C.foreground} />
-        </TouchableOpacity>
-        <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>Nosotros</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <View style={[styles.root, { backgroundColor: R.surface }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Nosotros</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      </SafeAreaView>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing[8] }]}
-      >
-        <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>QUIÉNES SOMOS</Text>
-        <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground, lineHeight: 32 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>QUIÉNES SOMOS</Text>
+        <Text family="noto-sans" weight="extrabold" size={22} lineHeight={29} color={R.foreground}>
           Los fundadores del ecosistema digital agropecuario de Paraguay
         </Text>
-        <Text variant="body" style={{ color: C.muted, lineHeight: 22 }}>
+        <Text family="noto-sans" size={13.5} lineHeight={21} color={R.mutedForeground} style={styles.intro}>
           Agroconecta nace para crear tecnología propia para el campo paraguayo: plataformas simples,
           útiles y pensadas desde las necesidades reales del sector.
         </Text>
 
-        <Card style={styles.missionCard} padding={4}>
-          <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>NUESTRA MISIÓN</Text>
-          <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1] }}>
+        <View style={styles.missionCard}>
+          <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>NUESTRA MISIÓN</Text>
+          <Text family="noto-sans" weight="semibold" size={15} color={R.foreground} style={{ marginTop: 4 }}>
             Tecnología construida desde adentro del campo.
           </Text>
-        </Card>
+        </View>
 
         <View style={styles.section}>
-          <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>VISIÓN</Text>
-          <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1] }}>
+          <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>VISIÓN</Text>
+          <Text family="noto-sans" weight="semibold" size={15} color={R.foreground} style={{ marginTop: 4 }}>
             Soluciones digitales propias para el agro
           </Text>
-          <Text variant="body" style={{ color: C.muted, lineHeight: 22, marginTop: Spacing[2] }}>
+          <Text family="noto-sans" size={13.5} lineHeight={21} color={R.mutedForeground} style={{ marginTop: 8 }}>
             El sector agropecuario paraguayo es uno de los motores de la economía nacional. Agroconecta
             busca darle herramientas digitales diseñadas para su forma de trabajar, comunicarse y tomar
             decisiones.
           </Text>
-          <Text variant="body" style={{ color: C.muted, lineHeight: 22, marginTop: Spacing[2] }}>
+          <Text family="noto-sans" size={13.5} lineHeight={21} color={R.mutedForeground} style={{ marginTop: 8 }}>
             Desarrollamos productos que ayudan a ordenar la información, amplificar instituciones,
             acercar eventos y conectar mejor a productores, profesionales, marcas y organizaciones.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>EQUIPO</Text>
-          <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1], marginBottom: Spacing[3] }}>
+          <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>EQUIPO</Text>
+          <Text family="noto-sans" weight="semibold" size={15} color={R.foreground} style={{ marginTop: 4, marginBottom: 12 }}>
             Equipo directivo
           </Text>
-          <View style={{ gap: Spacing[3] }}>
+          <View style={{ gap: 12 }}>
             {FOUNDERS.map((founder) => (
-              <Card key={founder.name} padding={4}>
+              <View key={founder.name} style={styles.card}>
                 <View style={styles.founderRow}>
                   <Image source={typeof founder.image === 'string' ? { uri: founder.image } : founder.image} style={styles.founderPhoto} />
                   <View style={{ flex: 1 }}>
-                    <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground }}>{founder.name}</Text>
-                    <Text variant="caption" weight="semibold" style={{ color: Colors.lime, marginTop: 2 }}>{founder.role}</Text>
+                    <Text family="noto-sans" weight="semibold" size={14} color={R.foreground}>{founder.name}</Text>
+                    <Text family="noto-sans" weight="semibold" size={11.5} color={Colors.lime} style={{ marginTop: 2 }}>{founder.role}</Text>
                   </View>
                 </View>
-                <Text variant="body" style={{ color: C.muted, lineHeight: 21, marginTop: Spacing[3] }}>{founder.bio}</Text>
-              </Card>
+                <Text family="noto-sans" size={12.5} lineHeight={19} color={R.mutedForeground} style={{ marginTop: 12 }}>{founder.bio}</Text>
+              </View>
             ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>VALORES</Text>
-          <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1], marginBottom: Spacing[3] }}>
+          <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>VALORES</Text>
+          <Text family="noto-sans" weight="semibold" size={15} color={R.foreground} style={{ marginTop: 4, marginBottom: 12 }}>
             Lo que nos guía
           </Text>
-          <View style={{ gap: Spacing[2.5] }}>
+          <View style={{ gap: 10 }}>
             {VALUES.map((value) => (
-              <Card key={value.number} padding={4}>
-                <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>{value.number}</Text>
-                <Text variant="body" weight="semibold" family="poppins" style={{ color: C.foreground, marginTop: Spacing[1.5] }}>{value.title}</Text>
-                <Text variant="body" style={{ color: C.muted, lineHeight: 21, marginTop: Spacing[1] }}>{value.description}</Text>
-              </Card>
+              <View key={value.number} style={styles.card}>
+                <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>{value.number}</Text>
+                <Text family="noto-sans" weight="semibold" size={14} color={R.foreground} style={{ marginTop: 6 }}>{value.title}</Text>
+                <Text family="noto-sans" size={12.5} lineHeight={19} color={R.mutedForeground} style={{ marginTop: 4 }}>{value.description}</Text>
+              </View>
             ))}
           </View>
         </View>
@@ -140,23 +136,20 @@ export default function NosotrosScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing[5],
-    paddingBottom: Spacing[3],
-    borderBottomWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
-  content: { padding: Spacing[5], gap: Spacing[3] },
-  missionCard: { borderColor: `${Colors.lime}40`, backgroundColor: `${Colors.lime}0f` },
-  section: { marginTop: Spacing[3] },
-  founderRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3] },
-  founderPhoto: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: `${Colors.lime}60`,
-  },
+  content: { padding: 20, gap: 12, paddingBottom: 40 },
+  eyebrow: { letterSpacing: 0.6 },
+  intro: { marginTop: 2 },
+  missionCard: { borderRadius: 16, padding: 16, backgroundColor: R.limeSoftBg, marginTop: 8 },
+  section: { marginTop: 6 },
+  card: { backgroundColor: R.secondary, borderRadius: 16, padding: 16 },
+  founderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  founderPhoto: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: `${Colors.lime}60` },
 })

@@ -3,11 +3,10 @@ import { View, TouchableOpacity, TextInput, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { useColors } from '@/lib/theme-context'
-import { Radius, Spacing } from '@/constants/spacing'
-import { Fonts } from '@/constants/typography'
 import { supabase } from '@/lib/supabase'
 import { useApp } from '@/lib/app-context'
+
+const R = Colors.redesign
 
 interface Props {
   serviceId: string
@@ -24,7 +23,6 @@ export function ServiceLeadForm({
   submitLabel = 'Enviar consulta',
   successTitle = '¡Consulta enviada!',
 }: Props) {
-  const C = useColors()
   const { user } = useApp()
   const [phone, setPhone] = useState('')
   const [info, setInfo] = useState('')
@@ -61,19 +59,19 @@ export function ServiceLeadForm({
   if (sent) {
     return (
       <View style={styles.successBox}>
-        <Ionicons name="checkmark-circle" size={56} color={Colors.lime} />
-        <Text variant="title" weight="bold" family="poppins" style={{ textAlign: 'center' }}>
+        <Ionicons name="checkmark-circle" size={52} color={Colors.lime} />
+        <Text family="noto-sans" weight="bold" size={19} color={R.foreground} style={{ textAlign: 'center' }}>
           {successTitle}
         </Text>
-        <Text variant="body" color={C.muted} style={{ textAlign: 'center' }}>
+        <Text family="noto-sans" size={13.5} color={R.mutedForeground} style={{ textAlign: 'center' }}>
           Nos comunicaremos a la brevedad al número proporcionado.
         </Text>
         <TouchableOpacity
-          style={[styles.submitBtn, { marginTop: Spacing[2] }]}
+          style={[styles.submitBtn, { marginTop: 8 }]}
           onPress={() => { setSent(false); setPhone(''); setInfo('') }}
           activeOpacity={0.85}
         >
-          <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviar otra consulta</Text>
+          <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">Enviar otra consulta</Text>
         </TouchableOpacity>
       </View>
     )
@@ -81,35 +79,33 @@ export function ServiceLeadForm({
 
   return (
     <View style={styles.formFields}>
-      {/* Teléfono */}
       <View style={styles.field}>
-        <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+        <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
           NÚMERO DE TELÉFONO *
         </Text>
-        <View style={[styles.inputBox, { backgroundColor: C.secondary, borderColor: C.border }]}>
-          <Ionicons name="call-outline" size={18} color={C.muted} />
+        <View style={styles.inputBox}>
+          <Ionicons name="call-outline" size={18} color={R.mutedForeground} />
           <TextInput
-            style={[styles.textInput, { color: C.foreground }]}
+            style={styles.textInput}
             value={phone}
             onChangeText={setPhone}
             placeholder="+595 9xx xxx xxx"
-            placeholderTextColor={C.muted}
+            placeholderTextColor={R.mutedForeground}
             keyboardType="phone-pad"
           />
         </View>
       </View>
 
-      {/* Info adicional */}
       <View style={styles.field}>
-        <Text variant="caption" weight="semibold" style={[styles.fieldLabel, { color: C.muted }]}>
+        <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
           INFORMACIÓN ADICIONAL
         </Text>
         <TextInput
-          style={[styles.textArea, { backgroundColor: C.secondary, borderColor: C.border, color: C.foreground }]}
+          style={styles.textArea}
           value={info}
           onChangeText={setInfo}
           placeholder={infoPlaceholder}
-          placeholderTextColor={C.muted}
+          placeholderTextColor={R.mutedForeground}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -122,54 +118,45 @@ export function ServiceLeadForm({
         disabled={loading || !phone.trim()}
         activeOpacity={0.85}
       >
-        {loading ? (
-          <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>Enviando...</Text>
-        ) : (
-          <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>{submitLabel}</Text>
-        )}
+        <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">
+          {loading ? 'Enviando...' : submitLabel}
+        </Text>
       </TouchableOpacity>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  formFields: { gap: Spacing[4] },
-  field: { gap: Spacing[1.5] },
-  fieldLabel: { letterSpacing: 0.6, fontSize: 11 },
+  formFields: { gap: 16 },
+  field: { gap: 6 },
+  fieldLabel: { letterSpacing: 0.6 },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    gap: Spacing[2],
+    borderRadius: 13,
+    backgroundColor: R.secondary,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 9,
   },
-  textInput: {
-    flex: 1,
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
-  },
+  textInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 14, color: R.foreground },
   textArea: {
-    borderWidth: 1,
-    borderRadius: Radius.base,
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    fontFamily: Fonts.dmSans,
-    fontSize: 15,
+    borderRadius: 13,
+    backgroundColor: R.secondary,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: 'NotoSans-Regular',
+    fontSize: 14,
+    color: R.foreground,
     minHeight: 100,
   },
   submitBtn: {
     backgroundColor: Colors.lime,
-    borderRadius: Radius.base,
+    borderRadius: 13,
     alignItems: 'center',
-    paddingVertical: Spacing[4],
-    marginTop: Spacing[2],
+    paddingVertical: 15,
+    marginTop: 6,
   },
   submitBtnDisabled: { opacity: 0.5 },
-  successBox: {
-    alignItems: 'center',
-    gap: Spacing[4],
-    paddingVertical: Spacing[8],
-  },
+  successBox: { alignItems: 'center', gap: 12, paddingVertical: 32 },
 })

@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingRight: 16 },
   chip: {
     borderWidth: 1,
     borderColor: R.header.chipBorder,

@@ -8,10 +8,12 @@ import { HeaderAvatar } from '@/components/navigation/HeaderAvatar'
 import { PlatformList } from '@/components/ecosystem/PlatformList'
 import { ListingCard } from '@/components/ecosystem/ListingCard'
 import { BookCard } from '@/components/library/BookCard'
+import { SectionOrderSheet } from '@/components/home/SectionOrderSheet'
 import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { mockEcosystemListings } from '@/lib/mock-data'
 import { fetchPublishedPosts, fetchEcosystemListings, fetchLibraryItems } from '@/lib/supabase-repositories'
+import { ECOSYSTEM_SECTIONS, normalizeEcosystemSectionOrder, type EcosystemSectionKey } from '@/lib/ecosystem-sections'
 import type { EcosystemListing, LibraryItem, Post } from '@/lib/types'
 
 const R = Colors.redesign
@@ -41,12 +43,13 @@ function matches(q: string, ...values: (string | undefined)[]) {
 }
 
 export default function EcosystemScreen() {
-  const { user } = useApp()
+  const { user, updateUser } = useApp()
   const [videos, setVideos] = useState<Post[]>([])
   const [listings, setListings] = useState<EcosystemListing[]>([])
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([])
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<EcoCategory>('todo')
+  const [showOrderSheet, setShowOrderSheet] = useState(false)
 
   useEffect(() => {
     fetchPublishedPosts()
@@ -94,6 +97,126 @@ export default function EcosystemScreen() {
   const noResults =
     isSearching && filteredVideos.length === 0 && empleos.length === 0 && clasificados.length === 0 && cursos.length === 0 && library.length === 0
 
+  const sectionContent: Record<EcosystemSectionKey, React.ReactNode> = {
+    videos: filteredVideos.length > 0 ? (
+      <View key="videos" style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Videos</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/videos' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todo
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.videosRow}>
+          {filteredVideos.map((video) => (
+            <TouchableOpacity
+              key={video.id}
+              style={styles.videoCard}
+              activeOpacity={0.85}
+              onPress={() => router.push(`/(main)/video/${video.id}` as any)}
+            >
+              <View style={styles.videoThumbWrap}>
+                <Image source={{ uri: video.imageUrl }} style={styles.videoThumb} resizeMode="cover" />
+                <View style={styles.videoOverlay} />
+                <View style={styles.playBtn}>
+                  <Ionicons name="play" size={13} color={R.foreground} />
+                </View>
+                <View style={styles.durationPill}>
+                  <Text family="noto-sans" weight="semibold" size={10.5} color="#FFFFFF">{videoDuration(video)}</Text>
+                </View>
+              </View>
+              <View style={styles.videoBody}>
+                <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} numberOfLines={2}>
+                  {video.title}
+                </Text>
+                <Text family="noto-sans" size={11.5} color={R.mutedForeground} style={styles.videoChannel}>
+                  {video.source}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    ) : null,
+
+    empleos: empleos.length > 0 ? (
+      <View key="empleos" style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Empleos</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/bolsa-trabajo' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todo
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.listingsStack}>
+          {empleos.map((item) => (
+            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+          ))}
+        </View>
+      </View>
+    ) : null,
+
+    clasificados: clasificados.length > 0 ? (
+      <View key="clasificados" style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Clasificados</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/clasificados' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todo
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.listingsStack}>
+          {clasificados.map((item) => (
+            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+          ))}
+        </View>
+      </View>
+    ) : null,
+
+    cursos: cursos.length > 0 ? (
+      <View key="cursos" style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Cursos</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/cursos' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todo
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.listingsStack}>
+          {cursos.map((item) => (
+            <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
+          ))}
+        </View>
+      </View>
+    ) : null,
+
+    biblioteca: library.length > 0 ? (
+      <View key="biblioteca" style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Biblioteca del agro</Text>
+          <TouchableOpacity onPress={() => router.push('/(main)/library' as any)} hitSlop={8}>
+            <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
+              Ver todo
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.libraryRow}>
+          {library.map((item) => (
+            <BookCard key={item.id} item={item} onPress={() => router.push(`/(main)/book/${item.id}` as any)} />
+          ))}
+        </ScrollView>
+      </View>
+    ) : null,
+  }
+
+  const orderedSections = normalizeEcosystemSectionOrder(user?.ecosystemSectionOrder)
+    .map((key) => sectionContent[key])
+    .filter((node) => node !== null)
+
   if (!user) return null
 
   return (
@@ -117,7 +240,7 @@ export default function EcosystemScreen() {
             />
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroller} contentContainerStyle={styles.chipsRow}>
             {CHIPS.map((chip) => {
               const active = chip.key === activeCategory
               return (
@@ -140,9 +263,15 @@ export default function EcosystemScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {activeCategory === 'todo' && !isSearching && (
           <View style={styles.introSection}>
-            <Text family="noto-sans" weight="medium" size={10} color={R.mutedForeground2} style={styles.introEyebrow}>
-              MÁS QUE NOTICIAS
-            </Text>
+            <View style={styles.introHeadRow}>
+              <Text family="noto-sans" weight="medium" size={10} color={R.mutedForeground2} style={styles.introEyebrow}>
+                MÁS QUE NOTICIAS
+              </Text>
+              <TouchableOpacity onPress={() => setShowOrderSheet(true)} style={styles.adjustChip} activeOpacity={0.8}>
+                <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground}>Ajustar interés</Text>
+                <Ionicons name="swap-vertical-outline" size={12} color={R.mutedForeground} />
+              </TouchableOpacity>
+            </View>
             <Text family="noto-sans" weight="extrabold" size={20} lineHeight={26} color={R.foreground}>
               El ecosistema del agro,{'\n'}en una sola app
             </Text>
@@ -161,119 +290,20 @@ export default function EcosystemScreen() {
           </View>
         )}
 
-        {filteredVideos.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Videos</Text>
-              <TouchableOpacity onPress={() => router.push('/(main)/videos' as any)} hitSlop={8}>
-                <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-                  Ver todo
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.videosRow}>
-              {filteredVideos.map((video) => (
-                <TouchableOpacity
-                  key={video.id}
-                  style={styles.videoCard}
-                  activeOpacity={0.85}
-                  onPress={() => router.push(`/(main)/video/${video.id}` as any)}
-                >
-                  <View style={styles.videoThumbWrap}>
-                    <Image source={{ uri: video.imageUrl }} style={styles.videoThumb} resizeMode="cover" />
-                    <View style={styles.videoOverlay} />
-                    <View style={styles.playBtn}>
-                      <Ionicons name="play" size={13} color={R.foreground} />
-                    </View>
-                    <View style={styles.durationPill}>
-                      <Text family="noto-sans" weight="semibold" size={10.5} color="#FFFFFF">{videoDuration(video)}</Text>
-                    </View>
-                  </View>
-                  <Text family="noto-sans" weight="semibold" size={13.5} lineHeight={18} color={R.foreground} style={styles.videoTitle} numberOfLines={2}>
-                    {video.title}
-                  </Text>
-                  <Text family="noto-sans" size={11.5} color={R.mutedForeground} style={styles.videoChannel}>
-                    {video.source}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {empleos.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Empleos</Text>
-              <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/bolsa-trabajo' as any)} hitSlop={8}>
-                <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-                  Ver todo
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.listingsStack}>
-              {empleos.map((item) => (
-                <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {clasificados.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Clasificados</Text>
-              <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/clasificados' as any)} hitSlop={8}>
-                <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-                  Ver todo
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.listingsStack}>
-              {clasificados.map((item) => (
-                <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {cursos.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Cursos</Text>
-              <TouchableOpacity onPress={() => router.push('/(main)/ecosistema/cursos' as any)} hitSlop={8}>
-                <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-                  Ver todo
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.listingsStack}>
-              {cursos.map((item) => (
-                <ListingCard key={item.id} listing={item} onPress={() => router.push(`/(main)/listing/${item.id}` as any)} />
-              ))}
-            </View>
-          </View>
-        )}
-
-        {library.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Biblioteca del agro</Text>
-              <TouchableOpacity onPress={() => router.push('/(main)/library' as any)} hitSlop={8}>
-                <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
-                  Ver todo
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.libraryRow}>
-              {library.map((item) => (
-                <BookCard key={item.id} item={item} onPress={() => router.push(`/(main)/book/${item.id}` as any)} />
-              ))}
-            </ScrollView>
-          </View>
-        )}
+        {orderedSections}
 
       </ScrollView>
+
+      {showOrderSheet && (
+        <SectionOrderSheet
+          title="Ajustar interés"
+          sections={ECOSYSTEM_SECTIONS}
+          normalize={normalizeEcosystemSectionOrder}
+          order={user.ecosystemSectionOrder}
+          onChange={(order) => updateUser({ ecosystemSectionOrder: order })}
+          onClose={() => setShowOrderSheet(false)}
+        />
+      )}
     </View>
   )
 }
@@ -300,7 +330,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
-  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  chipsScroller: { marginHorizontal: -20 },
+  chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingHorizontal: 20, paddingRight: 28 },
   chip: { borderWidth: 1, borderColor: R.header.chipBorder, borderRadius: 9999, paddingHorizontal: 13, paddingVertical: 7 },
   chipActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },
   content: { paddingTop: 20, paddingBottom: 26 },
@@ -310,9 +341,14 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 12 },
   underline: { textDecorationLine: 'underline' },
   listingsStack: { paddingHorizontal: 20, gap: 10 },
-  videosRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20 },
-  videoCard: { width: 214 },
-  videoThumbWrap: { borderRadius: 14, overflow: 'hidden', height: 120, position: 'relative' },
+  // Mismo patrón "peek" que la Agenda del sector (EventsSection): padding chico a la
+  // derecha en vez de simétrico, así la última tarjeta queda visible entera al llegar al
+  // final del scroll en vez de quedar recortada contra el borde de la pantalla.
+  videosRow: { flexDirection: 'row', gap: 10, paddingLeft: 20, paddingRight: 8 },
+  // Tarjeta unificada (fondo + radio + overflow hidden en el contenedor, como en Agenda)
+  // en vez de solo redondear la miniatura — así imagen y texto quedan en un mismo molde.
+  videoCard: { width: 214, backgroundColor: R.surface, borderRadius: 16, overflow: 'hidden' },
+  videoThumbWrap: { height: 120, position: 'relative' },
   videoThumb: { width: '100%', height: '100%' },
   videoOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.18)' },
   playBtn: {
@@ -335,10 +371,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 3,
   },
-  videoTitle: { marginTop: 9 },
-  videoChannel: { marginTop: 3 },
-  libraryRow: { flexDirection: 'row', gap: 14, paddingHorizontal: 20 },
+  videoBody: { padding: 12, gap: 5 },
+  videoChannel: {},
+  libraryRow: { flexDirection: 'row', gap: 14, paddingLeft: 20, paddingRight: 8 },
   introSection: { paddingHorizontal: 20, marginTop: 4, marginBottom: 28 },
-  introEyebrow: { letterSpacing: 0.7, marginBottom: 5 },
+  introHeadRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 },
+  introEyebrow: { letterSpacing: 0.7 },
+  adjustChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: R.border,
+    borderRadius: 9999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
   platformsWrap: { marginTop: 14 },
 })

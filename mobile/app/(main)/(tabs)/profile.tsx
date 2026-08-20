@@ -13,7 +13,8 @@ import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { getDepartmentLabel, getProfessionLabel } from '@/lib/mock-data'
 import { fetchLibraryItems, fetchUserLibrary } from '@/lib/supabase-repositories'
-import { getLocalAvatarUri, pickAndSaveLocalAvatar, removeLocalAvatar } from '@/lib/local-avatar'
+import { pickAndSaveLocalAvatar, removeLocalAvatar } from '@/lib/local-avatar'
+import { useLocalAvatar } from '@/lib/local-avatar-context'
 import { MediaSheet } from '@/components/profile/MediaSheet'
 import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
@@ -38,7 +39,7 @@ export default function ProfileScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [savedBooks, setSavedBooks] = useState<LibraryItem[]>([])
   const [libraryLoading, setLibraryLoading] = useState(true)
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
+  const { avatarUri, setAvatarUri } = useLocalAvatar()
 
   useEffect(() => {
     if (!user?.id) return
@@ -50,10 +51,6 @@ export default function ProfileScreen() {
       .catch(() => setSavedBooks([]))
       .finally(() => setLibraryLoading(false))
   }, [user?.id])
-
-  useEffect(() => {
-    getLocalAvatarUri().then(setAvatarUri)
-  }, [])
 
   async function handlePickAvatar() {
     const uri = await pickAndSaveLocalAvatar()
@@ -130,7 +127,7 @@ export default function ProfileScreen() {
               <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{initial}</Text>
+                <Text family="noto-sans" weight="extrabold" size={28} color={Colors.lime}>{initial}</Text>
               </View>
             )}
             <View style={styles.avatarEditBadge}>
@@ -331,7 +328,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarImage: { width: 76, height: 76, borderRadius: 38, borderWidth: 1, borderColor: R.header.chipBorder },
-  avatarText: { fontSize: 28, fontWeight: '800', color: Colors.lime },
   avatarEditBadge: {
     position: 'absolute',
     right: -2,

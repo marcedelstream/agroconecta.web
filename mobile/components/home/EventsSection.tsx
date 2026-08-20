@@ -52,7 +52,7 @@ export function EventsSection({ search }: Props) {
   return (
     <View>
       <View style={styles.headerRow}>
-        <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Agenda del sector</Text>
+        <Text family="noto-sans" weight="bold" size={17} color={R.foreground}>Eventos Agro</Text>
         <TouchableOpacity onPress={() => router.push('/(main)/events' as any)} hitSlop={8}>
           <Text family="noto-sans" weight="semibold" size={12} color={R.foreground} style={styles.underline}>
             Mostrar más

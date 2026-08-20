@@ -1,6 +1,7 @@
-import { Switch, View, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { SettingsSheet } from './SettingsSheet'
 import { Text } from '@/components/ui/Text'
+import { AnimatedToggle } from '@/components/ui/AnimatedToggle'
 import { Ionicons } from '@expo/vector-icons'
 import { useColors } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
@@ -47,12 +48,7 @@ export function NotificationsSheet({ onClose }: Props) {
               <Ionicons name={row.icon} size={18} color={Colors.lime} />
             </View>
             <Text variant="body" weight="medium" style={{ flex: 1, color: C.foreground }}>{row.label}</Text>
-            <Switch
-              value={prefs[row.key]}
-              onValueChange={() => toggle(row.key)}
-              trackColor={{ false: C.border, true: `${Colors.lime}80` }}
-              thumbColor={prefs[row.key] ? Colors.lime : C.muted}
-            />
+            <AnimatedToggle value={prefs[row.key]} onValueChange={() => toggle(row.key)} />
           </View>
         ))}
       </View>

@@ -31,15 +31,15 @@ export function SectionOrderSheet({ title = 'Ajustar interés', sections, order,
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 16, bounciness: 5 }),
+      Animated.timing(overlayAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start()
   }, [])
 
   function handleClose() {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: SHEET_H, duration: 150, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: SHEET_H, duration: 200, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 0, duration: 160, useNativeDriver: true }),
     ]).start(onClose)
   }
 

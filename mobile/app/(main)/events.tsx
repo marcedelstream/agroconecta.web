@@ -5,7 +5,6 @@ import { goBack } from '@/lib/navigation'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { LiveEventsTicker } from '@/components/home/LiveEventsTicker'
 import { HeaderAvatar } from '@/components/navigation/HeaderAvatar'
 import { fetchAllEvents } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
@@ -140,6 +139,25 @@ export default function EventsListScreen() {
         </View>
       </SafeAreaView>
 
+      <View style={[styles.searchWrap, styles.searchWrapStatic]}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={17} color={R.mutedForeground} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar evento, lugar..."
+            placeholderTextColor={R.mutedForeground}
+            style={styles.searchInput}
+            autoCorrect={false}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+              <Ionicons name="close-circle" size={16} color={R.mutedForeground} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator color={Colors.lime} size="large" />
@@ -161,34 +179,11 @@ export default function EventsListScreen() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           ListHeaderComponent={
-            <>
-              <View style={styles.searchWrap}>
-                <View style={styles.searchBox}>
-                  <Ionicons name="search-outline" size={17} color={R.mutedForeground} />
-                  <TextInput
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Buscar evento, lugar..."
-                    placeholderTextColor={R.mutedForeground}
-                    style={styles.searchInput}
-                    autoCorrect={false}
-                  />
-                  {search.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-                      <Ionicons name="close-circle" size={16} color={R.mutedForeground} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-
-              <LiveEventsTicker events={allEvents} />
-
-              <TouchableOpacity style={styles.suggestRow} activeOpacity={0.8} onPress={() => Linking.openURL(SUGGEST_URL)}>
-                <Ionicons name="add-circle-outline" size={13} color={Colors.lime} />
-                <Text family="noto-sans" weight="semibold" size={11.5} color={Colors.lime}>Sugerir un evento</Text>
-                <Ionicons name="open-outline" size={11} color={R.mutedForeground} />
-              </TouchableOpacity>
-            </>
+            <TouchableOpacity style={styles.suggestRow} activeOpacity={0.8} onPress={() => Linking.openURL(SUGGEST_URL)}>
+              <Ionicons name="add-circle-outline" size={13} color={Colors.lime} />
+              <Text family="noto-sans" weight="semibold" size={11.5} color={Colors.lime}>Sugerir un evento</Text>
+              <Ionicons name="open-outline" size={11} color={R.mutedForeground} />
+            </TouchableOpacity>
           }
           renderSectionHeader={({ section }) => (
             <View style={styles.dayHeader}>
@@ -269,6 +264,7 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center' },
   list: { paddingHorizontal: 20, paddingTop: 4 },
   searchWrap: { marginTop: 16, marginBottom: 4 },
+  searchWrapStatic: { paddingHorizontal: 20 },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',

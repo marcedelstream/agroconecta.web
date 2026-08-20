@@ -41,15 +41,15 @@ export function DrawerMenu({ onClose }: Props) {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: 0, duration: 160, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 1, duration: 160, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 4 }),
+      Animated.timing(overlayAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start()
   }, [])
 
   function handleClose(route?: string) {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: DRAWER_W, duration: 140, useNativeDriver: true }),
-      Animated.timing(overlayAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: DRAWER_W, duration: 200, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 0, duration: 160, useNativeDriver: true }),
     ]).start(() => {
       onClose()
       if (route) router.push(route as any)

@@ -31,7 +31,7 @@ export function SectionOrderSheet({ title = 'Ajustar interés', sections, order,
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 16, bounciness: 5 }),
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 16, bounciness: 0 }),
       Animated.timing(overlayAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start()
   }, [])
@@ -70,6 +70,7 @@ export function SectionOrderSheet({ title = 'Ajustar interés', sections, order,
 
         <DraggableFlatList
           data={items}
+          style={styles.listFlex}
           keyExtractor={(key) => key}
           contentContainerStyle={styles.list}
           onDragEnd={({ data }) => handleDragEnd(data)}
@@ -110,6 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: R.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginTop: 12, backgroundColor: R.border },
   header: {
@@ -123,6 +125,7 @@ const styles = StyleSheet.create({
     borderBottomColor: R.divider,
   },
   subtitle: { marginTop: 3 },
+  listFlex: { flex: 1 },
   list: { padding: 20, gap: 10 },
   row: {
     flexDirection: 'row',

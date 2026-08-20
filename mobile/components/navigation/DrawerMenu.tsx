@@ -41,7 +41,7 @@ export function DrawerMenu({ onClose }: Props) {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 4 }),
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 0 }),
       Animated.timing(overlayAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start()
   }, [])

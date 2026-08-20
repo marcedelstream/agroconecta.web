@@ -15,7 +15,7 @@ export const DEFAULT_SECTION_ORDER: HomeSectionKey[] = ['featured', 'market', 's
 export const HOME_SECTIONS: HomeSectionMeta[] = [
   { key: 'featured', label: 'Eventos destacados', icon: 'star-outline' },
   { key: 'market', label: 'Tu mercado hoy', icon: 'trending-up-outline' },
-  { key: 'services', label: 'Remates, empleos y más', icon: 'grid-outline' },
+  { key: 'services', label: 'Ecosistema', icon: 'grid-outline' },
   { key: 'live', label: 'En vivo', icon: 'radio-outline' },
   { key: 'news', label: 'Noticias para vos', icon: 'newspaper-outline' },
   { key: 'agenda', label: 'Eventos Agro', icon: 'calendar-outline' },

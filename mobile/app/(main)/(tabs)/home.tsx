@@ -11,12 +11,12 @@ import { QuickServicesGrid } from '@/components/home/QuickServicesGrid'
 import { LiveCard } from '@/components/home/LiveCard'
 import { NewsForYou } from '@/components/home/NewsForYou'
 import { EventsSection } from '@/components/home/EventsSection'
-import { FeaturedEventsSection } from '@/components/home/FeaturedEventsSection'
+import { FeaturedEventsSection, type FeaturedItem } from '@/components/home/FeaturedEventsSection'
 import { SectionOrderSheet } from '@/components/home/SectionOrderSheet'
 import { DrawerMenu } from '@/components/navigation/DrawerMenu'
 import { buildSegment, isNewsContent } from '@/lib/feed-utils'
 import { mockNews } from '@/lib/mock-data'
-import { fetchPublishedPosts, fetchLiveVideos } from '@/lib/supabase-repositories'
+import { fetchPublishedPosts, fetchLiveVideos, fetchFeaturedEvents, fetchEventBySlug } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
 import { HOME_SECTIONS, normalizeSectionOrder, type HomeSectionKey } from '@/lib/home-sections'
 import { Colors } from '@/constants/colors'
@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const { user, updateUser } = useApp()
   const [posts, setPosts] = useState<Post[]>([])
   const [liveVideo, setLiveVideo] = useState<Post | null>(null)
+  const [featuredEvents, setFeaturedEvents] = useState<FeaturedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [adRefreshKey, setAdRefreshKey] = useState(0)
@@ -54,18 +55,34 @@ export default function HomeScreen() {
     }
   }, [])
 
+  const loadFeaturedEvents = useCallback(async () => {
+    try {
+      const mediaList = await fetchFeaturedEvents()
+      const resolved = await Promise.all(
+        mediaList.map(async (media) => {
+          const event = await fetchEventBySlug(media.eventSlug).catch(() => null)
+          if (!event || (!media.bannerImageUrl && !event.imageUrl)) return null
+          return { media, event }
+        })
+      )
+      setFeaturedEvents(resolved.filter((item): item is FeaturedItem => item !== null))
+    } catch {
+      setFeaturedEvents([])
+    }
+  }, [])
+
   useEffect(() => {
     let mounted = true
-    Promise.all([loadPosts(), loadLive()]).finally(() => { if (mounted) setLoading(false) })
+    Promise.all([loadPosts(), loadLive(), loadFeaturedEvents()]).finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [loadPosts, loadLive])
+  }, [loadPosts, loadLive, loadFeaturedEvents])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     setAdRefreshKey((k) => k + 1)
-    await Promise.all([loadPosts(), loadLive()])
+    await Promise.all([loadPosts(), loadLive(), loadFeaturedEvents()])
     setRefreshing(false)
-  }, [loadPosts, loadLive])
+  }, [loadPosts, loadLive, loadFeaturedEvents])
 
   const filtered = useMemo(() => {
     const highlighted = posts.find((p) => p.isHighlighted)
@@ -80,7 +97,7 @@ export default function HomeScreen() {
   }, [])
 
   const widgetContent: Record<HomeSectionKey, React.ReactNode> = {
-    featured: <FeaturedEventsSection />,
+    featured: featuredEvents.length > 0 ? <FeaturedEventsSection items={featuredEvents} /> : null,
     market: <PriceBoard />,
     services: <QuickServicesGrid />,
     live: liveVideo ? <LiveCard video={liveVideo} /> : null,

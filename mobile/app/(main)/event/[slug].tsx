@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   View, ScrollView, Image, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator, Linking, Share,
+  type NativeSyntheticEvent, type NativeScrollEvent, type LayoutChangeEvent,
 } from 'react-native'
 import { useLocalSearchParams, router, Stack } from 'expo-router'
 import { goBack } from '@/lib/navigation'
@@ -20,8 +21,9 @@ import type { AgroEvent, EventMedia, EventScheduleItem, Post } from '@/lib/types
 
 const R = Colors.redesign
 const REMINDED_EVENTS_KEY = '@agroconecta:reminded_events'
+const STICKY_THRESHOLD = 190
 
-type HubTab = 'info' | 'programa' | 'noticias'
+type JumpKey = 'info' | 'programa' | 'noticias'
 
 async function getRemindedEvents(): Promise<string[]> {
   try {
@@ -92,7 +94,11 @@ export default function EventDetailScreen() {
   const [schedule, setSchedule] = useState<EventScheduleItem[]>([])
   const [media, setMedia] = useState<EventMedia | null>(null)
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([])
-  const [tab, setTab] = useState<HubTab>('info')
+  const [showSticky, setShowSticky] = useState(false)
+
+  const scrollRef = useRef<ScrollView>(null)
+  const contentTop = useRef(0)
+  const sectionOffsets = useRef<Partial<Record<JumpKey, number>>>({})
 
   // Limpiar estado anterior al cambiar slug para evitar pestañeo
   useEffect(() => {
@@ -101,7 +107,7 @@ export default function EventDetailScreen() {
     setSchedule([])
     setMedia(null)
     setRelatedPosts([])
-    setTab('info')
+    setShowSticky(false)
     setLoading(true)
     fetchEventBySlug(slug)
       .then(setEvent)
@@ -113,12 +119,26 @@ export default function EventDetailScreen() {
     fetchPostsByEventTag(slug).then((posts) => setRelatedPosts(posts.filter(isNewsContent))).catch(() => setRelatedPosts([]))
   }, [slug])
 
-  const tabs: { key: HubTab; label: string }[] = [
+  const jumpLinks: { key: JumpKey; label: string }[] = [
     { key: 'info', label: 'Info' },
-    ...(schedule.length > 0 ? [{ key: 'programa' as HubTab, label: 'Programa' }] : []),
-    ...(relatedPosts.length > 0 ? [{ key: 'noticias' as HubTab, label: 'Noticias' }] : []),
+    ...(schedule.length > 0 ? [{ key: 'programa' as JumpKey, label: 'Programa' }] : []),
+    ...(relatedPosts.length > 0 ? [{ key: 'noticias' as JumpKey, label: 'Noticias' }] : []),
   ]
-  const showTabs = tabs.length > 1
+
+  function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const shouldShow = e.nativeEvent.contentOffset.y > STICKY_THRESHOLD
+    setShowSticky((prev) => (prev === shouldShow ? prev : shouldShow))
+  }
+
+  function jumpTo(key: JumpKey) {
+    const y = sectionOffsets.current[key]
+    if (y === undefined) return
+    scrollRef.current?.scrollTo({ y: contentTop.current + y - 16, animated: true })
+  }
+
+  function registerSection(key: JumpKey) {
+    return (e: LayoutChangeEvent) => { sectionOffsets.current[key] = e.nativeEvent.layout.y }
+  }
 
   const handleReminder = async () => {
     if (!event || alreadyReminded) return
@@ -183,16 +203,31 @@ export default function EventDetailScreen() {
           <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText} numberOfLines={1}>
-            Evento
+          <Text family="noto-sans" weight="semibold" size={13} color="#FFFFFF" numberOfLines={1} style={styles.headerTitle}>
+            {showSticky ? event.title : 'Evento'}
           </Text>
           <TouchableOpacity onPress={handleShare} hitSlop={12}>
             <Ionicons name="share-outline" size={19} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+        {showSticky && jumpLinks.length > 1 && (
+          <View style={styles.jumpRow}>
+            {jumpLinks.map((link) => (
+              <TouchableOpacity key={link.key} style={styles.jumpChip} onPress={() => jumpTo(link.key)} activeOpacity={0.8}>
+                <Text family="noto-sans" weight="semibold" size={12} color={Colors.lime}>{link.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </SafeAreaView>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         <View style={styles.heroWrap}>
           {media?.bannerImageUrl || event.imageUrl ? (
             <Image source={{ uri: media?.bannerImageUrl ?? event.imageUrl }} style={styles.hero} resizeMode="cover" />
@@ -236,7 +271,10 @@ export default function EventDetailScreen() {
           )}
         </View>
 
-        <View style={[styles.content, media?.profileImageUrl && styles.contentWithAvatar]}>
+        <View
+          style={[styles.content, media?.profileImageUrl && styles.contentWithAvatar]}
+          onLayout={(e) => { contentTop.current = e.nativeEvent.layout.y }}
+        >
           {event.category && (
             <View style={styles.chip}>
               <Text family="noto-sans" weight="bold" size={10} color={R.limeSoftText} style={styles.chipText}>
@@ -261,28 +299,7 @@ export default function EventDetailScreen() {
             />
           </View>
 
-          {showTabs && (
-            <View style={styles.tabBar}>
-              {tabs.map((t) => {
-                const active = tab === t.key
-                return (
-                  <TouchableOpacity
-                    key={t.key}
-                    style={[styles.tabItem, active && styles.tabItemActive]}
-                    onPress={() => setTab(t.key)}
-                    activeOpacity={0.85}
-                  >
-                    <Text family="noto-sans" weight="semibold" size={12.5} color={active ? '#FFFFFF' : R.mutedForeground}>
-                      {t.label}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          )}
-
-          {tab === 'info' && (
-            <View style={styles.tabContent}>
+          <View style={styles.tabContent} onLayout={registerSection('info')}>
               {(event.longDescription ?? event.description) ? (
                 <Text family="noto-sans" size={13.5} lineHeight={21} color="#43434D">
                   {event.longDescription ?? event.description}
@@ -331,11 +348,11 @@ export default function EventDetailScreen() {
                   <Text family="noto-sans" weight="medium" size={13} color={R.foreground}>Ver en el mapa</Text>
                 </TouchableOpacity>
               )}
-            </View>
-          )}
+          </View>
 
-          {tab === 'programa' && (
-            <View style={styles.programaWrap}>
+          {schedule.length > 0 && (
+            <View style={styles.sectionWrap} onLayout={registerSection('programa')}>
+              <Text family="noto-sans" weight="bold" size={16} color={R.foreground} style={styles.sectionHeading}>Programa</Text>
               {schedule.map((item, i) => {
                 const showDayLabel = item.dayLabel && (i === 0 || schedule[i - 1].dayLabel !== item.dayLabel)
                 return (
@@ -363,8 +380,9 @@ export default function EventDetailScreen() {
             </View>
           )}
 
-          {tab === 'noticias' && (
-            <View style={styles.noticiasWrap}>
+          {relatedPosts.length > 0 && (
+            <View style={styles.sectionWrap} onLayout={registerSection('noticias')}>
+              <Text family="noto-sans" weight="bold" size={16} color={R.foreground} style={styles.sectionHeading}>Noticias</Text>
               {relatedPosts.map((post) => (
                 <NewsCard key={post.id} article={post} onPress={() => router.push(`/article/${post.id}`)} />
               ))}
@@ -401,6 +419,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
+    gap: 12,
+  },
+  headerTitle: { flex: 1, textAlign: 'center' },
+  jumpRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  jumpChip: {
+    borderWidth: 1,
+    borderColor: 'rgba(164,210,51,0.4)',
+    borderRadius: 9999,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
   },
   heroWrap: { position: 'relative' },
   hero: { width: '100%', height: 240 },
@@ -436,22 +469,9 @@ const styles = StyleSheet.create({
   title: {},
   metaCard: { gap: 12, padding: 16, borderRadius: 16, backgroundColor: R.secondary },
   metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  tabBar: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    backgroundColor: R.secondary,
-    padding: 4,
-    gap: 4,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  tabItemActive: { backgroundColor: R.foreground },
   tabContent: { gap: 16 },
+  sectionWrap: { gap: 12 },
+  sectionHeading: { marginBottom: 2 },
   reminderPill: {
     position: 'absolute',
     right: 20,
@@ -491,7 +511,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 13,
   },
-  programaWrap: { gap: 12 },
   dayLabel: { letterSpacing: 0.5, marginBottom: 6 },
   scheduleCard: {
     gap: 4,
@@ -499,5 +518,4 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: R.secondary,
   },
-  noticiasWrap: { gap: 12 },
 })

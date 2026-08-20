@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { FlatList, Image, TouchableOpacity, View, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -6,12 +5,11 @@ import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { Spacing } from '@/constants/spacing'
-import { fetchFeaturedEvents, fetchEventBySlug } from '@/lib/supabase-repositories'
 import type { AgroEvent, EventMedia } from '@/lib/types'
 
 const R = Colors.redesign
 
-interface FeaturedItem {
+export interface FeaturedItem {
   media: EventMedia
   event: AgroEvent
 }
@@ -21,30 +19,14 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('es-PY', { day: '2-digit', month: 'long' })
 }
 
-export function FeaturedEventsSection() {
-  const [items, setItems] = useState<FeaturedItem[]>([])
-  const [loading, setLoading] = useState(true)
+interface Props {
+  items: FeaturedItem[]
+}
 
-  useEffect(() => {
-    let mounted = true
-    fetchFeaturedEvents()
-      .then(async (mediaList) => {
-        const resolved = await Promise.all(
-          mediaList.map(async (media) => {
-            const event = await fetchEventBySlug(media.eventSlug).catch(() => null)
-            if (!event || (!media.bannerImageUrl && !event.imageUrl)) return null
-            return { media, event }
-          })
-        )
-        if (mounted) setItems(resolved.filter((item): item is FeaturedItem => item !== null))
-      })
-      .catch(() => { if (mounted) setItems([]) })
-      .finally(() => { if (mounted) setLoading(false) })
-    return () => { mounted = false }
-  }, [])
-
-  if (!loading && items.length === 0) return null
-
+// Presentacional puro — la carga de datos vive en home.tsx (mismo patrón que "En vivo"),
+// así cuando no hay eventos activos el widget se filtra de la lista de bandas y no deja
+// un hueco vacío ni corre el banner publicitario de lugar.
+export function FeaturedEventsSection({ items }: Props) {
   return (
     <View>
       <View style={styles.bleed}>

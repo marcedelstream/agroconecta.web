@@ -99,9 +99,6 @@ export function EventsSection({ search }: Props) {
                       {item.city ?? item.location}
                     </Text>
                   </View>
-                  <View style={styles.agendarBtn}>
-                    <Text family="noto-sans" weight="semibold" size={11.5} color={R.foreground}>Agendar</Text>
-                  </View>
                 </View>
               </TouchableOpacity>
             )
@@ -125,13 +122,4 @@ const styles = StyleSheet.create({
   month: { letterSpacing: 0.5 },
   cityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cityText: { flex: 1 },
-  agendarBtn: {
-    alignSelf: 'flex-start',
-    marginTop: 2,
-    borderWidth: 1,
-    borderColor: R.border,
-    borderRadius: 9999,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-  },
 })

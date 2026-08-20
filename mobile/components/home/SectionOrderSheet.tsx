@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 
 const { height: SCREEN_H } = Dimensions.get('window')
-const SHEET_H = SCREEN_H * 0.62
+const SHEET_H = SCREEN_H * 0.74
 const R = Colors.redesign
 
 interface SectionMeta {

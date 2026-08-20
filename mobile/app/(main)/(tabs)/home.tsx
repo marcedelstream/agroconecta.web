@@ -11,17 +11,17 @@ import { QuickServicesGrid } from '@/components/home/QuickServicesGrid'
 import { LiveCard } from '@/components/home/LiveCard'
 import { NewsForYou } from '@/components/home/NewsForYou'
 import { EventsSection } from '@/components/home/EventsSection'
-import { FeaturedEventBanner } from '@/components/home/FeaturedEventBanner'
+import { FeaturedEventsSection } from '@/components/home/FeaturedEventsSection'
 import { SectionOrderSheet } from '@/components/home/SectionOrderSheet'
 import { DrawerMenu } from '@/components/navigation/DrawerMenu'
 import { buildSegment, isNewsContent } from '@/lib/feed-utils'
 import { mockNews } from '@/lib/mock-data'
-import { fetchPublishedPosts, fetchLiveVideos, fetchFeaturedEventMedia, fetchEventBySlug } from '@/lib/supabase-repositories'
+import { fetchPublishedPosts, fetchLiveVideos } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
 import { HOME_SECTIONS, normalizeSectionOrder, type HomeSectionKey } from '@/lib/home-sections'
 import { Colors } from '@/constants/colors'
 import { Spacing } from '@/constants/spacing'
-import type { AgroEvent, EventMedia, Post } from '@/lib/types'
+import type { Post } from '@/lib/types'
 
 const R = Colors.redesign
 
@@ -29,7 +29,6 @@ export default function HomeScreen() {
   const { user, updateUser } = useApp()
   const [posts, setPosts] = useState<Post[]>([])
   const [liveVideo, setLiveVideo] = useState<Post | null>(null)
-  const [featuredEvent, setFeaturedEvent] = useState<{ media: EventMedia; event: AgroEvent } | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [adRefreshKey, setAdRefreshKey] = useState(0)
@@ -55,29 +54,18 @@ export default function HomeScreen() {
     }
   }, [])
 
-  const loadFeaturedEvent = useCallback(async () => {
-    try {
-      const media = await fetchFeaturedEventMedia()
-      if (!media?.bannerImageUrl) { setFeaturedEvent(null); return }
-      const event = await fetchEventBySlug(media.eventSlug)
-      setFeaturedEvent(event ? { media, event } : null)
-    } catch {
-      setFeaturedEvent(null)
-    }
-  }, [])
-
   useEffect(() => {
     let mounted = true
-    Promise.all([loadPosts(), loadLive(), loadFeaturedEvent()]).finally(() => { if (mounted) setLoading(false) })
+    Promise.all([loadPosts(), loadLive()]).finally(() => { if (mounted) setLoading(false) })
     return () => { mounted = false }
-  }, [loadPosts, loadLive, loadFeaturedEvent])
+  }, [loadPosts, loadLive])
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     setAdRefreshKey((k) => k + 1)
-    await Promise.all([loadPosts(), loadLive(), loadFeaturedEvent()])
+    await Promise.all([loadPosts(), loadLive()])
     setRefreshing(false)
-  }, [loadPosts, loadLive, loadFeaturedEvent])
+  }, [loadPosts, loadLive])
 
   const filtered = useMemo(() => {
     const highlighted = posts.find((p) => p.isHighlighted)
@@ -92,6 +80,7 @@ export default function HomeScreen() {
   }, [])
 
   const widgetContent: Record<HomeSectionKey, React.ReactNode> = {
+    featured: <FeaturedEventsSection />,
     market: <PriceBoard />,
     services: <QuickServicesGrid />,
     live: liveVideo ? <LiveCard video={liveVideo} /> : null,
@@ -133,14 +122,9 @@ export default function HomeScreen() {
           </View>
         ) : (
           <>
-            {featuredEvent && (
-              <View style={[styles.bandFirst, styles.bandPadded]}>
-                <FeaturedEventBanner media={featuredEvent.media} event={featuredEvent.event} />
-              </View>
-            )}
             {slots.map((slot, i) => (
               <Fragment key={slot.key}>
-                <View style={[i === 0 && !featuredEvent ? styles.bandFirst : styles.band, styles.bandPadded]}>
+                <View style={[i === 0 ? styles.bandFirst : styles.band, styles.bandPadded]}>
                   {slot.node}
                 </View>
                 {i === 0 && (
@@ -150,6 +134,9 @@ export default function HomeScreen() {
                 )}
               </Fragment>
             ))}
+            <View style={[styles.band, styles.bandPadded]}>
+              <AdBanner segment={segment} placement="home" refreshKey={adRefreshKey} />
+            </View>
           </>
         )}
       </ScrollView>

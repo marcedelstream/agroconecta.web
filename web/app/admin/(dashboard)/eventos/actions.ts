@@ -58,11 +58,6 @@ export async function saveEventMedia(formData: FormData) {
   const existingBannerUrl = String(formData.get('existing_banner_url') ?? '').trim() || null
   const isActive = formData.get('is_active') === 'on'
 
-  // Un solo evento destacado en Home a la vez — activar este apaga cualquier otro.
-  if (isActive) {
-    await supabase.from('event_media').update({ is_active: false }).neq('event_slug', eventSlug)
-  }
-
   await supabase.from('event_media').upsert(
     {
       event_slug: eventSlug,

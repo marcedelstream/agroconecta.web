@@ -1,6 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons'
 
-export type HomeSectionKey = 'market' | 'services' | 'live' | 'news' | 'agenda'
+export type HomeSectionKey = 'featured' | 'market' | 'services' | 'live' | 'news' | 'agenda'
 
 interface HomeSectionMeta {
   key: HomeSectionKey
@@ -10,9 +10,10 @@ interface HomeSectionMeta {
 
 // Orden por default (boceto 3a) — se usa si el usuario todavía no personalizó nada,
 // y como base para completar si se agrega una banda nueva más adelante.
-export const DEFAULT_SECTION_ORDER: HomeSectionKey[] = ['market', 'services', 'live', 'news', 'agenda']
+export const DEFAULT_SECTION_ORDER: HomeSectionKey[] = ['featured', 'market', 'services', 'live', 'news', 'agenda']
 
 export const HOME_SECTIONS: HomeSectionMeta[] = [
+  { key: 'featured', label: 'Eventos destacados', icon: 'star-outline' },
   { key: 'market', label: 'Tu mercado hoy', icon: 'trending-up-outline' },
   { key: 'services', label: 'Remates, empleos y más', icon: 'grid-outline' },
   { key: 'live', label: 'En vivo', icon: 'radio-outline' },

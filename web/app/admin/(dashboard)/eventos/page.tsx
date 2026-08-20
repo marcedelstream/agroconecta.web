@@ -135,7 +135,7 @@ export default async function EventosPage({
                   <span className="block text-sm font-medium text-foreground">Evento activo (destacado en el Home de la app)</span>
                   <span className="block text-xs text-muted mt-0.5">
                     Mientras esté sin marcar podés probar el hub del evento tranquilo — no se muestra en el Home.
-                    Activarlo acá apaga automáticamente cualquier otro evento que estuviera destacado.
+                    Se puede tener más de un evento activo a la vez: aparecen juntos en un carrusel destacado.
                   </span>
                 </span>
               </label>

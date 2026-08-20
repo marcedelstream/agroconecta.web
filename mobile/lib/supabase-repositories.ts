@@ -595,25 +595,23 @@ export async function fetchEventMedia(eventSlug: string): Promise<EventMedia | n
   }
 }
 
-// Evento único destacado en el Home (banner estilo OneFootball) — el admin lo activa/desactiva
+// Eventos destacados en el Home (carrusel estilo OneFootball) — el admin los activa/desactiva
 // desde /admin/eventos, útil para preparar y probar un evento antes de mostrarlo públicamente.
-export async function fetchFeaturedEventMedia(): Promise<EventMedia | null> {
+// Puede haber más de uno activo a la vez.
+export async function fetchFeaturedEvents(): Promise<EventMedia[]> {
   const { data, error } = await supabase
     .from('event_media')
     .select('*')
     .eq('is_active', true)
-    .maybeSingle()
+    .order('updated_at', { ascending: false })
 
   if (error) throw error
-  if (!data) return null
-
-  const typed = data as EventMediaRow
-  return {
+  return ((data ?? []) as EventMediaRow[]).map((typed) => ({
     eventSlug: typed.event_slug,
     profileImageUrl: typed.profile_image_url ?? undefined,
     bannerImageUrl: typed.banner_image_url ?? undefined,
     isActive: typed.is_active ?? false,
-  }
+  }))
 }
 
 export async function fetchPostsByEventTag(eventSlug: string): Promise<Post[]> {

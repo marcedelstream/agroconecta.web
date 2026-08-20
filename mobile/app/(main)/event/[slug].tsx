@@ -6,6 +6,7 @@ import {
 import { useLocalSearchParams, router, Stack } from 'expo-router'
 import { goBack } from '@/lib/navigation'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -48,6 +49,14 @@ function daysUntilEvent(dateStr: string): number {
   const eventDate = new Date(dateStr + 'T00:00:00')
   eventDate.setHours(0, 0, 0, 0)
   return Math.floor((eventDate.getTime() - today.getTime()) / 86_400_000)
+}
+
+function countdownLabel(days: number, hasEndDate: boolean, endDays: number): string | null {
+  if (days > 1) return `Faltan ${days} días`
+  if (days === 1) return 'Mañana'
+  if (days === 0) return 'Hoy'
+  if (hasEndDate && endDays >= 0) return 'En curso'
+  return null
 }
 
 async function scheduleReminder(event: AgroEvent) {
@@ -161,7 +170,9 @@ export default function EventDetailScreen() {
   }
 
   const days = daysUntilEvent(event.date)
+  const endDays = event.endDate ? daysUntilEvent(event.endDate) : days
   const showReminder = days >= 2
+  const countdown = countdownLabel(days, Boolean(event.endDate), endDays)
 
   return (
     <View style={[styles.root, { backgroundColor: R.surface }]}>
@@ -190,8 +201,38 @@ export default function EventDetailScreen() {
               <Ionicons name="calendar-outline" size={52} color={Colors.lime} />
             </View>
           )}
+          <LinearGradient
+            colors={['transparent', 'rgba(10,10,19,0.15)', 'rgba(10,10,19,0.55)']}
+            locations={[0, 0.55, 1]}
+            style={styles.heroGradient}
+          />
+          {countdown && (
+            <View style={styles.countdownBadge}>
+              <Ionicons name="time-outline" size={12} color="#0A0A13" />
+              <Text family="noto-sans" weight="bold" size={11.5} color="#0A0A13">{countdown}</Text>
+            </View>
+          )}
           {media?.profileImageUrl && (
             <Image source={{ uri: media.profileImageUrl }} style={styles.profileAvatar} />
+          )}
+          {showReminder && (
+            <TouchableOpacity
+              style={[styles.reminderPill, alreadyReminded && styles.reminderPillDone]}
+              activeOpacity={alreadyReminded ? 1 : 0.85}
+              onPress={handleReminder}
+              disabled={reminding || alreadyReminded}
+            >
+              {reminding ? (
+                <ActivityIndicator color="#0A0A13" size="small" />
+              ) : (
+                <Ionicons
+                  name={alreadyReminded ? 'checkmark-circle' : 'notifications-outline'}
+                  size={16}
+                  color="#0A0A13"
+                />
+              )}
+              <Text family="noto-sans" weight="bold" size={12.5} color="#0A0A13">Recordar</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -247,32 +288,6 @@ export default function EventDetailScreen() {
                   {event.longDescription ?? event.description}
                 </Text>
               ) : null}
-
-              {showReminder && (
-                <TouchableOpacity
-                  style={[
-                    styles.remindBtn,
-                    alreadyReminded && styles.remindBtnDone,
-                    reminding && styles.remindBtnDisabled,
-                  ]}
-                  activeOpacity={alreadyReminded ? 1 : 0.85}
-                  onPress={handleReminder}
-                  disabled={reminding || alreadyReminded}
-                >
-                  {reminding ? (
-                    <ActivityIndicator color="#0A0A13" size="small" />
-                  ) : (
-                    <Ionicons
-                      name={alreadyReminded ? 'checkmark-circle' : 'notifications-outline'}
-                      size={19}
-                      color={alreadyReminded ? R.mutedForeground : '#0A0A13'}
-                    />
-                  )}
-                  <Text family="noto-sans" weight="bold" size={13.5} color={alreadyReminded ? R.mutedForeground : '#0A0A13'}>
-                    {reminding ? 'Programando…' : alreadyReminded ? 'Ya agendaste este evento' : 'Recordar este evento'}
-                  </Text>
-                </TouchableOpacity>
-              )}
 
               {event.importantLinks && event.importantLinks.length > 0 && (
                 <View style={styles.linksBlock}>
@@ -388,8 +403,21 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   heroWrap: { position: 'relative' },
-  hero: { width: '100%', height: 220 },
+  hero: { width: '100%', height: 240 },
   heroPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: R.secondary },
+  heroGradient: { ...StyleSheet.absoluteFillObject },
+  countdownBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.lime,
+    borderRadius: 9999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
   profileAvatar: {
     position: 'absolute',
     left: 20,
@@ -424,17 +452,19 @@ const styles = StyleSheet.create({
   },
   tabItemActive: { backgroundColor: R.foreground },
   tabContent: { gap: 16 },
-  remindBtn: {
+  reminderPill: {
+    position: 'absolute',
+    right: 20,
+    bottom: -14,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: Colors.lime,
-    borderRadius: 16,
-    paddingVertical: 15,
+    borderRadius: 9999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
-  remindBtnDisabled: { opacity: 0.6 },
-  remindBtnDone: { backgroundColor: R.secondary },
+  reminderPillDone: { backgroundColor: '#D9D9DE' },
   linksBlock: { gap: 2 },
   linkRow: {
     flexDirection: 'row',

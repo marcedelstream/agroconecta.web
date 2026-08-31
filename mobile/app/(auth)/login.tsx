@@ -28,10 +28,11 @@ type PasswordMode = 'signin' | 'signup'
 export default function LoginScreen() {
   const C = useColors()
   const { isDark } = useTheme()
-  const { signIn, signUp, signInWithGoogle, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
+  const { signIn, signUp, signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
   const [view, setView] = useState<LoginView>('options')
   const [error, setError] = useState<string | null>(null)
 
+  const [appleLoading, setAppleLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [otpStep, setOtpStep] = useState<'request' | 'verify'>('request')
   const [otpEmail, setOtpEmail] = useState('')
@@ -74,6 +75,15 @@ export default function LoginScreen() {
     } else {
       router.replace('/(main)/(tabs)/home')
     }
+  }
+
+  async function handleApple() {
+    setError(null)
+    setAppleLoading(true)
+    const result = await signInWithApple()
+    setAppleLoading(false)
+    if (result) { setError(result); return }
+    await afterAuth()
   }
 
   async function handleGoogle() {
@@ -156,13 +166,23 @@ export default function LoginScreen() {
         {view === 'options' && (
           /* ── Opciones ── */
           <View style={styles.options}>
+            {Platform.OS === 'ios' && (
+              <AuthBtn
+                icon="logo-apple"
+                label="Continuar con Apple"
+                onPress={handleApple}
+                loading={appleLoading}
+                C={C}
+                primary
+              />
+            )}
             <AuthBtn
               icon="logo-google"
               label="Continuar con Google"
               onPress={handleGoogle}
               loading={googleLoading}
               C={C}
-              primary
+              primary={Platform.OS !== 'ios'}
             />
             {error && (
               <Text variant="caption" style={{ color: Colors.destructive, textAlign: 'center' }}>{error}</Text>

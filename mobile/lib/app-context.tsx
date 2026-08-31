@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as WebBrowser from 'expo-web-browser'
 import * as Linking from 'expo-linking'
 import * as QueryParams from 'expo-auth-session/build/QueryParams'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import type { Department, NewsCategory, NotificationPreferences, OnboardingState, Profession, UserProfile } from './types'
@@ -144,6 +145,7 @@ interface AppContextType {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
+  signInWithApple: () => Promise<string | null>
   sendEmailOtp: (email: string) => Promise<string | null>
   verifyEmailOtp: (email: string, token: string) => Promise<string | null>
   signOut: () => Promise<void>
@@ -344,6 +346,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const signInWithApple = useCallback(async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      })
+      if (!credential.identityToken) return 'No se pudo completar el login con Apple.'
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      })
+      return error?.message ?? null
+    } catch (err) {
+      if (err instanceof Error && 'code' in err && err.code === 'ERR_REQUEST_CANCELED') return null
+      return err instanceof Error ? err.message : 'No se pudo completar el login con Apple.'
+    }
+  }, [])
+
   const sendEmailOtp = useCallback(async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
     return error?.message ?? null
@@ -430,6 +453,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signInWithGoogle,
+        signInWithApple,
         sendEmailOtp,
         verifyEmailOtp,
         signOut,

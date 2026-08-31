@@ -78,8 +78,6 @@ export default function NoticiasScreen() {
     router.push(`/article/${id}`)
   }, [])
 
-  if (!user) return null
-
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
@@ -91,7 +89,7 @@ export default function NoticiasScreen() {
               </TouchableOpacity>
               <Text family="noto-sans" weight="bold" size={18} color="#FFFFFF">Noticias</Text>
             </View>
-            <HeaderAvatar name={user.name} />
+            <HeaderAvatar name={user?.name} />
           </View>
 
           <View style={styles.searchBox}>

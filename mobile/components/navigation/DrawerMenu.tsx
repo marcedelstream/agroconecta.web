@@ -130,30 +130,45 @@ export function DrawerMenu({ onClose }: Props) {
 
           {/* CUENTA */}
           <Text variant="label" color={Colors.muted} style={[styles.sectionLabel, { marginTop: Spacing[4] }]}>CUENTA</Text>
-          <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={() => handleClose('/(main)/(tabs)/profile')}
-          >
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarCircle}>
-                <Text family="noto-sans" weight="bold" size={12} color={Colors.lime}>{initial}</Text>
+          {user ? (
+            <>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.7}
+                onPress={() => handleClose('/(main)/(tabs)/profile')}
+              >
+                {avatarUri ? (
+                  <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarCircle}>
+                    <Text family="noto-sans" weight="bold" size={12} color={Colors.lime}>{initial}</Text>
+                  </View>
+                )}
+                <Text variant="caption" weight="medium">Ver perfil</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                activeOpacity={0.7}
+                onPress={() => setLogoutModalVisible(true)}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: `${Colors.destructive}15` }]}>
+                  <Ionicons name="log-out-outline" size={16} color={Colors.destructive} />
+                </View>
+                <Text variant="caption" weight="medium">Cerrar sesión</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => handleClose('/(auth)/login')}
+            >
+              <View style={styles.menuIconBox}>
+                <Ionicons name="log-in-outline" size={16} color={Colors.lime} />
               </View>
-            )}
-            <Text variant="caption" weight="medium">Ver perfil</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={() => setLogoutModalVisible(true)}
-          >
-            <View style={[styles.menuIconBox, { backgroundColor: `${Colors.destructive}15` }]}>
-              <Ionicons name="log-out-outline" size={16} color={Colors.destructive} />
-            </View>
-            <Text variant="caption" weight="medium">Cerrar sesión</Text>
-          </TouchableOpacity>
+              <Text variant="caption" weight="medium">Iniciar sesión</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </Animated.View>
 

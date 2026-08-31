@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/Text'
 import { HtmlContent } from '@/components/ui/HtmlContent'
 import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
+import { useRequireAuth } from '@/lib/require-auth'
 import { mockNews, mockPublishers, getCategoryLabel } from '@/lib/mock-data'
 import { fetchPublishedPostBySlug, fetchOrganizationById, fetchPublishedPosts } from '@/lib/supabase-repositories'
 import type { Organization, Post } from '@/lib/types'
@@ -44,6 +45,7 @@ function initials(name: string) {
 export default function ArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user, updateUser } = useApp()
+  const requireAuth = useRequireAuth()
 
   const [article, setArticle] = useState<Post | null>(null)
   const [publisher, setPublisher] = useState<Organization | null>(null)
@@ -103,7 +105,7 @@ export default function ArticleScreen() {
   const isFollowed = user?.organizationSubscriptions?.includes(article?.publisherId ?? '') ?? false
 
   async function toggleFollow() {
-    if (!user || !article?.publisherId) return
+    if (!article?.publisherId || !requireAuth() || !user) return
     const current = user.organizationSubscriptions ?? []
     const updated = isFollowed
       ? current.filter((x) => x !== article.publisherId)

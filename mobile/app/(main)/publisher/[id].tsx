@@ -12,6 +12,7 @@ import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
+import { useRequireAuth } from '@/lib/require-auth'
 import { mockPublishers, mockNews } from '@/lib/mock-data'
 import {
   fetchPostsByOrganization,
@@ -44,6 +45,7 @@ export default function PublisherScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const C = useColors()
   const { user, updateUser } = useApp()
+  const requireAuth = useRequireAuth()
 
   const [publisher, setPublisher] = useState<Organization | undefined>(undefined)
   const [loading, setLoading] = useState(true)
@@ -91,14 +93,14 @@ export default function PublisherScreen() {
   }, [user?.id, id])
 
   async function toggleFollow() {
-    if (!user || !id) return
+    if (!id || !requireAuth() || !user) return
     const current = user.organizationSubscriptions ?? []
     const updated = isFollowed ? current.filter((x) => x !== id) : [...current, id]
     await updateUser({ organizationSubscriptions: updated, mediaPreferences: updated })
   }
 
   async function toggleNotif() {
-    if (!user?.id || !id) return
+    if (!id || !requireAuth() || !user?.id) return
     const { status } = await Notifications.requestPermissionsAsync()
     if (status !== 'granted') {
       Alert.alert('Permisos necesarios', 'Activá las notificaciones en los ajustes del dispositivo.')

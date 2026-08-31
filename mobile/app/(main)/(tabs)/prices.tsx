@@ -102,8 +102,6 @@ export default function PricesScreen() {
     }
   }
 
-  if (!user) return null
-
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
@@ -123,7 +121,7 @@ export default function PricesScreen() {
                   <Ionicons name="share-outline" size={20} color="#FFFFFF" />
                 )}
               </TouchableOpacity>
-              <HeaderAvatar name={user.name} />
+              <HeaderAvatar name={user?.name} />
             </View>
           </View>
           <Text family="noto-sans" size={12} color={R.header.mutedText} style={styles.updatedLabel}>

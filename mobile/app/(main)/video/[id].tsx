@@ -10,6 +10,7 @@ import { Text } from '@/components/ui/Text'
 import { ReminderModal } from '@/components/ui/ReminderModal'
 import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
+import { useRequireAuth } from '@/lib/require-auth'
 import { mockPublishers } from '@/lib/mock-data'
 import { fetchPublishedPostBySlug, fetchOrganizationById, fetchPostsByOrganization, fetchPublishedPosts } from '@/lib/supabase-repositories'
 import type { Organization, Post } from '@/lib/types'
@@ -63,6 +64,7 @@ async function scheduleAuctionReminder(post: Post) {
 export default function VideoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { user, updateUser } = useApp()
+  const requireAuth = useRequireAuth()
   const [post, setPost] = useState<Post | null>(null)
   const [publisher, setPublisher] = useState<Organization | null>(null)
   const [channelVideoCount, setChannelVideoCount] = useState<number | null>(null)
@@ -115,7 +117,7 @@ export default function VideoDetailScreen() {
   const isFollowed = user?.organizationSubscriptions?.includes(post?.publisherId ?? '') ?? false
 
   async function toggleFollow() {
-    if (!user || !post?.publisherId) return
+    if (!post?.publisherId || !requireAuth() || !user) return
     const current = user.organizationSubscriptions ?? []
     const updated = isFollowed ? current.filter((x) => x !== post.publisherId) : [...current, post.publisherId]
     await updateUser({ organizationSubscriptions: updated, mediaPreferences: updated })
@@ -127,7 +129,7 @@ export default function VideoDetailScreen() {
   }
 
   async function handleReminder() {
-    if (!post?.startsAt) return
+    if (!post?.startsAt || !requireAuth()) return
     setReminding(true)
     try {
       const ok = await scheduleAuctionReminder(post)

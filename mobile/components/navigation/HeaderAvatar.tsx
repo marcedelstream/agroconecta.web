@@ -7,15 +7,16 @@ import { useLocalAvatar } from '@/lib/local-avatar-context'
 const R = Colors.redesign
 
 interface Props {
-  name: string
+  name?: string
 }
 
 // Avatar de la cabecera oscura del rediseño — Inicio, Mercado y el resto de las pantallas
 // rediseñadas lo usan igual, siempre abre Perfil. Muestra la foto local si el usuario tiene
 // una guardada (mismo estado compartido que Perfil y el menú lateral); si no, la inicial.
+// Sin sesión (name undefined) muestra "?" — Perfil se encarga de mostrar el CTA de login.
 export function HeaderAvatar({ name }: Props) {
   const { avatarUri } = useLocalAvatar()
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
+  const initial = (name ?? '').trim().charAt(0).toUpperCase() || '?'
   return (
     <TouchableOpacity
       onPress={() => router.push('/(main)/(tabs)/profile' as any)}

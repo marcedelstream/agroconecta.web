@@ -10,7 +10,7 @@ export default function PublishGateScreen() {
   const { user } = useApp()
 
   useEffect(() => {
-    if (!user) return
+    if (!user) { router.replace('/(auth)/login'); return }
     if (user.isMember) {
       router.replace('/(main)/publish-form' as any)
     } else {

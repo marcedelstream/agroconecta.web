@@ -105,13 +105,9 @@ export default function HomeScreen() {
     agenda: <EventsSection />,
   }
 
-  const slots = user
-    ? normalizeSectionOrder(user.sectionOrder)
-        .map((key) => ({ key, node: widgetContent[key] }))
-        .filter((slot) => slot.node !== null)
-    : []
-
-  if (!user) return null
+  const slots = normalizeSectionOrder(user?.sectionOrder)
+    .map((key) => ({ key, node: widgetContent[key] }))
+    .filter((slot) => slot.node !== null)
 
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
@@ -160,7 +156,7 @@ export default function HomeScreen() {
 
       {menuOpen && <DrawerMenu onClose={() => setMenuOpen(false)} />}
 
-      {showOrderSheet && (
+      {showOrderSheet && user && (
         <SectionOrderSheet
           sections={HOME_SECTIONS}
           normalize={normalizeSectionOrder}

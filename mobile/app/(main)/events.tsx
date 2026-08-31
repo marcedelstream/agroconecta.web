@@ -109,7 +109,7 @@ export default function EventsListScreen() {
               </TouchableOpacity>
               <Text family="noto-sans" weight="bold" size={18} color="#FFFFFF">Eventos</Text>
             </View>
-            {user && <HeaderAvatar name={user.name} />}
+            <HeaderAvatar name={user?.name} />
           </View>
 
           {categories.length > 0 && (

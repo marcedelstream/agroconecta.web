@@ -9,7 +9,7 @@ import type { UserProfile } from '@/lib/types'
 const R = Colors.redesign
 
 interface Props {
-  user: UserProfile
+  user: UserProfile | null
   onAdjustInterestsPress: () => void
 }
 
@@ -21,6 +21,34 @@ function getGreeting() {
 }
 
 export function HomeGreetingCard({ user, onAdjustInterestsPress }: Props) {
+  if (!user) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.greetingRow}>
+          <TouchableOpacity
+            style={styles.greetingText}
+            activeOpacity={0.75}
+            onPress={() => router.push('/(auth)/login')}
+          >
+            <Text family="noto-sans" weight="bold" size={20} color="#FFFFFF">
+              {getGreeting()}
+            </Text>
+            <View style={styles.roleRow}>
+              <Text family="noto-sans" size={12.5} color={R.header.mutedText}>
+                Iniciá sesión para personalizar tu experiencia
+              </Text>
+              <Ionicons name="chevron-forward" size={13} color={Colors.lime} />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={styles.adjustChip} activeOpacity={0.8}>
+            <Text family="noto-sans" weight="semibold" size={11.5} color="#C9C9D2">Iniciar sesión</Text>
+            <Ionicons name="log-in-outline" size={13} color="#C9C9D2" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
+
   const firstName = user.name.trim().split(' ')[0] || user.name
 
   return (

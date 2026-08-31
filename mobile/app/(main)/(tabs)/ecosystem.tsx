@@ -14,6 +14,7 @@ import { useApp } from '@/lib/app-context'
 import { mockEcosystemListings } from '@/lib/mock-data'
 import { fetchPublishedPosts, fetchEcosystemListings, fetchLibraryItems } from '@/lib/supabase-repositories'
 import { ECOSYSTEM_SECTIONS, normalizeEcosystemSectionOrder, type EcosystemSectionKey } from '@/lib/ecosystem-sections'
+import { useRequireAuth } from '@/lib/require-auth'
 import type { EcosystemListing, LibraryItem, Post } from '@/lib/types'
 
 const R = Colors.redesign
@@ -44,6 +45,7 @@ function matches(q: string, ...values: (string | undefined)[]) {
 
 export default function EcosystemScreen() {
   const { user, updateUser } = useApp()
+  const requireAuth = useRequireAuth()
   const [videos, setVideos] = useState<Post[]>([])
   const [listings, setListings] = useState<EcosystemListing[]>([])
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([])
@@ -232,15 +234,13 @@ export default function EcosystemScreen() {
     .map((key) => sectionContent[key])
     .filter((node) => node !== null)
 
-  if (!user) return null
-
   return (
     <View style={[styles.root, { backgroundColor: R.background }]}>
       <SafeAreaView edges={['top']} style={[styles.headerWrap, { backgroundColor: R.header.bg }]}>
         <View style={styles.header}>
           <View style={styles.topRow}>
             <Text family="noto-sans" weight="bold" size={20} color="#FFFFFF">Ecosistema</Text>
-            <HeaderAvatar name={user.name} />
+            <HeaderAvatar name={user?.name} />
           </View>
 
           <View style={styles.searchBox}>
@@ -282,7 +282,7 @@ export default function EcosystemScreen() {
               <Text family="noto-sans" weight="medium" size={10} color={R.mutedForeground2} style={styles.introEyebrow}>
                 TODO LO QUE TENEMOS PARA VOS
               </Text>
-              <TouchableOpacity onPress={() => setShowOrderSheet(true)} style={styles.adjustChip} activeOpacity={0.8}>
+              <TouchableOpacity onPress={() => { if (requireAuth()) setShowOrderSheet(true) }} style={styles.adjustChip} activeOpacity={0.8}>
                 <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground}>Ajustar interés</Text>
                 <Ionicons name="swap-vertical-outline" size={12} color={R.mutedForeground} />
               </TouchableOpacity>
@@ -309,7 +309,7 @@ export default function EcosystemScreen() {
 
       </ScrollView>
 
-      {showOrderSheet && (
+      {showOrderSheet && user && (
         <SectionOrderSheet
           title="Ajustar interés"
           sections={ECOSYSTEM_SECTIONS}

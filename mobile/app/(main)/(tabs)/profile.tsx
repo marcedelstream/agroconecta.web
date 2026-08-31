@@ -5,6 +5,7 @@ import { router, Href } from 'expo-router'
 import { goBack } from '@/lib/navigation'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
+import { Button } from '@/components/ui/Button'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal'
 import { BookCardSkeleton } from '@/components/ui/Skeleton'
@@ -100,7 +101,7 @@ export default function ProfileScreen() {
     }
   }
 
-  if (!user) return null
+  if (!user) return <GuestProfile />
 
   const initial = user.name.trim().charAt(0).toUpperCase() || '?'
   const followedCount = user.organizationSubscriptions?.length ?? 0
@@ -286,6 +287,37 @@ export default function ProfileScreen() {
   )
 }
 
+function GuestProfile() {
+  return (
+    <View style={[styles.root, { backgroundColor: R.background }]}>
+      <SafeAreaView edges={['top']} style={[styles.headerWrap, { backgroundColor: R.header.bg }]}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Perfil</Text>
+          <View style={{ width: 20 }} />
+        </View>
+      </SafeAreaView>
+
+      <View style={styles.guestBody}>
+        <View style={styles.guestIcon}>
+          <Ionicons name="person-outline" size={32} color={Colors.lime} />
+        </View>
+        <Text family="noto-sans" weight="bold" size={18} color={R.foreground} style={{ textAlign: 'center' }}>
+          Todavía no iniciaste sesión
+        </Text>
+        <Text family="noto-sans" size={13.5} color={R.mutedForeground} style={styles.guestDesc}>
+          Creá una cuenta o iniciá sesión para guardar contenido, seguir organizaciones y personalizar tu experiencia.
+        </Text>
+        <Button onPress={() => router.push('/(auth)/login')} size="lg" style={{ marginTop: 8 }}>
+          Iniciar sesión
+        </Button>
+      </View>
+    </View>
+  )
+}
+
 function StatItem({ label, value }: { label: string; value: number | string }) {
   return (
     <View style={styles.statItem}>
@@ -403,4 +435,15 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.destructive}08`,
   },
   deleteLink: { textDecorationLine: 'underline' },
+  guestBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 6 },
+  guestIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: `${Colors.lime}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  guestDesc: { textAlign: 'center', lineHeight: 20, marginBottom: 6 },
 })

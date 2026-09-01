@@ -6,7 +6,7 @@ export const DAILY_TEXT_LIMIT = 15
 
 const ASUNCION_OFFSET_HOURS = 3 // UTC-3, Paraguay no usa horario de verano desde 2024.
 
-function startOfTodayAsuncionUtc(): string {
+export function startOfTodayAsuncionUtc(): string {
   const now = new Date()
   const shifted = new Date(now.getTime() - ASUNCION_OFFSET_HOURS * 3_600_000)
   shifted.setUTCHours(0, 0, 0, 0)

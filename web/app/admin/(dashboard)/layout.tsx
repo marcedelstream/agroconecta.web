@@ -45,6 +45,12 @@ const ADMIN_NAV_GROUPS = [
       { href: '/admin/notificaciones', label: 'Notificaciones', icon: '◉' },
     ],
   },
+  {
+    label: 'Karai',
+    items: [
+      { href: '/admin/karai', label: 'Uso y conversaciones', icon: '◐' },
+    ],
+  },
 ]
 
 const ADMIN_NAV = ADMIN_NAV_GROUPS.flatMap((group) => group.items)

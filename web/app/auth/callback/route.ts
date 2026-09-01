@@ -13,11 +13,13 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
   const tokenHash = requestUrl.searchParams.get('token_hash')
   const type = requestUrl.searchParams.get('type')
-  const redirectTo = requestUrl.searchParams.get('redirect_to') ?? '/admin'
+  const isKaraiHost = (request.headers.get('host') ?? '').startsWith('karai.')
+  const redirectTo = requestUrl.searchParams.get('redirect_to') ?? (isKaraiHost ? '/' : '/admin')
+  const loginPath = isKaraiHost ? '/login' : '/admin/login'
   const response = NextResponse.redirect(new URL(redirectTo, requestUrl.origin))
 
   if (!code && !(tokenHash && isEmailOtpType(type))) {
-    const loginUrl = new URL('/admin/login', requestUrl.origin)
+    const loginUrl = new URL(loginPath, requestUrl.origin)
     loginUrl.searchParams.set('error', 'verification')
     return NextResponse.redirect(loginUrl)
   }
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
       })
 
   if (error) {
-    const loginUrl = new URL('/admin/login', requestUrl.origin)
+    const loginUrl = new URL(loginPath, requestUrl.origin)
     loginUrl.searchParams.set('error', 'verification')
     return NextResponse.redirect(loginUrl)
   }

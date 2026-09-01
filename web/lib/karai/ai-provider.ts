@@ -9,7 +9,10 @@ export interface AIProvider {
 }
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
-const MODEL = 'gpt-4o-mini'
+// gpt-5.6-luna (jul-2026): tier mas barato de la familia GPT-5.6 vigente, pensado para chat/
+// clasificacion de alto volumen — reemplaza a gpt-4o-mini (generacion anterior) para este caso
+// de uso. Ver KARAI-MODELO-NEGOCIO.md secc. "por que el limite no es (solo) por costo de OpenAI".
+const MODEL = 'gpt-5.6-luna'
 
 export class OpenAIProvider implements AIProvider {
   constructor(private readonly apiKey: string) {}

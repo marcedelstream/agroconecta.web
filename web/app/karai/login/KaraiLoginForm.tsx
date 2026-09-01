@@ -18,10 +18,28 @@ export function KaraiLoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   function afterLogin() {
     router.push(redirect)
     router.refresh()
+  }
+
+  async function handleGoogle() {
+    setError(null)
+    setGoogleLoading(true)
+    const supabase = createSupabaseBrowser()
+    const callbackUrl = new URL('/auth/callback', window.location.origin)
+    callbackUrl.searchParams.set('redirect_to', redirect)
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: callbackUrl.toString() },
+    })
+    if (authError) {
+      setGoogleLoading(false)
+      setError(authError.message)
+    }
+    // Si no hay error, el navegador ya está siendo redirigido a Google — no hace falta setLoading(false).
   }
 
   async function handleSendOtp(e: React.FormEvent) {
@@ -76,6 +94,15 @@ export function KaraiLoginForm() {
 
         {view === 'options' && (
           <div className="flex flex-col gap-3">
+            <button onClick={handleGoogle} disabled={googleLoading} className="btn w-full">
+              {googleLoading ? 'Redirigiendo a Google...' : 'Continuar con Google'}
+            </button>
+            {error && <p className="text-danger text-sm text-center">{error}</p>}
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-bdr" />
+              <span className="text-muted text-xs">o</span>
+              <div className="flex-1 h-px bg-bdr" />
+            </div>
             <button onClick={() => { setError(null); setView('otp-request') }} className="btn-primary w-full">
               Iniciar sesión con código por email
             </button>

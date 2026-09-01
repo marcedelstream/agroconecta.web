@@ -17,7 +17,13 @@ export async function proxy(request: NextRequest) {
   // se agrega el dominio como alias y acá lo reescribimos server-side.
   let effectivePathname = pathname
   let needsRewrite = false
-  if (isKaraiHost && !pathname.startsWith('/api') && !pathname.startsWith('/karai') && !pathname.startsWith('/_next')) {
+  if (
+    isKaraiHost &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/karai') &&
+    !pathname.startsWith('/_next') &&
+    !pathname.startsWith('/auth')
+  ) {
     effectivePathname = pathname === '/' ? '/karai' : `/karai${pathname}`
     needsRewrite = true
   }

@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { authenticateKaraiRequest } from '@/lib/karai/auth'
 import { orchestrateMessage } from '@/lib/karai/orchestrator'
 
 // Endpoint channel-agnostic: hoy lo llama el chat web, mas adelante el webhook de WhatsApp puede
 // llamar al mismo orquestador (orchestrateMessage) directo sin pasar por HTTP, o via este mismo
 // endpoint con channel:'whatsapp' si conviene mantenerlo desacoplado del webhook.
 export async function POST(request: Request) {
-  const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace(/^Bearer\s+/i, '')
-  if (!token) {
-    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
-  }
+  const auth = await authenticateKaraiRequest(request)
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const body = await request.json().catch(() => null)
   const message = typeof body?.message === 'string' ? body.message : null
@@ -19,23 +16,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Falta el mensaje.' }, { status: 400 })
   }
 
-  let admin: ReturnType<typeof createSupabaseAdmin>
-  try {
-    admin = createSupabaseAdmin()
-  } catch (err) {
-    console.error('karai/chat: createSupabaseAdmin falló:', err)
-    return NextResponse.json({ error: 'El servidor no está configurado.' }, { status: 500 })
-  }
-
-  const { data: userData, error: userError } = await admin.auth.getUser(token)
-  if (userError || !userData.user) {
-    return NextResponse.json({ error: 'Sesión inválida o expirada.' }, { status: 401 })
-  }
-
   try {
     const result = await orchestrateMessage({
-      admin,
-      profileId: userData.user.id,
+      admin: auth.admin,
+      profileId: auth.profileId,
       channel: 'web',
       conversationId,
       message,

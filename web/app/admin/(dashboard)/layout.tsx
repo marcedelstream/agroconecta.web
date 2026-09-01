@@ -48,7 +48,8 @@ const ADMIN_NAV_GROUPS = [
   {
     label: 'Karai',
     items: [
-      { href: '/admin/karai', label: 'Uso y conversaciones', icon: '◐' },
+      { href: '/admin/karai', label: 'Uso y leads', icon: '◐' },
+      { href: '/admin/karai/fuentes', label: 'Base de conocimiento', icon: '◍' },
     ],
   },
 ]

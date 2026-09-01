@@ -23,11 +23,12 @@ import { professions, newsCategories, departments } from '@/lib/mock-data'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Profession, Department, NewsCategory, Organization } from '@/lib/types'
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
 
 export default function OnboardingScreen() {
   const { onboarding, updateOnboarding, nextStep, prevStep, completeOnboarding } = useApp()
   const [localName, setLocalName] = useState(onboarding.name)
+  const [localPhone, setLocalPhone] = useState(onboarding.phone)
   const slideAnim = useRef(new Animated.Value(0)).current
 
   function animateNext(direction: 1 | -1 = 1) {
@@ -41,6 +42,9 @@ export default function OnboardingScreen() {
     if (onboarding.step === 0) {
       if (localName.trim().length < 2) return
       updateOnboarding({ name: localName.trim() })
+    }
+    if (onboarding.step === 1) {
+      updateOnboarding({ phone: localPhone.trim() })
     }
     animateNext(1)
     nextStep()
@@ -59,10 +63,11 @@ export default function OnboardingScreen() {
   const canProceed = () => {
     switch (onboarding.step) {
       case 0: return localName.trim().length >= 2
-      case 1: return onboarding.profession !== null
-      case 2: return onboarding.department !== null
-      case 3: return onboarding.preferences.length > 0
-      case 4: return true
+      case 1: return true
+      case 2: return onboarding.profession !== null
+      case 3: return onboarding.department !== null
+      case 4: return onboarding.preferences.length > 0
+      case 5: return true
       default: return false
     }
   }
@@ -96,18 +101,24 @@ export default function OnboardingScreen() {
             />
           )}
           {onboarding.step === 1 && (
+            <StepPhone
+              phone={localPhone}
+              onPhoneChange={setLocalPhone}
+            />
+          )}
+          {onboarding.step === 2 && (
             <StepProfession
               selected={onboarding.profession}
               onSelect={(p) => updateOnboarding({ profession: p })}
             />
           )}
-          {onboarding.step === 2 && (
+          {onboarding.step === 3 && (
             <StepDepartment
               selected={onboarding.department}
               onSelect={(d) => updateOnboarding({ department: d })}
             />
           )}
-          {onboarding.step === 3 && (
+          {onboarding.step === 4 && (
             <StepPreferences
               selected={onboarding.preferences}
               onToggle={(cat) => {
@@ -117,7 +128,7 @@ export default function OnboardingScreen() {
               }}
             />
           )}
-          {onboarding.step === 4 && (
+          {onboarding.step === 5 && (
             <StepMedia
               selected={onboarding.organizationSubscriptions}
               onToggle={(id) => {
@@ -168,6 +179,34 @@ function StepName({
         placeholder="Tu nombre"
         placeholderTextColor={Colors.muted}
         style={styles.input}
+        autoFocus
+        returnKeyType="next"
+      />
+    </View>
+  )
+}
+
+function StepPhone({
+  phone,
+  onPhoneChange,
+}: {
+  phone: string
+  onPhoneChange: (v: string) => void
+}) {
+  return (
+    <View style={styles.step}>
+      <Ionicons name="logo-whatsapp" size={56} color={Colors.lime} style={styles.stepIcon} />
+      <Text variant="title" style={styles.stepTitle}>¿Cuál es tu WhatsApp?</Text>
+      <Text variant="body" color={Colors.muted} style={styles.stepDesc}>
+        Lo usamos para contactarte y para las nuevas funciones del ecosistema. Podés saltear este paso.
+      </Text>
+      <TextInput
+        value={phone}
+        onChangeText={onPhoneChange}
+        placeholder="+595 981 234567"
+        placeholderTextColor={Colors.muted}
+        style={styles.input}
+        keyboardType="phone-pad"
         autoFocus
         returnKeyType="next"
       />

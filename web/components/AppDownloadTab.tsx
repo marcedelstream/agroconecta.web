@@ -8,7 +8,7 @@ export function AppDownloadTab() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
-  if (pathname?.startsWith('/admin')) return null
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/karai')) return null
 
   return (
     <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center">

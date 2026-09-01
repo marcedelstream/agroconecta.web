@@ -8,11 +8,16 @@ export interface AIProvider {
   generate(input: { messages: ChatMessage[] }): Promise<{ text: string; tokensUsed: number | null }>
 }
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
-// gpt-5.6-luna (jul-2026): tier mas barato de la familia GPT-5.6 vigente, pensado para chat/
-// clasificacion de alto volumen — reemplaza a gpt-4o-mini (generacion anterior) para este caso
-// de uso. Ver KARAI-MODELO-NEGOCIO.md secc. "por que el limite no es (solo) por costo de OpenAI".
+// gpt-5.6-luna (jul-2026) es modelo de razonamiento — en la practica falla en /v1/chat/completions
+// (no soporta `temperature`, y varios clientes reportan que ese endpoint directamente lo rechaza).
+// Usamos /v1/responses, que es el endpoint soportado de punta a punta para esta familia de modelos.
+const OPENAI_URL = 'https://api.openai.com/v1/responses'
 const MODEL = 'gpt-5.6-luna'
+
+interface ResponsesApiOutputItem {
+  type?: string
+  content?: { type?: string; text?: string }[]
+}
 
 export class OpenAIProvider implements AIProvider {
   constructor(private readonly apiKey: string) {}
@@ -26,9 +31,9 @@ export class OpenAIProvider implements AIProvider {
       },
       body: JSON.stringify({
         model: MODEL,
-        messages,
-        temperature: 0.4,
-        max_tokens: 500,
+        input: messages,
+        max_output_tokens: 600,
+        reasoning: { effort: 'low' },
       }),
     })
 
@@ -38,7 +43,11 @@ export class OpenAIProvider implements AIProvider {
     }
 
     const data = await res.json()
-    const text = data?.choices?.[0]?.message?.content
+    const output = (data?.output ?? []) as ResponsesApiOutputItem[]
+    const messageItem = output.find((item) => item.type === 'message')
+    const textItem = messageItem?.content?.find((c) => c.type === 'output_text')
+    const text = textItem?.text
+
     if (typeof text !== 'string') throw new Error('Respuesta de OpenAI sin contenido.')
 
     return { text, tokensUsed: data?.usage?.total_tokens ?? null }

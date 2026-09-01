@@ -1,7 +1,9 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 
-// Starter (KARAI-MODELO-NEGOCIO.md): 15 consultas de texto por dia. Teams/Enterprise quedan para
-// cuando exista el vinculo numero<->organizacion — por ahora todos los perfiles caen en Starter.
+// Karai es beneficio de membresia paga (2026-09-01: se descarta el tier gratuito Starter hasta que
+// haya organizaciones dando suscripciones a sus clientes) — este limite protege el costo de un
+// uso anormal, no es un funnel de upsell. Teams/Enterprise quedan para cuando exista el vinculo
+// numero<->organizacion.
 export const DAILY_TEXT_LIMIT = 15
 
 const ASUNCION_OFFSET_HOURS = 3 // UTC-3, Paraguay no usa horario de verano desde 2024.
@@ -28,4 +30,4 @@ export async function getUsageToday(
 }
 
 export const QUOTA_REACHED_REPLY =
-  'Llegaste al límite de 15 consultas gratuitas de hoy. Mañana se reinicia — si querés más consultas por día para vos o tu organización, escribinos por WhatsApp y te contamos sobre Karai Teams.'
+  'Llegaste al límite de 15 consultas de hoy. Mañana se reinicia — si necesitás más consultas por día para vos o tu organización, escribinos por WhatsApp y te contamos sobre Karai Teams.'

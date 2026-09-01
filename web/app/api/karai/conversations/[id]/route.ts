@@ -32,3 +32,27 @@ export async function GET(request: Request, { params }: Props) {
 
   return NextResponse.json({ messages: messages ?? [] })
 }
+
+// Borra la conversación (y sus mensajes, por el on delete cascade de conversation_messages) —
+// solo si es del usuario autenticado. Los leads ya generados a partir de esta conversación NO se
+// borran (karai_leads.conversation_id es "on delete set null"): el admin igual necesita poder
+// contactar a alguien que ya mostró una intención comercial, aunque el usuario borre el chat.
+export async function DELETE(request: Request, { params }: Props) {
+  const { id } = await params
+  const auth = await authenticateKaraiRequest(request)
+  if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const { data: conversation } = await auth.admin
+    .from('conversations')
+    .select('id')
+    .eq('id', id)
+    .eq('profile_id', auth.profileId)
+    .maybeSingle()
+
+  if (!conversation) return NextResponse.json({ error: 'No encontrada.' }, { status: 404 })
+
+  const { error } = await auth.admin.from('conversations').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
+}

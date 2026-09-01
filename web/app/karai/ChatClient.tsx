@@ -74,6 +74,28 @@ export function KaraiChatClient({ email }: { email: string }) {
     setSidebarOpen(false)
   }
 
+  async function handleDeleteConversation(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!confirm('¿Eliminar esta conversación? No se puede deshacer.')) return
+
+    try {
+      const token = await getToken()
+      const res = await fetch(`/api/karai/conversations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error ?? 'No se pudo eliminar.')
+      }
+
+      setConversations((prev) => prev.filter((c) => c.id !== id))
+      if (id === conversationId) handleNewConversation()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar la conversación.')
+    }
+  }
+
   async function handleOpenConversation(id: string) {
     setError(null)
     setSidebarOpen(false)
@@ -144,16 +166,24 @@ export function KaraiChatClient({ email }: { email: string }) {
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-1">
           {conversations.map((c) => (
-            <button
+            <div
               key={c.id}
-              onClick={() => handleOpenConversation(c.id)}
-              className={`text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                c.id === conversationId ? 'bg-lime/15 text-foreground' : 'text-muted hover:bg-secondary'
+              className={`group flex items-center gap-1 rounded-lg transition-colors ${
+                c.id === conversationId ? 'bg-lime/15' : 'hover:bg-secondary'
               }`}
             >
-              <p className="line-clamp-1">{c.preview}</p>
-              <p className="text-xs text-muted mt-0.5">{new Date(c.lastMessageAt).toLocaleDateString('es-PY')}</p>
-            </button>
+              <button onClick={() => handleOpenConversation(c.id)} className="flex-1 min-w-0 text-left px-3 py-2.5 text-sm">
+                <p className={`line-clamp-1 ${c.id === conversationId ? 'text-foreground' : 'text-muted'}`}>{c.preview}</p>
+                <p className="text-xs text-muted mt-0.5">{new Date(c.lastMessageAt).toLocaleDateString('es-PY')}</p>
+              </button>
+              <button
+                onClick={(e) => handleDeleteConversation(c.id, e)}
+                title="Eliminar conversación"
+                className="shrink-0 px-2 text-muted/60 hover:text-danger transition-colors"
+              >
+                ✕
+              </button>
+            </div>
           ))}
           {conversations.length === 0 && <p className="text-muted text-xs px-3 py-2">Sin conversaciones todavía.</p>}
         </div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 interface DisplayMessage {
@@ -402,7 +403,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                     {isEmpty && loading ? (
                       <span className="text-muted">Escribiendo...</span>
                     ) : m.role === 'assistant' ? (
-                      <ReactMarkdown components={markdownComponents}>{m.content}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{m.content}</ReactMarkdown>
                     ) : (
                       <p className="whitespace-pre-wrap">{m.content}</p>
                     )}

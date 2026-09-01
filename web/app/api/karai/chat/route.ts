@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import { authenticateKaraiRequest } from '@/lib/karai/auth'
-import { orchestrateMessage } from '@/lib/karai/orchestrator'
+import { orchestrateMessageStream } from '@/lib/karai/orchestrator'
 
-// Endpoint channel-agnostic: hoy lo llama el chat web, mas adelante el webhook de WhatsApp puede
-// llamar al mismo orquestador (orchestrateMessage) directo sin pasar por HTTP, o via este mismo
-// endpoint con channel:'whatsapp' si conviene mantenerlo desacoplado del webhook.
+// Endpoint channel-agnostic: hoy lo llama el chat web (streaming). El futuro webhook de WhatsApp va
+// a usar orchestrateMessage (no-streaming) directo, no este endpoint — un mensaje de WhatsApp llega
+// completo, no hace falta tipeo progresivo.
 export async function POST(request: Request) {
   const auth = await authenticateKaraiRequest(request)
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await orchestrateMessage({
+    const result = await orchestrateMessageStream({
       admin: auth.admin,
       profileId: auth.profileId,
       channel: 'web',
@@ -29,10 +29,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: result.status })
     }
 
-    return NextResponse.json({
-      reply: result.reply,
-      conversationId: result.conversationId,
-      category: result.category,
+    return new Response(result.stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Karai-Conversation-Id': result.conversationId,
+        'X-Karai-Category': result.category,
+      },
     })
   } catch (err) {
     console.error('karai/chat error:', err)

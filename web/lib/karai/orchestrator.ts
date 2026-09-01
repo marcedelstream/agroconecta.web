@@ -1,6 +1,6 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { classifyMessage, OUT_OF_SCOPE_REPLY, UNSAFE_REPLY } from './classifier'
-import { getAIProvider } from './ai-provider'
+import { getAIProvider, type AIProvider } from './ai-provider'
 import { buildContext } from './context'
 import { extractAndSaveFarmData } from './farm-extraction'
 import { DAILY_TEXT_LIMIT, getUsageToday, QUOTA_REACHED_REPLY } from './quota'
@@ -38,7 +38,10 @@ Oportunidades comerciales:
 
 Datos de finca:
 - Si el bloque "Datos de finca que este usuario ya registró con vos" tiene información, usala para responder sin volver a preguntarla.
-- Cuando el usuario te cuente un dato objetivo nuevo de su finca (cantidad de animales, hectáreas, cultivos, ubicación), dale el visto — se guarda automáticamente, no hace falta que se lo confirmes con un formulario, pero podés mencionar que ya quedó anotado en "Mis datos".`
+- Cuando el usuario te cuente un dato objetivo nuevo de su finca (cantidad de animales, hectáreas, cultivos, ubicación), dale el visto — se guarda automáticamente, no hace falta que se lo confirmes con un formulario, pero podés mencionar que ya quedó anotado en "Mis datos".
+
+Fuentes de referencia:
+- Si usaste algo del bloque "Fuentes de referencia adicionales" para responder, cerrá tu respuesta con una línea aparte: "Fuente: <título de la fuente>". Si no usaste ninguna, no agregues esa línea.`
 
 const MEMBERSHIP_REQUIRED_REPLY =
   'Karai es un beneficio para miembros de Agroconecta. Activá tu membresía anual desde la app o escribinos por WhatsApp para más información.'
@@ -199,4 +202,116 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
   }
 
   return { ok: true, reply: text, conversationId, category }
+}
+
+type StreamResult =
+  | { ok: true; conversationId: string; category: ScopeCategory; stream: ReadableStream<Uint8Array> }
+  | { ok: false; status: number; error: string }
+
+function singleChunkStream(text: string): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder()
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(text))
+      controller.close()
+    },
+  })
+}
+
+// Version streaming para el chat web (tipeo progresivo). El WhatsApp adapter (fase siguiente) va a
+// seguir usando orchestrateMessage — un mensaje de WhatsApp no se "tipea" progresivamente, llega
+// completo, así que no necesita esto.
+export async function orchestrateMessageStream(input: OrchestrateInput): Promise<StreamResult> {
+  const { admin, profileId, channel, message } = input
+  const trimmed = message.trim()
+  if (!trimmed) return { ok: false, status: 400, error: 'Mensaje vacío.' }
+
+  if (!(await isActiveMember(admin, profileId))) {
+    return { ok: false, status: 402, error: MEMBERSHIP_REQUIRED_REPLY }
+  }
+
+  const category = classifyMessage(trimmed)
+  const conversationId = await ensureConversation(admin, profileId, channel, input.conversationId)
+
+  if (BLOCKED_CATEGORIES.includes(category)) {
+    const reply = category === 'unsafe_or_abusive' ? UNSAFE_REPLY : OUT_OF_SCOPE_REPLY
+    await persistMessage(admin, conversationId, 'user', trimmed, category, null)
+    await persistMessage(admin, conversationId, 'assistant', reply, category, null)
+    return { ok: true, conversationId, category, stream: singleChunkStream(reply) }
+  }
+
+  const usageToday = await getUsageToday(admin, profileId)
+  if (usageToday >= DAILY_TEXT_LIMIT) {
+    await persistMessage(admin, conversationId, 'user', trimmed, category, null)
+    await persistMessage(admin, conversationId, 'assistant', QUOTA_REACHED_REPLY, category, null)
+    return { ok: true, conversationId, category, stream: singleChunkStream(QUOTA_REACHED_REPLY) }
+  }
+
+  const provider = getAIProvider()
+  if (!provider) {
+    return { ok: false, status: 503, error: 'Karai todavía no está configurado (falta OPENAI_API_KEY).' }
+  }
+
+  const [history, context] = await Promise.all([
+    loadRecentHistory(admin, conversationId),
+    buildContext(admin, profileId),
+  ])
+
+  const messages: ChatMessage[] = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: `Contexto de Agroconecta:\n${context}` },
+    ...history,
+    { role: 'user', content: trimmed },
+  ]
+
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let fullText = ''
+      let tokensUsed: number | null = null
+
+      try {
+        for await (const event of provider.generateStream({ messages })) {
+          if (event.type === 'delta') {
+            fullText += event.text
+            controller.enqueue(encoder.encode(event.text))
+          } else if (event.type === 'done') {
+            tokensUsed = event.tokensUsed
+          }
+        }
+      } catch (streamErr) {
+        // Fallback: si el streaming falla (ej. OpenAI cambia el formato del SSE), pedimos la
+        // respuesta completa de una sola vez en vez de dejar el chat roto — mismo criterio que
+        // ya nos salvó una vez con el bug del endpoint equivocado.
+        console.error('generateStream falló, uso fallback no-streaming:', streamErr)
+        try {
+          const fallback = await provider.generate({ messages })
+          fullText = fallback.text
+          tokensUsed = fallback.tokensUsed
+          controller.enqueue(encoder.encode(fullText))
+        } catch (fallbackErr) {
+          controller.error(fallbackErr)
+          return
+        }
+      }
+
+      try {
+        await persistMessage(admin, conversationId, 'user', trimmed, category, null)
+        await persistMessage(admin, conversationId, 'assistant', fullText, category, tokensUsed)
+        await admin.from('usage_ledger').insert({ profile_id: profileId, channel, interaction_type: 'text', tokens_used: tokensUsed })
+        await recordLeadIfCommercial(admin, profileId, conversationId, category, trimmed)
+        if (category === 'farm_management') {
+          await extractAndSaveFarmData(admin, provider as AIProvider, profileId, trimmed)
+        }
+      } catch (persistErr) {
+        // La respuesta ya se le mostró al usuario — un error acá no debe tirarle un error al
+        // cliente, solo loguearse para revisar despues.
+        console.error('orchestrateMessageStream: fallo al persistir:', persistErr)
+      }
+
+      controller.close()
+    },
+  })
+
+  return { ok: true, conversationId, category, stream }
 }

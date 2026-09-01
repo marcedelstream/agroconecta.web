@@ -1,7 +1,7 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { ExtractedFarmData } from './farm-extraction'
 
-const MAX_KNOWLEDGE_CONTENT_CHARS = 800
+const MAX_KNOWLEDGE_CONTENT_CHARS = 2000
 
 // Contexto minimo de Agroconecta para que el modelo responda con datos reales en vez de inventar
 // (KARAI-DIAGNOSTICO-SPRINT-1.md secc. 5: "no hace falta RAG con embeddings el dia 1 — se puede

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await auth.admin
     .from('conversations')
-    .select('id,started_at,last_message_at')
+    .select('id,title,started_at,last_message_at')
     .eq('profile_id', auth.profileId)
     .order('last_message_at', { ascending: false })
     .limit(50)
@@ -37,7 +37,8 @@ export async function GET(request: Request) {
       id: c.id,
       startedAt: c.started_at,
       lastMessageAt: c.last_message_at,
-      preview: previews.get(c.id) ?? 'Nueva conversación',
+      title: c.title as string | null,
+      preview: c.title || previews.get(c.id) || 'Nueva conversación',
     })),
   })
 }

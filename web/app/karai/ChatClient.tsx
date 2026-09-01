@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
 interface DisplayMessage {
@@ -14,12 +15,31 @@ interface ConversationSummary {
   id: string
   startedAt: string
   lastMessageAt: string
+  title: string | null
   preview: string
 }
 
 const WELCOME: DisplayMessage = {
   role: 'assistant',
   content: 'Mba\'éichapa. Soy Karai, el asistente de Agroconecta. Preguntame por precios, noticias, eventos, o contame de tu finca.',
+}
+
+const SUGGESTIONS = ['¿Qué precios tenés hoy?', '¿Qué eventos vienen?', 'Últimas noticias del agro', 'Quiero contarte de mi finca']
+
+const markdownComponents = {
+  p: ({ children }: { children?: React.ReactNode }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+  strong: ({ children }: { children?: React.ReactNode }) => <strong className="font-semibold">{children}</strong>,
+  ul: ({ children }: { children?: React.ReactNode }) => <ul className="list-disc pl-4 mb-1.5 space-y-0.5">{children}</ul>,
+  ol: ({ children }: { children?: React.ReactNode }) => <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>,
+  li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
+  a: ({ children, href }: { children?: React.ReactNode; href?: string }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline text-lime">
+      {children}
+    </a>
+  ),
+  code: ({ children }: { children?: React.ReactNode }) => (
+    <code className="bg-bg/50 px-1 py-0.5 rounded text-xs">{children}</code>
+  ),
 }
 
 async function getToken(): Promise<string> {
@@ -39,7 +59,12 @@ export function KaraiChatClient({ email }: { email: string }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null)
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -56,9 +81,21 @@ export function KaraiChatClient({ email }: { email: string }) {
     }
   }, [])
 
+  const loadQuota = useCallback(async () => {
+    try {
+      const token = await getToken()
+      const res = await fetch('/api/karai/quota', { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      if (res.ok) setQuota({ used: data.used, limit: data.limit })
+    } catch {
+      // No crítico para poder chatear.
+    }
+  }, [])
+
   useEffect(() => {
     loadConversations()
-  }, [loadConversations])
+    loadQuota()
+  }, [loadConversations, loadQuota])
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowser()
@@ -68,6 +105,7 @@ export function KaraiChatClient({ email }: { email: string }) {
   }
 
   function handleNewConversation() {
+    abortRef.current?.abort()
     setConversationId(null)
     setMessages([WELCOME])
     setError(null)
@@ -96,6 +134,24 @@ export function KaraiChatClient({ email }: { email: string }) {
     }
   }
 
+  async function handleRenameSubmit(id: string) {
+    const title = renameValue.trim()
+    setRenamingId(null)
+    if (!title) return
+
+    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title, preview: title } : c)))
+    try {
+      const token = await getToken()
+      await fetch(`/api/karai/conversations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title }),
+      })
+    } catch {
+      loadConversations()
+    }
+  }
+
   async function handleOpenConversation(id: string) {
     setError(null)
     setSidebarOpen(false)
@@ -116,37 +172,101 @@ export function KaraiChatClient({ email }: { email: string }) {
     }
   }
 
-  async function handleSend(e: React.FormEvent) {
+  const sendMessage = useCallback(
+    async (text: string, opts?: { skipUserBubble?: boolean }) => {
+      const trimmed = text.trim()
+      if (!trimmed || loading) return
+
+      setError(null)
+      if (!opts?.skipUserBubble) setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+      setLoading(true)
+
+      const controller = new AbortController()
+      abortRef.current = controller
+
+      try {
+        const token = await getToken()
+        const res = await fetch('/api/karai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ message: trimmed, conversationId }),
+          signal: controller.signal,
+        })
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => null)
+          throw new Error(data?.error ?? 'No se pudo enviar el mensaje.')
+        }
+
+        const newConversationId = res.headers.get('X-Karai-Conversation-Id')
+        const wasNewConversation = !conversationId
+        if (newConversationId) setConversationId(newConversationId)
+
+        const reader = res.body?.getReader()
+        if (reader) {
+          const decoder = new TextDecoder()
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value, { stream: true })
+            setMessages((prev) => {
+              const next = [...prev]
+              next[next.length - 1] = { role: 'assistant', content: next[next.length - 1].content + chunk }
+              return next
+            })
+          }
+        }
+
+        if (wasNewConversation) loadConversations()
+        loadQuota()
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          // Detenido a pedido del usuario — dejamos lo que ya se escribió, sin error.
+        } else {
+          setError(err instanceof Error ? err.message : 'No se pudo enviar el mensaje.')
+          setMessages((prev) => prev.slice(0, -1))
+        }
+      } finally {
+        setLoading(false)
+        abortRef.current = null
+      }
+    },
+    [loading, conversationId, loadConversations, loadQuota],
+  )
+
+  function handleSend(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()
-    if (!trimmed || loading) return
-
-    setError(null)
-    setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
+    if (!trimmed) return
     setInput('')
-    setLoading(true)
-
-    try {
-      const token = await getToken()
-      const res = await fetch('/api/karai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: trimmed, conversationId }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error ?? 'No se pudo enviar el mensaje.')
-
-      const isNewConversation = !conversationId
-      setConversationId(data.conversationId)
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
-      if (isNewConversation) loadConversations()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo enviar el mensaje.')
-    } finally {
-      setLoading(false)
-    }
+    sendMessage(trimmed)
   }
+
+  function handleStop() {
+    abortRef.current?.abort()
+  }
+
+  function handleRegenerate() {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user')
+    if (!lastUser || loading) return
+    setMessages((prev) => {
+      // Saca la última respuesta del asistente (si la hay) para reemplazarla visualmente.
+      const next = [...prev]
+      if (next[next.length - 1]?.role === 'assistant') next.pop()
+      return next
+    })
+    sendMessage(lastUser.content, { skipUserBubble: true })
+  }
+
+  function handleCopy(index: number, content: string) {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopiedIndex(index)
+      setTimeout(() => setCopiedIndex((i) => (i === index ? null : i)), 1500)
+    })
+  }
+
+  const isFreshConversation = messages.length === 1
 
   return (
     <div className="min-h-screen flex">
@@ -168,21 +288,50 @@ export function KaraiChatClient({ email }: { email: string }) {
           {conversations.map((c) => (
             <div
               key={c.id}
-              className={`group flex items-center gap-1 rounded-lg transition-colors ${
+              className={`flex items-center gap-1 rounded-lg transition-colors ${
                 c.id === conversationId ? 'bg-lime/15' : 'hover:bg-secondary'
               }`}
             >
-              <button onClick={() => handleOpenConversation(c.id)} className="flex-1 min-w-0 text-left px-3 py-2.5 text-sm">
-                <p className={`line-clamp-1 ${c.id === conversationId ? 'text-foreground' : 'text-muted'}`}>{c.preview}</p>
-                <p className="text-xs text-muted mt-0.5">{new Date(c.lastMessageAt).toLocaleDateString('es-PY')}</p>
-              </button>
-              <button
-                onClick={(e) => handleDeleteConversation(c.id, e)}
-                title="Eliminar conversación"
-                className="shrink-0 px-2 text-muted/60 hover:text-danger transition-colors"
-              >
-                ✕
-              </button>
+              {renamingId === c.id ? (
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onBlur={() => handleRenameSubmit(c.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleRenameSubmit(c.id)
+                    if (e.key === 'Escape') setRenamingId(null)
+                  }}
+                  className="flex-1 min-w-0 mx-2 my-1.5 px-2 py-1 text-sm rounded bg-secondary border border-bdr text-foreground"
+                />
+              ) : (
+                <button onClick={() => handleOpenConversation(c.id)} className="flex-1 min-w-0 text-left px-3 py-2.5 text-sm">
+                  <p className={`line-clamp-1 ${c.id === conversationId ? 'text-foreground' : 'text-muted'}`}>{c.preview}</p>
+                  <p className="text-xs text-muted mt-0.5">{new Date(c.lastMessageAt).toLocaleDateString('es-PY')}</p>
+                </button>
+              )}
+              {renamingId !== c.id && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setRenamingId(c.id)
+                      setRenameValue(c.title ?? c.preview)
+                    }}
+                    title="Renombrar"
+                    className="shrink-0 px-1.5 text-muted/60 hover:text-foreground transition-colors"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteConversation(c.id, e)}
+                    title="Eliminar conversación"
+                    className="shrink-0 px-2 text-muted/60 hover:text-danger transition-colors"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
             </div>
           ))}
           {conversations.length === 0 && <p className="text-muted text-xs px-3 py-2">Sin conversaciones todavía.</p>}
@@ -203,29 +352,62 @@ export function KaraiChatClient({ email }: { email: string }) {
               <p className="text-muted text-xs truncate">{email}</p>
             </div>
           </div>
-          <button onClick={handleSignOut} className="btn text-xs shrink-0">Cerrar sesión</button>
+          <div className="flex items-center gap-3 shrink-0">
+            {quota && (
+              <span className="text-muted text-xs hidden sm:inline">
+                {quota.used}/{quota.limit} hoy
+              </span>
+            )}
+            <button onClick={handleSignOut} className="btn text-xs">Cerrar sesión</button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto px-5 py-6">
           <div className="max-w-2xl mx-auto flex flex-col gap-4">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                    m.role === 'user' ? 'bg-lime text-bg' : 'bg-secondary text-foreground border border-bdr'
-                  }`}
-                >
-                  {m.content}
+            {messages.map((m, i) => {
+              const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
+              const isEmpty = m.role === 'assistant' && m.content === ''
+              return (
+                <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      m.role === 'user' ? 'bg-lime text-bg' : 'bg-secondary text-foreground border border-bdr'
+                    }`}
+                  >
+                    {isEmpty && loading ? (
+                      <span className="text-muted">Escribiendo...</span>
+                    ) : m.role === 'assistant' ? (
+                      <ReactMarkdown components={markdownComponents}>{m.content}</ReactMarkdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    )}
+                  </div>
+                  {m.role === 'assistant' && !isEmpty && (!loading || !isLastAssistant) && (
+                    <div className="flex items-center gap-3 mt-1 px-1">
+                      <button onClick={() => handleCopy(i, m.content)} className="text-muted text-xs hover:text-foreground transition-colors">
+                        {copiedIndex === i ? 'Copiado' : 'Copiar'}
+                      </button>
+                      {isLastAssistant && (
+                        <button onClick={handleRegenerate} className="text-muted text-xs hover:text-foreground transition-colors">
+                          Regenerar
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-secondary border border-bdr rounded-2xl px-4 py-2.5 text-sm text-muted">
-                  Escribiendo...
-                </div>
+              )
+            })}
+
+            {isFreshConversation && !loading && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} onClick={() => sendMessage(s)} className="btn text-xs">
+                    {s}
+                  </button>
+                ))}
               </div>
             )}
+
             {error && (
               <div className="rounded-xl bg-danger/10 border border-danger/30 px-4 py-3 text-sm text-danger max-w-[85%]">
                 {error}
@@ -244,9 +426,15 @@ export function KaraiChatClient({ email }: { email: string }) {
               className="input flex-1"
               disabled={loading}
             />
-            <button type="submit" disabled={loading || !input.trim()} className="btn-primary shrink-0">
-              Enviar
-            </button>
+            {loading ? (
+              <button type="button" onClick={handleStop} className="btn shrink-0">
+                Detener
+              </button>
+            ) : (
+              <button type="submit" disabled={!input.trim()} className="btn-primary shrink-0">
+                Enviar
+              </button>
+            )}
           </div>
         </form>
       </div>

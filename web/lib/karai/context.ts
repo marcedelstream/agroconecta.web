@@ -1,7 +1,24 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { ExtractedFarmData } from './farm-extraction'
+import { loadEventsContext } from './events-context'
 
 const MAX_KNOWLEDGE_CONTENT_CHARS = 2000
+
+// Sin esto el modelo no tiene forma de saber qué es "hoy" — no puede decidir qué evento es
+// "próximo" ni interpretar "esta semana" sin la fecha/hora actual de Paraguay.
+function nowContext(): string {
+  const now = new Date()
+  const formatted = now.toLocaleString('es-PY', {
+    timeZone: 'America/Asuncion',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return `Hoy es ${formatted} (hora de Paraguay).`
+}
 
 // Contexto minimo de Agroconecta para que el modelo responda con datos reales en vez de inventar
 // (KARAI-DIAGNOSTICO-SPRINT-1.md secc. 5: "no hace falta RAG con embeddings el dia 1 — se puede
@@ -87,11 +104,12 @@ async function loadOwnFarmContext(admin: ReturnType<typeof createSupabaseAdmin>,
 }
 
 export async function buildContext(admin: ReturnType<typeof createSupabaseAdmin>, profileId: string): Promise<string> {
-  const [publicContext, knowledgeContext, ownFarmContext] = await Promise.all([
+  const [publicContext, eventsContext, knowledgeContext, ownFarmContext] = await Promise.all([
     loadPublicContext(admin),
+    loadEventsContext(),
     loadKnowledgeContext(admin),
     loadOwnFarmContext(admin, profileId),
   ])
 
-  return `${publicContext}${knowledgeContext}${ownFarmContext}`
+  return `${nowContext()}\n\n${publicContext}${eventsContext}${knowledgeContext}${ownFarmContext}`
 }

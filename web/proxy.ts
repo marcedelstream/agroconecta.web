@@ -36,8 +36,12 @@ export async function proxy(request: NextRequest) {
   const isKaraiPath = effectivePathname.startsWith('/karai')
   if (!isAdminPath && !isKaraiPath) return pass()
 
+  // El favicon (y cualquier otro ícono que genere la convención de metadata de Next: apple-icon,
+  // opengraph-image, etc.) tiene que verse en la pestaña del navegador ANTES de loguearse — si no,
+  // el ícono de /karai/login queda pidiendo sesión y el navegador nunca lo muestra.
+  const isPublicIcon = /^\/karai\/(icon|apple-icon|favicon)/.test(effectivePathname)
   const isLoginPage = effectivePathname === '/admin/login' || effectivePathname === '/karai/login'
-  if (isLoginPage) return pass()
+  if (isLoginPage || isPublicIcon) return pass()
 
   const response = pass()
 

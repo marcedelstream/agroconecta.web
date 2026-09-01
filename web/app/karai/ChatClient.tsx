@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
@@ -21,7 +21,15 @@ interface ConversationSummary {
 
 const WELCOME: DisplayMessage = {
   role: 'assistant',
-  content: 'Mba\'éichapa. Soy Karai, el asistente de Agroconecta. Preguntame por precios, noticias, eventos, o contame de tu finca.',
+  content: `Mba'éichapa, soy Karai, el asistente de Agroconecta. Puedo ayudarte con:
+
+- **Precios** de mercado, ganadería y commodities
+- **Noticias** del agro paraguayo
+- **Eventos** del sector, con fecha y lugar
+- **Cargar los datos de tu finca** (animales, hectáreas, cultivos) solo contándomelos
+- Avisarle a Agroconecta si tenés algo para **comprar o vender**
+
+¿Por dónde arrancamos?`,
 }
 
 const SUGGESTIONS = ['¿Qué precios tenés hoy?', '¿Qué eventos vienen?', 'Últimas noticias del agro', 'Quiero contarte de mi finca']
@@ -52,6 +60,7 @@ async function getToken(): Promise<string> {
 
 export function KaraiChatClient({ email }: { email: string }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<DisplayMessage[]>([WELCOME])
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
@@ -172,6 +181,22 @@ export function KaraiChatClient({ email }: { email: string }) {
     }
   }
 
+  // Al entrar con ?c=<id> en la URL (ej. después de refrescar la página), reabre esa
+  // conversación en vez de arrancar en blanco.
+  useEffect(() => {
+    const fromUrl = searchParams.get('c')
+    if (fromUrl) handleOpenConversation(fromUrl)
+    // Solo al montar — no queremos reabrir cada vez que cambia algo no relacionado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Mantiene la URL en sync con la conversación activa, así un refresh no la pierde.
+  useEffect(() => {
+    const url = conversationId ? `/karai?c=${conversationId}` : '/karai'
+    router.replace(url, { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId])
+
   const sendMessage = useCallback(
     async (text: string, opts?: { skipUserBubble?: boolean }) => {
       const trimmed = text.trim()
@@ -269,7 +294,7 @@ export function KaraiChatClient({ email }: { email: string }) {
   const isFreshConversation = messages.length === 1
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       <aside
         className={`w-64 shrink-0 border-r border-bdr flex-col bg-bg ${
           sidebarOpen ? 'fixed inset-y-0 left-0 z-50 flex' : 'hidden md:flex'
@@ -284,7 +309,7 @@ export function KaraiChatClient({ email }: { email: string }) {
             + Nueva conversación
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-1">
+        <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-3 flex flex-col gap-1">
           {conversations.map((c) => (
             <div
               key={c.id}
@@ -343,8 +368,8 @@ export function KaraiChatClient({ email }: { email: string }) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="border-b border-bdr px-5 py-4 flex items-center justify-between gap-3">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        <header className="border-b border-bdr px-5 py-4 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button onClick={() => setSidebarOpen(true)} className="md:hidden btn text-xs shrink-0">☰</button>
             <div className="min-w-0">
@@ -362,7 +387,7 @@ export function KaraiChatClient({ email }: { email: string }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-5 py-6">
+        <main className="flex-1 min-h-0 overflow-y-auto px-5 py-6">
           <div className="max-w-2xl mx-auto flex flex-col gap-4">
             {messages.map((m, i) => {
               const isLastAssistant = m.role === 'assistant' && i === messages.length - 1
@@ -417,7 +442,7 @@ export function KaraiChatClient({ email }: { email: string }) {
           </div>
         </main>
 
-        <form onSubmit={handleSend} className="border-t border-bdr px-5 py-4">
+        <form onSubmit={handleSend} className="border-t border-bdr px-5 py-4 shrink-0">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <input
               value={input}

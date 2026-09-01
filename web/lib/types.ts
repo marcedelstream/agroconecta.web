@@ -243,6 +243,7 @@ export interface OrganizationRow {
   ally_category?: AllyCategory | null
   ally_founder?: boolean
   contact_phone?: string | null
+  billing_notes?: string | null
 }
 
 export const CATEGORY_LABELS: Record<NewsCategory, string> = {

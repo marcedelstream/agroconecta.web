@@ -19,6 +19,7 @@ export function Footer() {
             <span className="text-xs text-muted uppercase tracking-wider font-display font-semibold">Portal</span>
             <Link href="/" className="text-muted hover:text-foreground transition-colors">Noticias</Link>
             <Link href="/ecosistema" className="text-muted hover:text-foreground transition-colors">Ecosistema</Link>
+            <Link href="/aliados" className="text-muted hover:text-foreground transition-colors">Aliados</Link>
             <Link href="/quienes-somos" className="text-muted hover:text-foreground transition-colors">Quiénes somos</Link>
           </div>
 

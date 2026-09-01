@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { fetchAllyDirectory } from '@/lib/supabase-repositories'
-import { ALLY_CATEGORY_LABELS, ALLY_PLAN_LABELS, type AllyCategory, type Organization } from '@/lib/types'
+import { ALLY_CATEGORY_LABELS, type AllyCategory, type Organization } from '@/lib/types'
 
 const R = Colors.redesign
 
@@ -125,7 +125,7 @@ export default function AliadosScreen() {
           onRefresh={onRefresh}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.item}
+              style={[styles.item, item.allyFounder && styles.itemFounder]}
               activeOpacity={0.85}
               onPress={() => router.push(`/publisher/${item.id}` as any)}
             >
@@ -145,15 +145,8 @@ export default function AliadosScreen() {
                 </View>
                 <View style={styles.badgeRow}>
                   {item.allyPlan && (
-                    <View style={[styles.planBadge, item.allyPlan === 'cosecha' ? { backgroundColor: Colors.lime } : { backgroundColor: R.limeSoftBg }]}>
-                      <Text family="noto-sans" weight="bold" size={9.5} color={item.allyPlan === 'cosecha' ? '#0A0A13' : R.limeSoftText}>
-                        {ALLY_PLAN_LABELS[item.allyPlan]}
-                      </Text>
-                    </View>
-                  )}
-                  {item.allyFounder && (
-                    <View style={[styles.planBadge, { backgroundColor: '#FDF0D8' }]}>
-                      <Text family="noto-sans" weight="bold" size={9.5} color="#9A6200">Fundador</Text>
+                    <View style={[styles.planBadge, { backgroundColor: R.limeSoftBg }]}>
+                      <Text family="noto-sans" weight="bold" size={9.5} color={R.limeSoftText}>Aliado</Text>
                     </View>
                   )}
                 </View>
@@ -223,6 +216,12 @@ const styles = StyleSheet.create({
     backgroundColor: R.surface,
     borderRadius: 16,
     padding: 14,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  itemFounder: {
+    borderColor: '#F0B429',
+    backgroundColor: '#FFFBEF',
   },
   avatar: { width: 44, height: 44, borderRadius: 12, backgroundColor: R.limeSoftBg, alignItems: 'center', justifyContent: 'center' },
   avatarImage: { width: 44, height: 44, borderRadius: 12 },

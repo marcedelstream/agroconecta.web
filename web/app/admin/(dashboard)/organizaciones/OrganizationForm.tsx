@@ -122,6 +122,18 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         </div>
       </div>
 
+      <div>
+        <label className={labelClass}>Notas de facturación</label>
+        <textarea
+          name="billing_notes"
+          rows={2}
+          defaultValue={organization?.billing_notes ?? ''}
+          className={`${inputClass} resize-none`}
+          placeholder="Ej: vence el 10 de cada mes, factura pendiente desde agosto..."
+        />
+        <p className="text-xs text-muted mt-1">Solo interno — se usa para hacer seguimiento manual de cobros y vencimientos.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Foto / logo 1:1</label>

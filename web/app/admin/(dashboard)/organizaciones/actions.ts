@@ -87,6 +87,7 @@ async function extractPayload(formData: FormData, supabase: ReturnType<typeof cr
     ally_category: (formData.get('ally_category') as string) || null,
     ally_founder: formData.get('ally_founder') === 'on',
     contact_phone: ((formData.get('contact_phone') as string) || '').trim() || null,
+    billing_notes: ((formData.get('billing_notes') as string) || '').trim() || null,
   }
 }
 

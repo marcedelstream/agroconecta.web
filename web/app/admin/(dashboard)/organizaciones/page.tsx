@@ -5,14 +5,18 @@ import { ALLY_PLAN_LABELS, type OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
 
+const STATUS_ORDER: Record<string, number> = { overdue: 0, trial: 1, active: 2, paused: 3 }
+
 async function loadOrgs() {
   // Cliente admin: la lista tiene que mostrar tambien las organizaciones pausadas
   const supabase = createSupabaseAdmin()
   const { data } = await supabase
     .from('organizations')
-    .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url,ally_plan,ally_founder')
+    .select('id,slug,name,description,type,commercial_status,plan_name,is_verified,logo_url,ally_plan,ally_founder,billing_notes')
     .order('name')
-  return (data ?? []) as OrganizationRow[]
+  const orgs = (data ?? []) as OrganizationRow[]
+  // Vencidas primero para que cobrar deje de depender de acordarse.
+  return orgs.sort((a, b) => (STATUS_ORDER[a.commercial_status] ?? 9) - (STATUS_ORDER[b.commercial_status] ?? 9))
 }
 
 const STATUS_STYLE: Record<string, string> = {
@@ -29,8 +33,15 @@ const STATUS_LABELS: Record<string, string> = {
   paused: 'Pausada',
 }
 
-export default async function OrganizacionesPage() {
-  const orgs = await loadOrgs()
+interface Props {
+  searchParams: Promise<{ estado?: string }>
+}
+
+export default async function OrganizacionesPage({ searchParams }: Props) {
+  const { estado } = await searchParams
+  const allOrgs = await loadOrgs()
+  const overdueCount = allOrgs.filter((org) => org.commercial_status === 'overdue').length
+  const orgs = estado === 'overdue' ? allOrgs.filter((org) => org.commercial_status === 'overdue') : allOrgs
 
   return (
     <div className="max-w-6xl">
@@ -38,6 +49,20 @@ export default async function OrganizacionesPage() {
         <div>
           <h1 className="font-display font-bold text-2xl text-foreground">Organizaciones</h1>
           <p className="text-muted text-sm mt-0.5">{orgs.length} cuentas</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/organizaciones"
+            className={`btn text-xs ${!estado ? 'bg-lime/15 text-lime border-lime/30' : ''}`}
+          >
+            Todas
+          </Link>
+          <Link
+            href="/admin/organizaciones?estado=overdue"
+            className={`btn text-xs ${estado === 'overdue' ? 'bg-danger/15 text-danger border-danger/30' : ''}`}
+          >
+            Vencidas{overdueCount > 0 ? ` (${overdueCount})` : ''}
+          </Link>
         </div>
       </div>
 
@@ -99,9 +124,17 @@ export default async function OrganizacionesPage() {
                       )}
                     </td>
                     <td>
-                      <span className={`badge text-xs ${STATUS_STYLE[org.commercial_status] ?? 'bg-secondary text-muted'}`}>
+                      <span
+                        className={`badge text-xs ${STATUS_STYLE[org.commercial_status] ?? 'bg-secondary text-muted'}`}
+                        title={org.billing_notes ?? undefined}
+                      >
                         {STATUS_LABELS[org.commercial_status] ?? org.commercial_status}
                       </span>
+                      {org.billing_notes && (
+                        <p className="text-muted text-xs mt-1 max-w-[220px] truncate" title={org.billing_notes}>
+                          {org.billing_notes}
+                        </p>
+                      )}
                     </td>
                     <td className="text-center">{org.is_verified ? '✓' : '—'}</td>
                     <td>

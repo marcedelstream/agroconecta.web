@@ -84,31 +84,26 @@ export function KaraiLoginForm() {
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-5">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <Logo width={140} height={40} className="h-9 w-auto" />
+        <div className="text-center mb-9">
+          <div className="flex justify-center mb-5">
+            <Logo width={140} height={40} className="h-8 w-auto" />
           </div>
-          <h1 className="font-display font-semibold text-xl text-foreground">Karai</h1>
-          <p className="text-muted text-sm mt-1">Ingresá con tu cuenta de Agroconecta</p>
+          <h1 className="font-display font-semibold text-2xl text-foreground">Karai</h1>
+          <p className="text-muted text-sm mt-1.5">Ingresá con tu cuenta de Agroconecta</p>
         </div>
 
         {view === 'options' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
+            <button onClick={() => { setError(null); setView('otp-request') }} className="btn-primary w-full">
+              Continuar con código por email
+            </button>
             <button onClick={handleGoogle} disabled={googleLoading} className="btn w-full">
               {googleLoading ? 'Redirigiendo a Google...' : 'Continuar con Google'}
             </button>
-            {error && <p className="text-danger text-sm text-center">{error}</p>}
-            <div className="flex items-center gap-3 py-1">
-              <div className="flex-1 h-px bg-bdr" />
-              <span className="text-muted text-xs">o</span>
-              <div className="flex-1 h-px bg-bdr" />
-            </div>
-            <button onClick={() => { setError(null); setView('otp-request') }} className="btn-primary w-full">
-              Iniciar sesión con código por email
-            </button>
             <button onClick={() => { setError(null); setView('password') }} className="btn w-full">
-              Iniciar sesión con contraseña
+              Continuar con contraseña
             </button>
+            {error && <p className="text-danger text-sm text-center mt-1">{error}</p>}
           </div>
         )}
 

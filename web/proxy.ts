@@ -15,10 +15,16 @@ export async function proxy(request: NextRequest) {
   // En karai.agroconecta.com.py servimos las mismas rutas de web/app/karai/* pero sin el prefijo
   // /karai en la URL visible — mismo deploy de Vercel (Root Directory sigue siendo `web`), solo
   // se agrega el dominio como alias y acá lo reescribimos server-side.
+  //
+  // Los archivos estáticos de /public (logo-light.png, favicon.png, etc.) se sirven desde la raíz
+  // sin importar el host — si se reescriben igual que las páginas, terminan pidiendo
+  // /karai/logo-light.png (no existe) y encima piden sesión. isStaticAsset los deja pasar tal cual.
+  const isStaticAsset = /\.[a-zA-Z0-9]+$/.test(pathname)
   let effectivePathname = pathname
   let needsRewrite = false
   if (
     isKaraiHost &&
+    !isStaticAsset &&
     !pathname.startsWith('/api') &&
     !pathname.startsWith('/karai') &&
     !pathname.startsWith('/_next') &&

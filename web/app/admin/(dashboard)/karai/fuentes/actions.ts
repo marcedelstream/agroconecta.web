@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import mammoth from 'mammoth'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import type { KaraiSourceStatus } from '@/lib/karai/knowledge-types'
 
 export type KnowledgeActionState = { error: string | null }
 
@@ -28,6 +29,15 @@ async function extractDocxText(formData: FormData): Promise<string | null> {
   return text
 }
 
+function optionalText(formData: FormData, key: string): string | null {
+  return ((formData.get(key) as string) || '').trim() || null
+}
+
+function optionalDate(formData: FormData, key: string): string | null {
+  const raw = (formData.get(key) as string) || ''
+  return raw.trim() || null
+}
+
 export async function createKnowledgeSource(
   _prev: KnowledgeActionState,
   formData: FormData,
@@ -36,7 +46,7 @@ export async function createKnowledgeSource(
     await requireAdmin()
     const kind = formData.get('kind') as string
     const title = ((formData.get('title') as string) || '').trim()
-    const url = ((formData.get('url') as string) || '').trim() || null
+    const url = optionalText(formData, 'url')
 
     if (!title) return { error: 'El título es obligatorio.' }
     if (kind === 'link' && !url) return { error: 'Los links necesitan una URL.' }
@@ -44,11 +54,27 @@ export async function createKnowledgeSource(
     // El documento puede venir pegado a mano (content) o como .docx (docx_file, se extrae con
     // mammoth) — si vienen los dos, gana el archivo.
     const docxText = await extractDocxText(formData)
-    const pastedContent = ((formData.get('content') as string) || '').trim() || null
+    const pastedContent = optionalText(formData, 'content')
     const content = docxText ?? pastedContent
 
+    // Nueva fuente siempre arranca en "pendiente" — que alguien la revise y la apruebe a mano es
+    // justo el punto del flujo editorial (KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md secc. 5,
+    // "Documentos cargados por el equipo": Borrador → revisión → aprobación → indexación).
     const admin = createSupabaseAdmin()
-    const { error } = await admin.from('karai_knowledge_sources').insert({ kind, title, url, content })
+    const { error } = await admin.from('karai_knowledge_sources').insert({
+      kind,
+      title,
+      url,
+      content,
+      publisher: optionalText(formData, 'publisher'),
+      source_level: optionalText(formData, 'source_level'),
+      topic: optionalText(formData, 'topic'),
+      geography: optionalText(formData, 'geography') ?? 'Paraguay',
+      issued_at: optionalDate(formData, 'issued_at'),
+      expires_at: optionalDate(formData, 'expires_at'),
+      verification_notes: optionalText(formData, 'verification_notes'),
+      status: 'pendiente',
+    })
     if (error) return { error: error.message }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'No se pudo guardar.' }
@@ -58,10 +84,12 @@ export async function createKnowledgeSource(
   return { error: null }
 }
 
-export async function toggleKnowledgeSource(id: string, isActive: boolean) {
+export async function setKnowledgeSourceStatus(id: string, status: KaraiSourceStatus) {
   await requireAdmin()
   const admin = createSupabaseAdmin()
-  await admin.from('karai_knowledge_sources').update({ is_active: isActive }).eq('id', id)
+  const patch: Record<string, unknown> = { status }
+  if (status === 'aprobado') patch.reviewed_at = new Date().toISOString().slice(0, 10)
+  await admin.from('karai_knowledge_sources').update(patch).eq('id', id)
   revalidatePath('/admin/karai/fuentes')
 }
 

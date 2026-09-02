@@ -1,20 +1,29 @@
 'use client'
 
 import { useTransition } from 'react'
-import { toggleKnowledgeSource, deleteKnowledgeSource } from './actions'
+import { setKnowledgeSourceStatus, deleteKnowledgeSource } from './actions'
+import type { KaraiSourceStatus } from '@/lib/karai/knowledge-types'
 
-export function SourceRowActions({ id, isActive }: { id: string; isActive: boolean }) {
+export function SourceRowActions({ id, status }: { id: string; status: KaraiSourceStatus }) {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        disabled={isPending}
-        onClick={() => startTransition(() => toggleKnowledgeSource(id, !isActive))}
-        className="btn text-xs"
-      >
-        {isActive ? 'Desactivar' : 'Activar'}
-      </button>
+    <div className="flex items-center gap-2 flex-wrap">
+      {status !== 'aprobado' && (
+        <button disabled={isPending} onClick={() => startTransition(() => setKnowledgeSourceStatus(id, 'aprobado'))} className="btn text-xs">
+          Aprobar
+        </button>
+      )}
+      {status === 'aprobado' && (
+        <button disabled={isPending} onClick={() => startTransition(() => setKnowledgeSourceStatus(id, 'vencido'))} className="btn text-xs">
+          Marcar vencida
+        </button>
+      )}
+      {status !== 'retirado' && (
+        <button disabled={isPending} onClick={() => startTransition(() => setKnowledgeSourceStatus(id, 'retirado'))} className="btn text-xs">
+          Retirar
+        </button>
+      )}
       <button
         disabled={isPending}
         onClick={() => {

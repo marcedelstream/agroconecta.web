@@ -1,6 +1,7 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { ExtractedFarmData } from './farm-extraction'
 import { loadEventsContext } from './events-context'
+import { SOURCE_LEVEL_LABELS, type KaraiSourceLevel } from './knowledge-types'
 
 const MAX_KNOWLEDGE_CONTENT_CHARS = 2000
 
@@ -70,11 +71,18 @@ async function loadPublicContext(admin: ReturnType<typeof createSupabaseAdmin>):
 // Fuentes cargadas a mano por el equipo (web/app/admin/(dashboard)/karai/fuentes) para cuando
 // Agroconecta no tiene el dato — placeholder simple sin RAG/embeddings todavia, se trunca por
 // longitud para no disparar el costo de tokens.
+//
+// KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md secc. 4.2: "impedir que una fuente vencida se use para una
+// respuesta vigente" — por eso el filtro es status='aprobado' Y (sin vencimiento O vigente), nunca
+// solo un on/off. Cada línea lleva su nivel de autoridad y vigencia para que el modelo pueda
+// citarlos con precisión, no solo el título.
 async function loadKnowledgeContext(admin: ReturnType<typeof createSupabaseAdmin>): Promise<string> {
+  const today = new Date().toISOString().slice(0, 10)
   const { data } = await admin
     .from('karai_knowledge_sources')
-    .select('kind,title,url,content')
-    .eq('is_active', true)
+    .select('kind,title,url,content,publisher,source_level,expires_at')
+    .eq('status', 'aprobado')
+    .or(`expires_at.is.null,expires_at.gte.${today}`)
     .order('created_at', { ascending: false })
     .limit(10)
 
@@ -84,13 +92,14 @@ async function loadKnowledgeContext(admin: ReturnType<typeof createSupabaseAdmin
   const block = sources
     .map((s) => {
       const body = (s.content ?? '').slice(0, MAX_KNOWLEDGE_CONTENT_CHARS)
-      return s.kind === 'link'
-        ? `- ${s.title} (${s.url ?? 'sin URL'}): ${body}`
-        : `- ${s.title} (documento cargado por el equipo): ${body}`
+      const level = s.source_level ? SOURCE_LEVEL_LABELS[s.source_level as KaraiSourceLevel] : null
+      const meta = [s.publisher, level, s.expires_at ? `vigente hasta ${s.expires_at}` : null].filter(Boolean).join(' · ')
+      const origin = s.kind === 'link' ? (s.url ?? 'sin URL') : 'documento cargado por el equipo'
+      return `- ${s.title} (${origin}${meta ? ` · ${meta}` : ''}): ${body}`
     })
     .join('\n')
 
-  return `\n\nFuentes de referencia adicionales cargadas por el equipo de Agroconecta (usar solo si son relevantes a la pregunta, y aclarar que es una fuente externa, no un dato de la plataforma):\n${block}`
+  return `\n\nFuentes de referencia adicionales cargadas y aprobadas por el equipo de Agroconecta (usar solo si son relevantes a la pregunta, y aclarar que es una fuente externa, no un dato de la plataforma):\n${block}`
 }
 
 // Lo que Karai ya sabe de la finca de ESTE usuario puntual (farm_profile) — nunca de otro. Se

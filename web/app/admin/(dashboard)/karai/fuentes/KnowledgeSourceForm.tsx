@@ -2,6 +2,9 @@
 
 import { useActionState, useState } from 'react'
 import { createKnowledgeSource, type KnowledgeActionState } from './actions'
+import { SOURCE_LEVEL_LABELS, type KaraiSourceLevel } from '@/lib/karai/knowledge-types'
+
+const LEVEL_OPTIONS = Object.entries(SOURCE_LEVEL_LABELS) as [KaraiSourceLevel, string][]
 
 export function KnowledgeSourceForm() {
   const [state, formAction, isPending] = useActionState<KnowledgeActionState, FormData>(createKnowledgeSource, { error: null })
@@ -61,6 +64,51 @@ export function KnowledgeSourceForm() {
           className="input resize-none"
         />
         <p className="text-xs text-muted mt-1">Se usa recortado a 2000 caracteres por fuente, para no disparar el costo por consulta.</p>
+      </div>
+
+      <div className="border-t border-bdr pt-4 space-y-4">
+        <p className="text-sm font-medium text-foreground">Trazabilidad</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Responsable / publicador</label>
+            <input name="publisher" placeholder="Ej: MAG, ARP, equipo Agroconecta" className="input" />
+          </div>
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Nivel de autoridad</label>
+            <select name="source_level" defaultValue="" className="input">
+              <option value="">Sin clasificar</option>
+              {LEVEL_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Tema</label>
+            <input name="topic" placeholder="Ej: sanidad animal, mercados, normativa" className="input" />
+          </div>
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Alcance geográfico</label>
+            <input name="geography" defaultValue="Paraguay" className="input" />
+          </div>
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Fecha de emisión</label>
+            <input name="issued_at" type="date" className="input" />
+          </div>
+          <div>
+            <label className="block text-sm text-muted mb-1.5">Vence el (opcional)</label>
+            <input name="expires_at" type="date" className="input" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm text-muted mb-1.5">Notas de verificación</label>
+          <textarea name="verification_notes" rows={2} placeholder="Cómo se confirmó que esta fuente es confiable..." className="input resize-none" />
+        </div>
+
+        <p className="text-xs text-muted">
+          Queda como <strong>pendiente de revisión</strong> hasta que alguien la apruebe desde la lista — Karai solo usa fuentes aprobadas y vigentes.
+        </p>
       </div>
 
       <button type="submit" disabled={isPending} className="btn-primary self-start">

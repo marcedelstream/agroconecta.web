@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { saveFarmProfile } from './actions'
 import type { ExtractedFarmData, FarmAnimalRow, FarmCultivoRow } from '@/lib/karai/farm-extraction'
+import { KaraiThemeToggle } from '../KaraiThemeToggle'
 
 interface Lead {
   id: string
@@ -170,10 +171,11 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <p className="hidden md:block text-[11.5px] font-medium text-[var(--k-muted-3)] font-[family-name:var(--font-karai-mono)]">{savedLabel}</p>
+          <KaraiThemeToggle />
           <button
             onClick={handleSave}
             disabled={saving}
-            className="bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[#0A1424] rounded-[11px] py-2.5 px-[18px] text-[13px] font-bold cursor-pointer transition-colors disabled:opacity-60"
+            className="bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[var(--k-on-lime)] rounded-[11px] py-2.5 px-[18px] text-[13px] font-bold cursor-pointer transition-colors disabled:opacity-60"
           >
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
@@ -192,9 +194,9 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
             sidebarOpen ? 'fixed inset-y-[62px] left-0 z-50 flex' : 'hidden md:flex'
           }`}
         >
-          <div className="flex flex-col gap-3.5 bg-[#0E1829] border border-[var(--k-border-strong)] rounded-2xl p-4">
+          <div className="flex flex-col gap-3.5 bg-[var(--k-raised)] border border-[var(--k-border-strong)] rounded-2xl p-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 shrink-0 rounded-[13px] bg-[var(--k-user-bubble)] border border-[#23375A] flex items-center justify-center text-[13px] font-bold text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)]">
+              <div className="w-10 h-10 shrink-0 rounded-[13px] bg-[var(--k-user-bubble)] border border-[var(--k-border-hover)] flex items-center justify-center text-[13px] font-bold text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)]">
                 {orgInitials}
               </div>
               <div className="min-w-0 flex flex-col gap-0.5">
@@ -208,7 +210,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 <p className="text-xs font-bold text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)]">{completeness}%</p>
               </div>
               <div className="h-1.5 rounded-full bg-[var(--k-border-strong)] overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#8FD63F] to-[var(--k-lime)]" style={{ width: `${completeness}%` }} />
+                <div className="h-full rounded-full bg-gradient-to-r from-[var(--k-lime-soft)] to-[var(--k-lime)]" style={{ width: `${completeness}%` }} />
               </div>
             </div>
           </div>
@@ -220,7 +222,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 key={s.id}
                 onClick={() => { setSection(s.id); setSidebarOpen(false) }}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] text-left transition-colors ${
-                  section === s.id ? 'bg-[var(--k-user-bubble)]' : 'hover:bg-[#101B2E]'
+                  section === s.id ? 'bg-[var(--k-user-bubble)]' : 'hover:bg-[var(--k-raised)]'
                 }`}
               >
                 <p className={`flex-1 text-[13px] ${section === s.id ? 'font-semibold text-[var(--k-text)]' : 'font-medium text-[var(--k-muted)]'}`}>{s.label}</p>
@@ -231,7 +233,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
             ))}
           </div>
 
-          <div className="mt-auto bg-[#0E1829] border border-[var(--k-border)] rounded-[14px] p-3.5 flex flex-col gap-1.5">
+          <div className="mt-auto bg-[var(--k-raised)] border border-[var(--k-border)] rounded-[14px] p-3.5 flex flex-col gap-1.5">
             <p className="text-xs font-bold text-[var(--k-text)]">Karai completa esto por vos</p>
             <p className="text-[11.5px] font-medium leading-relaxed text-[var(--k-muted-2)]">
               Contale por chat lo que cambió en la finca y se actualiza acá solo.
@@ -297,7 +299,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 <TableHead cols={['Categoría', 'Cabezas', 'Raza', 'Potrero', '']} template={GANADERIA_GRID} />
                 <div className="flex flex-col">
                   {animales.map((a, i) => (
-                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]" style={{ gridTemplateColumns: GANADERIA_GRID }}>
+                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[var(--k-border)]" style={{ gridTemplateColumns: GANADERIA_GRID }}>
                       <input className={cellInputClass} value={a.tipo} onChange={(e) => updateAnimalRow(i, { tipo: e.target.value })} />
                       <input
                         className={`${cellInputClass} text-right font-[family-name:var(--font-karai-mono)]`}
@@ -324,7 +326,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 <TableHead cols={['Cultivo', 'Hectáreas', 'Variedad', 'Estado', '']} template={AGRICULTURA_GRID} />
                 <div className="flex flex-col">
                   {cultivos.map((c, i) => (
-                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]" style={{ gridTemplateColumns: AGRICULTURA_GRID }}>
+                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[var(--k-border)]" style={{ gridTemplateColumns: AGRICULTURA_GRID }}>
                       <input className={cellInputClass} value={c.tipo} onChange={(e) => updateCultivoRow(i, { tipo: e.target.value })} />
                       <input
                         className={`${cellInputClass} text-right font-[family-name:var(--font-karai-mono)]`}
@@ -354,7 +356,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                           onClick={() => toggleInteres(label)}
                           className={`rounded-full py-2 px-3.5 text-[13px] font-semibold transition-colors ${
                             on
-                              ? 'bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] text-[#CDF585]'
+                              ? 'bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] text-[var(--k-lime-text)]'
                               : 'bg-[var(--k-bg)] border border-[var(--k-border-strong)] text-[var(--k-muted)] hover:border-[var(--k-border-hover)] hover:text-[var(--k-text-soft)]'
                           }`}
                         >
@@ -368,7 +370,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 <Card title="Tus consultas comerciales" subtitle="Lo que le pediste a Karai que le avise a Agroconecta">
                   <div className="px-5 md:px-[22px] pb-[18px] pt-1 flex flex-col">
                     {leads.map((l) => (
-                      <div key={l.id} className="flex items-center gap-4 py-3.5 border-b border-[#101B2E] last:border-b-0">
+                      <div key={l.id} className="flex items-center gap-4 py-3.5 border-b border-[var(--k-border)] last:border-b-0">
                         <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-lime)] bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] rounded-[7px] py-1 px-2.5">
                           {LEAD_STATUS_LABEL[l.status]}
                         </span>
@@ -429,7 +431,7 @@ function Card({
           <p className="text-xs font-medium text-[var(--k-muted-2)]">{subtitle}</p>
         </div>
         {tag && (
-          <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-muted)] bg-[#111C31] border border-[var(--k-border-strong)] rounded-full py-1.5 px-2.5">
+          <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-muted)] bg-[var(--k-raised)] border border-[var(--k-border-strong)] rounded-full py-1.5 px-2.5">
             {tag}
           </span>
         )}
@@ -489,7 +491,7 @@ function HeaderButton({ onClick, children }: { onClick: () => void; children: Re
   return (
     <button
       onClick={onClick}
-      className="bg-[#111C31] border border-[var(--k-border-strong)] hover:border-[var(--k-lime)] text-[var(--k-text)] rounded-[10px] py-2 px-3.5 text-[12.5px] font-semibold transition-colors"
+      className="bg-[var(--k-raised)] border border-[var(--k-border-strong)] hover:border-[var(--k-lime)] text-[var(--k-text)] rounded-[10px] py-2 px-3.5 text-[12.5px] font-semibold transition-colors"
     >
       {children}
     </button>

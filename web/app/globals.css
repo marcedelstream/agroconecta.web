@@ -36,13 +36,15 @@
   a    { @apply text-inherit no-underline; }
 }
 
-/* Karai tiene identidad visual propia, fija (no sigue el toggle claro/oscuro del sitio) — mismo
-   criterio que el subdominio y el favicon propios. Variables scoped a .karai-root, referenciadas
-   con la sintaxis arbitraria de Tailwind (bg-[var(--k-bg)]) en vez de tocar el theme del sitio. */
+/* Karai tiene identidad visual propia (no sigue el toggle claro/oscuro del sitio, tiene el suyo
+   propio — ver KaraiThemeProvider.tsx). Variables scoped a .karai-root, referenciadas con la
+   sintaxis arbitraria de Tailwind (bg-[var(--k-bg)]) en vez de tocar el theme del sitio. Oscuro es
+   el default (sin atributo); [data-k-theme="light"] pisa todo el set para el modo claro. */
 .karai-root {
   --k-bg: #070E1B;
   --k-sidebar: #0A1322;
   --k-card: #0C1526;
+  --k-raised: #0E1829;
   --k-border: #16233A;
   --k-border-strong: #1C2A43;
   --k-border-hover: #2A3C5C;
@@ -56,6 +58,9 @@
   --k-lime-hover: #C9F477;
   --k-lime-bg: #18280F;
   --k-lime-border: #2F4A22;
+  --k-lime-soft: #8FD63F;
+  --k-lime-text: #CDF585;
+  --k-on-lime: #0A1424;
   --k-positive: #6BE3A1;
   --k-negative: #FF8080;
   --k-warning: #F0A868;
@@ -63,6 +68,36 @@
   --k-warning-border: #4A2F10;
   --k-user-bubble: #132340;
   --k-user-border: #1E3253;
+}
+
+.karai-root[data-k-theme='light'] {
+  --k-bg: #F4F7FC;
+  --k-sidebar: #FFFFFF;
+  --k-card: #FFFFFF;
+  --k-raised: #EEF3FA;
+  --k-border: #E3E8F2;
+  --k-border-strong: #D2DAE9;
+  --k-border-hover: #BAC6DC;
+  --k-text: #10192B;
+  --k-text-soft: #2C3A52;
+  --k-muted: #57657E;
+  --k-muted-2: #76839B;
+  --k-muted-3: #96A2B8;
+  --k-muted-4: #B5BFD1;
+  --k-lime: #5C9A16;
+  --k-lime-hover: #4C8010;
+  --k-lime-bg: #EAF6D9;
+  --k-lime-border: #C7E6A2;
+  --k-lime-soft: #8FC94A;
+  --k-lime-text: #3E6B0C;
+  --k-on-lime: #FFFFFF;
+  --k-positive: #1E9A5C;
+  --k-negative: #D6304A;
+  --k-warning: #B36A0E;
+  --k-warning-bg: #FBF1DD;
+  --k-warning-border: #E9D19C;
+  --k-user-bubble: #E8EEFB;
+  --k-user-border: #CBD9F2;
 }
 
 @layer components {

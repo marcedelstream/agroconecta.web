@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import { WHATSAPP_URL } from '@/lib/social-links'
+import { KaraiThemeToggle } from '../KaraiThemeToggle'
 
 type View = 'initial' | 'otp-verify' | 'password'
 
@@ -103,7 +104,10 @@ export function KaraiLoginForm() {
         <p className="text-xs font-medium text-[var(--k-muted-4)]">Ganadería · Agricultura · Mercado · Clima</p>
       </div>
 
-      <div className="flex-1 min-w-0 flex items-center justify-center p-8 overflow-y-auto">
+      <div className="relative flex-1 min-w-0 flex items-center justify-center p-8 overflow-y-auto">
+        <div className="absolute top-5 right-5">
+          <KaraiThemeToggle />
+        </div>
         <div className="w-full max-w-[376px] flex flex-col gap-6">
           <div className="flex flex-col items-center gap-3.5 text-center">
             <Image src="/karai-avatar.png" alt="Karai" width={60} height={60} className="rounded-[20px] block" />
@@ -134,7 +138,7 @@ export function KaraiLoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[#0A1424] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
+                  className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[var(--k-on-lime)] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
                 >
                   {loading ? 'Enviando...' : 'Enviar código por email'}
                 </button>
@@ -150,7 +154,7 @@ export function KaraiLoginForm() {
                 <button
                   onClick={handleGoogle}
                   disabled={googleLoading}
-                  className="w-full bg-[#111C31] hover:border-[var(--k-border-hover)] border border-[var(--k-border-strong)] text-[var(--k-text)] rounded-xl py-3 text-[13.5px] font-semibold cursor-pointer transition-colors disabled:opacity-60"
+                  className="w-full bg-[var(--k-raised)] hover:border-[var(--k-border-hover)] border border-[var(--k-border-strong)] text-[var(--k-text)] rounded-xl py-3 text-[13.5px] font-semibold cursor-pointer transition-colors disabled:opacity-60"
                 >
                   {googleLoading ? 'Redirigiendo a Google...' : 'Continuar con Google'}
                 </button>
@@ -179,7 +183,7 @@ export function KaraiLoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[#0A1424] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
+                className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[var(--k-on-lime)] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
               >
                 {loading ? 'Verificando...' : 'Verificar'}
               </button>
@@ -222,7 +226,7 @@ export function KaraiLoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[#0A1424] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
+                className="w-full bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[var(--k-on-lime)] rounded-xl py-3 text-sm font-bold cursor-pointer transition-colors disabled:opacity-60"
               >
                 {loading ? 'Ingresando...' : 'Ingresar'}
               </button>

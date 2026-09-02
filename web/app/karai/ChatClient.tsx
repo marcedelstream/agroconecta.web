@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { KaraiThemeToggle } from './KaraiThemeToggle'
 
 interface DisplayMessage {
   role: 'user' | 'assistant'
@@ -333,7 +334,7 @@ export function KaraiChatClient({ email }: { email: string }) {
         <div className="px-3.5 pb-3.5">
           <button
             onClick={handleNewConversation}
-            className="w-full flex items-center justify-center gap-2 bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] text-[#0A1424] rounded-xl py-2.5 px-3.5 text-[13.5px] font-bold cursor-pointer transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] text-[var(--k-on-lime)] rounded-xl py-2.5 px-3.5 text-[13.5px] font-bold cursor-pointer transition-colors"
           >
             <span className="text-[15px] leading-none">+</span>Nueva conversación
           </button>
@@ -346,7 +347,7 @@ export function KaraiChatClient({ email }: { email: string }) {
             <div
               key={c.id}
               className={`relative flex items-center gap-1 rounded-[11px] transition-colors ${
-                c.id === conversationId ? 'bg-[var(--k-user-bubble)]' : 'hover:bg-[#101B2E]'
+                c.id === conversationId ? 'bg-[var(--k-user-bubble)]' : 'hover:bg-[var(--k-raised)]'
               }`}
             >
               {c.id === conversationId && (
@@ -404,7 +405,7 @@ export function KaraiChatClient({ email }: { email: string }) {
         <div className="border-t border-[var(--k-border)] p-3 flex flex-col gap-2">
           <Link
             href="/karai/mis-datos"
-            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-[#0E1829] border border-[var(--k-border)] hover:border-[var(--k-border-hover)] transition-colors"
+            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-[var(--k-raised)] border border-[var(--k-border)] hover:border-[var(--k-border-hover)] transition-colors"
           >
             <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] bg-[var(--k-user-bubble)] flex items-center justify-center text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)] text-xs font-bold">
               MD
@@ -437,6 +438,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                 </p>
               </div>
             )}
+            <KaraiThemeToggle />
             <button
               onClick={handleSignOut}
               title={email}
@@ -539,7 +541,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                 <button
                   type="button"
                   onClick={handleStop}
-                  className="shrink-0 h-[38px] px-3.5 rounded-[13px] bg-[#111C31] border border-[var(--k-border-strong)] text-[var(--k-muted)] text-xs font-semibold"
+                  className="shrink-0 h-[38px] px-3.5 rounded-[13px] bg-[var(--k-raised)] border border-[var(--k-border-strong)] text-[var(--k-muted)] text-xs font-semibold"
                 >
                   Detener
                 </button>
@@ -547,7 +549,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="shrink-0 w-[38px] h-[38px] rounded-[13px] bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[#0A1424] text-base font-bold flex items-center justify-center transition-colors disabled:opacity-50"
+                  className="shrink-0 w-[38px] h-[38px] rounded-[13px] bg-[var(--k-lime)] hover:bg-[var(--k-lime-hover)] border-none text-[var(--k-on-lime)] text-base font-bold flex items-center justify-center transition-colors disabled:opacity-50"
                 >
                   ↑
                 </button>

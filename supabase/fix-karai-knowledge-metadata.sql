@@ -8,9 +8,17 @@
 
 -- Niveles B/C/D del documento (A es Agroconecta mismo — posts/market_prices/events, no pasa por
 -- este catálogo; E/F — web abierta y memoria del modelo — tampoco se cargan acá).
-create type karai_source_level as enum ('official_document', 'official_site', 'social_media');
+-- Postgres no tiene "CREATE TYPE IF NOT EXISTS" — el DO block evita el error si el script se
+-- reintenta después de una corrida parcial.
+do $$ begin
+  create type karai_source_level as enum ('official_document', 'official_site', 'social_media');
+exception when duplicate_object then null;
+end $$;
 
-create type karai_source_status as enum ('pendiente', 'aprobado', 'vencido', 'retirado');
+do $$ begin
+  create type karai_source_status as enum ('pendiente', 'aprobado', 'vencido', 'retirado');
+exception when duplicate_object then null;
+end $$;
 
 alter table karai_knowledge_sources
   add column if not exists publisher text,
@@ -23,8 +31,10 @@ alter table karai_knowledge_sources
   add column if not exists verification_notes text,
   add column if not exists status karai_source_status not null default 'pendiente';
 
--- Migra el on/off que ya existía a los estados nuevos, después saca la columna vieja.
-update karai_knowledge_sources set status = case when is_active then 'aprobado' else 'retirado' end;
+-- Migra el on/off que ya existía a los estados nuevos, después saca la columna vieja. El CASE
+-- necesita el cast explícito: Postgres no infiere el tipo enum de las ramas del CASE solo.
+update karai_knowledge_sources
+  set status = case when is_active then 'aprobado' else 'retirado' end::karai_source_status;
 alter table karai_knowledge_sources drop column if exists is_active;
 
 create index karai_knowledge_sources_status_idx on karai_knowledge_sources (status, expires_at);

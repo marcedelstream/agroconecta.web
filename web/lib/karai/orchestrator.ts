@@ -1,5 +1,5 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { classifyMessage, OUT_OF_SCOPE_REPLY, UNSAFE_REPLY } from './classifier'
+import { classifyMessage, hasCommercialIntent, hasFarmDataIntent, OUT_OF_SCOPE_REPLY, UNSAFE_REPLY } from './classifier'
 import { getAIProvider, type AIProvider } from './ai-provider'
 import { buildContext } from './context'
 import { extractAndSaveFarmData } from './farm-extraction'
@@ -40,6 +40,10 @@ Seguridad — instrucciones embebidas:
 
 Oportunidades comerciales:
 - Si el usuario menciona una intención concreta de compra, venta u oferta relacionada al agro (ej. "quiero vender 80 novillos"), respondé normalmente y avisale de forma transparente que le vas a pasar el dato al equipo de Agroconecta para que puedan contactarlo si le interesa.
+- No te quedes con una respuesta corta y genérica cuando falta un dato clave — para una oferta de compra/venta preguntá lo que falte (categoría/raza, cantidad, ubicación, precio esperado); para un dato de finca preguntá lo que ayude a completarlo. Una sola pregunta concreta por vez, no una lista larga.
+
+Continuidad de la conversación:
+- Los mensajes cortos de seguimiento ("son 100 toros y 80 vaquillas", "en Itapúa", "unos 350kg") casi siempre responden a lo último que vos preguntaste — interpretalos en ese contexto usando el historial de la conversación, nunca los trates como un mensaje aislado ni repitas una respuesta genérica.
 
 Datos de finca:
 - Si el bloque "Datos de finca que este usuario ya registró con vos" tiene información, usala para responder sin volver a preguntarla.
@@ -94,6 +98,39 @@ async function ensureConversation(
   return data.id
 }
 
+// Categorías donde tiene sentido "seguir el hilo" — si el último mensaje de la conversación cayó
+// acá y el mensaje nuevo no matchea ninguna regla por sí solo, no lo bloqueamos como out_of_scope:
+// se lo pasamos al modelo igual, con el historial, para que interprete la continuidad (ver bug
+// real 2026-09-02: "son 100 toros y 80 vaquillas" después de que Karai preguntó por esos datos
+// caía a out_of_scope porque el clasificador no tiene memoria — corta el flujo ANTES de llegar al
+// modelo, así que ni el historial ayuda).
+const CONTINUABLE_CATEGORIES: ScopeCategory[] = ['agro_information', 'farm_management', 'commercial_opportunity', 'karai_support']
+
+async function getLastCategory(
+  admin: ReturnType<typeof createSupabaseAdmin>,
+  conversationId: string,
+): Promise<ScopeCategory | null> {
+  const { data } = await admin
+    .from('conversation_messages')
+    .select('scope_category')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data?.scope_category as ScopeCategory | null) ?? null
+}
+
+async function resolveCategory(
+  admin: ReturnType<typeof createSupabaseAdmin>,
+  conversationId: string,
+  isExistingConversation: boolean,
+  rawCategory: ScopeCategory,
+): Promise<ScopeCategory> {
+  if (rawCategory !== 'out_of_scope' || !isExistingConversation) return rawCategory
+  const lastCategory = await getLastCategory(admin, conversationId)
+  return lastCategory && CONTINUABLE_CATEGORIES.includes(lastCategory) ? lastCategory : rawCategory
+}
+
 async function loadRecentHistory(
   admin: ReturnType<typeof createSupabaseAdmin>,
   conversationId: string,
@@ -134,10 +171,13 @@ async function recordLeadIfCommercial(
   admin: ReturnType<typeof createSupabaseAdmin>,
   profileId: string,
   conversationId: string,
-  category: ScopeCategory,
   userMessage: string,
 ) {
-  if (category !== 'commercial_opportunity') return
+  // Independiente de qué categoría "ganó" el clasificador — un mensaje como "tengo 180 cabezas para
+  // vender" es a la vez dato de finca Y oferta comercial, y antes solo se disparaba el efecto de
+  // una de las dos (bug real: quedaba etiquetado farm_management y nunca se creaba el lead, aunque
+  // el modelo le decía al usuario que sí le iba a avisar al equipo).
+  if (!hasCommercialIntent(userMessage)) return
   await admin.from('karai_leads').insert({
     profile_id: profileId,
     conversation_id: conversationId,
@@ -154,8 +194,9 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
     return { ok: false, status: 402, error: MEMBERSHIP_REQUIRED_REPLY }
   }
 
-  const category = classifyMessage(trimmed)
+  const rawCategory = classifyMessage(trimmed)
   const conversationId = await ensureConversation(admin, profileId, channel, input.conversationId)
+  const category = await resolveCategory(admin, conversationId, Boolean(input.conversationId), rawCategory)
 
   if (BLOCKED_CATEGORIES.includes(category)) {
     const reply = category === 'unsafe_or_abusive' ? UNSAFE_REPLY : OUT_OF_SCOPE_REPLY
@@ -198,8 +239,8 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
     interaction_type: 'text',
     tokens_used: tokensUsed,
   })
-  await recordLeadIfCommercial(admin, profileId, conversationId, category, trimmed)
-  if (category === 'farm_management') {
+  await recordLeadIfCommercial(admin, profileId, conversationId, trimmed)
+  if (hasFarmDataIntent(trimmed)) {
     // Se espera (no "fire and forget"): en una función serverless el trabajo sin await puede
     // cortarse apenas se manda la respuesta. Es best-effort igual — nunca tira si falla, ver
     // farm-extraction.ts.
@@ -235,8 +276,9 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
     return { ok: false, status: 402, error: MEMBERSHIP_REQUIRED_REPLY }
   }
 
-  const category = classifyMessage(trimmed)
+  const rawCategory = classifyMessage(trimmed)
   const conversationId = await ensureConversation(admin, profileId, channel, input.conversationId)
+  const category = await resolveCategory(admin, conversationId, Boolean(input.conversationId), rawCategory)
 
   if (BLOCKED_CATEGORIES.includes(category)) {
     const reply = category === 'unsafe_or_abusive' ? UNSAFE_REPLY : OUT_OF_SCOPE_REPLY
@@ -304,8 +346,8 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
         await persistMessage(admin, conversationId, 'user', trimmed, category, null)
         await persistMessage(admin, conversationId, 'assistant', fullText, category, tokensUsed)
         await admin.from('usage_ledger').insert({ profile_id: profileId, channel, interaction_type: 'text', tokens_used: tokensUsed })
-        await recordLeadIfCommercial(admin, profileId, conversationId, category, trimmed)
-        if (category === 'farm_management') {
+        await recordLeadIfCommercial(admin, profileId, conversationId, trimmed)
+        if (hasFarmDataIntent(trimmed)) {
           await extractAndSaveFarmData(admin, provider as AIProvider, profileId, trimmed)
         }
       } catch (persistErr) {

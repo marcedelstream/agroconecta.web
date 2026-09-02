@@ -1,7 +1,8 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { ExtractedFarmData } from './farm-extraction'
 import { loadEventsContext } from './events-context'
-import { SOURCE_LEVEL_LABELS, type KaraiSourceLevel } from './knowledge-types'
+import { SOURCE_LEVEL_LABELS, isSourceUsable, type KaraiSourceLevel } from './knowledge-types'
+import { postUrl } from '@/lib/seo'
 
 const MAX_KNOWLEDGE_CONTENT_CHARS = 2000
 
@@ -21,6 +22,14 @@ function nowContext(): string {
   return `Hoy es ${formatted} (hora de Paraguay).`
 }
 
+// KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md secc. 5 "Precios": cada valor va con su fecha de
+// actualización explícita, para que el modelo diga "último precio cargado" en vez de "hoy" cuando
+// el dato no es del día. Función pura (exportada) para poder testear esta regla sin mockear Supabase.
+export function formatPriceLine(p: { label: string; market: string; currency: string; unit: string; value: number; updated_at: string }): string {
+  const updated = new Date(p.updated_at).toLocaleDateString('es-PY', { day: 'numeric', month: 'short' })
+  return `- ${p.label} (${p.market}): ${p.value} ${p.currency}/${p.unit} — actualizado el ${updated}`
+}
+
 // Contexto minimo de Agroconecta para que el modelo responda con datos reales en vez de inventar
 // (KARAI-DIAGNOSTICO-SPRINT-1.md secc. 5: "no hace falta RAG con embeddings el dia 1 — se puede
 // consultar directo"). Nada de esto es privado del usuario, son las mismas noticias/precios
@@ -29,7 +38,7 @@ async function loadPublicContext(admin: ReturnType<typeof createSupabaseAdmin>):
   const [postsRes, pricesRes] = await Promise.all([
     admin
       .from('posts')
-      .select('title,summary,category,published_at')
+      .select('title,summary,category,published_at,slug')
       .eq('editorial_status', 'published')
       .order('published_at', { ascending: false })
       .limit(5),
@@ -43,21 +52,14 @@ async function loadPublicContext(admin: ReturnType<typeof createSupabaseAdmin>):
   const posts = postsRes.data ?? []
   const prices = pricesRes.data ?? []
 
+  // Cada noticia lleva su link real (mismo helper que usa el resto del sitio, lib/seo.ts) — así el
+  // modelo puede compartir el link directo de ESA noticia en vez de mandar siempre al genérico
+  // /descargar (KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md: "contexto con ID/link por item").
   const postsBlock = posts.length
-    ? posts.map((p) => `- [${p.category}] ${p.title}: ${p.summary}`).join('\n')
+    ? posts.map((p) => `- [${p.category}] ${p.title}: ${p.summary} — ${postUrl({ slug: p.slug })}`).join('\n')
     : '(sin noticias publicadas por el momento)'
 
-  // KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md secc. 5 "Precios": cada valor va con su fecha de
-  // actualización explícita, para que el modelo diga "último precio cargado" en vez de "hoy"
-  // cuando el dato no es del día.
-  const pricesBlock = prices.length
-    ? prices
-        .map((p) => {
-          const updated = new Date(p.updated_at).toLocaleDateString('es-PY', { day: 'numeric', month: 'short' })
-          return `- ${p.label} (${p.market}): ${p.value} ${p.currency}/${p.unit} — actualizado el ${updated}`
-        })
-        .join('\n')
-    : '(sin precios cargados por el momento)'
+  const pricesBlock = prices.length ? prices.map(formatPriceLine).join('\n') : '(sin precios cargados por el momento)'
 
   return [
     'Últimas noticias publicadas en Agroconecta:',
@@ -80,13 +82,16 @@ async function loadKnowledgeContext(admin: ReturnType<typeof createSupabaseAdmin
   const today = new Date().toISOString().slice(0, 10)
   const { data } = await admin
     .from('karai_knowledge_sources')
-    .select('kind,title,url,content,publisher,source_level,expires_at')
+    .select('kind,title,url,content,publisher,source_level,expires_at,status')
     .eq('status', 'aprobado')
     .or(`expires_at.is.null,expires_at.gte.${today}`)
     .order('created_at', { ascending: false })
     .limit(10)
 
-  const sources = data ?? []
+  // Segunda capa de defensa además del filtro en la query: isSourceUsable() es la misma regla
+  // ("aprobada Y no vencida") pero como función pura testeada, por si la query cambia alguna vez y
+  // deja de filtrar bien.
+  const sources = (data ?? []).filter((s) => isSourceUsable({ status: s.status, expiresAt: s.expires_at }, today))
   if (!sources.length) return ''
 
   const block = sources

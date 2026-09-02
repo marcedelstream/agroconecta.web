@@ -36,6 +36,11 @@ const FINCA_FIELDS: (keyof ExtractedFarmData)[] = ['nombre', 'productor', 'depto
 
 const LEAD_STATUS_LABEL: Record<Lead['status'], string> = { new: 'Nuevo', contacted: 'Contactado', closed: 'Cerrado' }
 
+// Una sola fuente de verdad por tabla — header y filas comparten el mismo valor, así nunca se
+// desalinean (bug real que hubo: el header de Agricultura usaba el ratio de Ganadería).
+const GANADERIA_GRID = '1.4fr .8fr 1.1fr 1.1fr 40px'
+const AGRICULTURA_GRID = '1.3fr .8fr 1.1fr 1.1fr 40px'
+
 function num(v: unknown): number {
   return typeof v === 'number' && !Number.isNaN(v) ? v : Number(v) || 0
 }
@@ -245,7 +250,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
 
             {section === 'finca' && (
               <Card title="Datos de la finca" subtitle="Identificación, ubicación y contacto principal" tag={`${FINCA_FIELDS.filter((k) => Boolean(data[k])).length} campos`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-5 md:px-[22px]">
                   <Field label="Nombre de la finca">
                     <input className={inputClass} value={data.nombre ?? ''} onChange={(e) => setField('nombre', e.target.value)} />
                   </Field>
@@ -289,10 +294,10 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 subtitle="Rodeo por categoría, raza y potrero"
                 action={<HeaderButton onClick={addAnimal}>+ Agregar categoría</HeaderButton>}
               >
-                <TableHead cols={['Categoría', 'Cabezas', 'Raza', 'Potrero', '']} />
+                <TableHead cols={['Categoría', 'Cabezas', 'Raza', 'Potrero', '']} template={GANADERIA_GRID} />
                 <div className="flex flex-col">
                   {animales.map((a, i) => (
-                    <div key={i} className="grid grid-cols-[1.4fr_.8fr_1.1fr_1.1fr_40px] items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]">
+                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]" style={{ gridTemplateColumns: GANADERIA_GRID }}>
                       <input className={cellInputClass} value={a.tipo} onChange={(e) => updateAnimalRow(i, { tipo: e.target.value })} />
                       <input
                         className={`${cellInputClass} text-right font-[family-name:var(--font-karai-mono)]`}
@@ -316,10 +321,10 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 subtitle="Cultivos, superficie y estado de la zafra"
                 action={<HeaderButton onClick={addCultivo}>+ Agregar cultivo</HeaderButton>}
               >
-                <TableHead cols={['Cultivo', 'Hectáreas', 'Variedad', 'Estado', '']} />
+                <TableHead cols={['Cultivo', 'Hectáreas', 'Variedad', 'Estado', '']} template={AGRICULTURA_GRID} />
                 <div className="flex flex-col">
                   {cultivos.map((c, i) => (
-                    <div key={i} className="grid grid-cols-[1.3fr_.8fr_1.1fr_1.1fr_40px] items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]">
+                    <div key={i} className="grid items-center gap-0 px-5 md:px-[22px] py-1.5 border-b border-[#101B2E]" style={{ gridTemplateColumns: AGRICULTURA_GRID }}>
                       <input className={cellInputClass} value={c.tipo} onChange={(e) => updateCultivoRow(i, { tipo: e.target.value })} />
                       <input
                         className={`${cellInputClass} text-right font-[family-name:var(--font-karai-mono)]`}
@@ -437,18 +442,18 @@ function Card({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5 px-5 md:px-0 md:[&:not(:first-child)]:px-0">
+    <div className="flex flex-col gap-1.5">
       <label className={labelClass}>{label}</label>
       {children}
     </div>
   )
 }
 
-function TableHead({ cols }: { cols: string[] }) {
+function TableHead({ cols, template }: { cols: string[]; template: string }) {
   return (
     <div
       className="grid gap-0 px-5 md:px-[22px] py-2.5 border-b border-[var(--k-border)] bg-[var(--k-sidebar)]"
-      style={{ gridTemplateColumns: cols.length === 5 ? '1.4fr .8fr 1.1fr 1.1fr 40px' : undefined }}
+      style={{ gridTemplateColumns: template }}
     >
       {cols.map((c, i) => (
         <p key={i} className={`m-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-muted-2)] ${i === 1 ? 'text-right pr-3.5' : i > 1 ? 'pl-3.5' : ''}`}>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import { KaraiSplash } from './KaraiSplash'
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
 export default function KaraiLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`karai-root ${plusJakarta.variable} ${jetBrainsMono.variable} min-h-screen bg-[var(--k-bg)] font-[family-name:var(--font-karai-sans)]`}>
+      <KaraiSplash />
       {children}
     </div>
   )

@@ -10,7 +10,7 @@ export function SplashScreen() {
   const logoSrc = theme === 'light' ? '/logo-light.png' : '/logo-dark.png'
 
   useEffect(() => {
-    if (window.location.pathname.startsWith('/admin')) {
+    if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/karai')) {
       setState('gone')
       return
     }

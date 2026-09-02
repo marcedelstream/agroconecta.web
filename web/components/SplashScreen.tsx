@@ -10,7 +10,12 @@ export function SplashScreen() {
   const logoSrc = theme === 'light' ? '/logo-light.png' : '/logo-dark.png'
 
   useEffect(() => {
-    if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/karai')) {
+    // En karai.agroconecta.com.py el rewrite a /karai/* pasa server-side (proxy.ts) — el
+    // pathname que ve el browser sigue siendo "/" o "/mis-datos", nunca "/karai/...", así que
+    // hace falta chequear el host, no solo el path (antes esto dejaba pasar el splash de
+    // Agroconecta después del propio de Karai en el subdominio real).
+    const { pathname, hostname } = window.location
+    if (hostname.startsWith('karai.') || pathname.startsWith('/admin') || pathname.startsWith('/karai')) {
       setState('gone')
       return
     }

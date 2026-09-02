@@ -5,18 +5,51 @@ import type { AIProvider } from './ai-provider'
 // versión liviana — sin farms/lots/crops como entidades separadas todavía (eso es fase 2 completa),
 // una sola fila jsonb por usuario que se va completando de a poco por extracción best-effort.
 // Nunca bloquea ni rompe la respuesta principal del chat si falla — es una mejora aparte.
+//
+// Campos de identidad/contacto (nombre, productor, depto, distrito, telefono, notas, intereses,
+// lotes) son SOLO de edición manual en /karai/mis-datos — Karai no los auto-completa desde el chat,
+// a diferencia de los datos objetivos de producción (animales, cultivos, hectareas).
 
-export interface ExtractedFarmData {
-  ubicacion?: string
-  hectareas?: number
-  animales?: { tipo: string; cantidad: number }[]
-  cultivos?: { tipo: string; superficie_ha: number }[]
+export interface FarmAnimalRow {
+  tipo: string
+  cantidad: number
+  raza?: string
+  potrero?: string
 }
 
-const EXTRACTION_PROMPT = `Extraé datos objetivos de finca mencionados en el mensaje del usuario (no en el contexto ni en mensajes previos).
+export interface FarmCultivoRow {
+  tipo: string
+  hectareas: number
+  variedad?: string
+  estado?: string
+}
+
+export interface FarmLote {
+  id: string
+  tipo: 'vende' | 'compra'
+  descripcion: string
+  detalle?: string
+  createdAt: string
+}
+
+export interface ExtractedFarmData {
+  nombre?: string
+  productor?: string
+  depto?: string
+  distrito?: string
+  hectareas?: number
+  telefono?: string
+  notas?: string
+  animales?: FarmAnimalRow[]
+  cultivos?: FarmCultivoRow[]
+  intereses?: Record<string, boolean>
+  lotes?: FarmLote[]
+}
+
+const EXTRACTION_PROMPT = `Extraé datos objetivos de PRODUCCIÓN de finca mencionados en el mensaje del usuario (no en el contexto ni en mensajes previos). No extraigas nombre, teléfono ni notas personales — solo datos productivos.
 Devolvé SOLO un objeto JSON válido, sin texto alrededor, con esta forma exacta (omití los campos que no se mencionen, no inventes valores):
-{"ubicacion": string, "hectareas": number, "animales": [{"tipo": string, "cantidad": number}], "cultivos": [{"tipo": string, "superficie_ha": number}]}
-Si el mensaje no menciona ningún dato objetivo de finca, devolvé {}.`
+{"hectareas": number, "animales": [{"tipo": string, "cantidad": number, "raza": string, "potrero": string}], "cultivos": [{"tipo": string, "hectareas": number, "variedad": string, "estado": string}]}
+Si el mensaje no menciona ningún dato objetivo de producción, devolvé {}.`
 
 function parseExtraction(text: string): ExtractedFarmData | null {
   try {
@@ -34,13 +67,15 @@ function parseExtraction(text: string): ExtractedFarmData | null {
 function mergeFarmData(existing: ExtractedFarmData, extracted: ExtractedFarmData): ExtractedFarmData {
   const merged: ExtractedFarmData = { ...existing }
 
-  if (extracted.ubicacion) merged.ubicacion = extracted.ubicacion
   if (typeof extracted.hectareas === 'number') merged.hectareas = extracted.hectareas
 
   if (extracted.animales?.length) {
     const byTipo = new Map((existing.animales ?? []).map((a) => [a.tipo.toLowerCase(), a]))
     for (const item of extracted.animales) {
-      if (item?.tipo && typeof item.cantidad === 'number') byTipo.set(item.tipo.toLowerCase(), item)
+      if (item?.tipo && typeof item.cantidad === 'number') {
+        const prev = byTipo.get(item.tipo.toLowerCase())
+        byTipo.set(item.tipo.toLowerCase(), { ...prev, ...item })
+      }
     }
     merged.animales = Array.from(byTipo.values())
   }
@@ -48,7 +83,10 @@ function mergeFarmData(existing: ExtractedFarmData, extracted: ExtractedFarmData
   if (extracted.cultivos?.length) {
     const byTipo = new Map((existing.cultivos ?? []).map((c) => [c.tipo.toLowerCase(), c]))
     for (const item of extracted.cultivos) {
-      if (item?.tipo && typeof item.superficie_ha === 'number') byTipo.set(item.tipo.toLowerCase(), item)
+      if (item?.tipo && typeof item.hectareas === 'number') {
+        const prev = byTipo.get(item.tipo.toLowerCase())
+        byTipo.set(item.tipo.toLowerCase(), { ...prev, ...item })
+      }
     }
     merged.cultivos = Array.from(byTipo.values())
   }

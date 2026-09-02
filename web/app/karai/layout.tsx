@@ -1,4 +1,19 @@
 import type { Metadata } from 'next'
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-karai-sans',
+  display: 'swap',
+})
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-karai-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Karai — Agroconecta',
@@ -11,5 +26,9 @@ export const metadata: Metadata = {
 }
 
 export default function KaraiLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-bg">{children}</div>
+  return (
+    <div className={`karai-root ${plusJakarta.variable} ${jetBrainsMono.variable} min-h-screen bg-[var(--k-bg)] font-[family-name:var(--font-karai-sans)]`}>
+      {children}
+    </div>
+  )
 }

@@ -46,8 +46,16 @@ async function loadPublicContext(admin: ReturnType<typeof createSupabaseAdmin>):
     ? posts.map((p) => `- [${p.category}] ${p.title}: ${p.summary}`).join('\n')
     : '(sin noticias publicadas por el momento)'
 
+  // KARAI-PLAN-ENTRENAMIENTO-Y-FUENTES.md secc. 5 "Precios": cada valor va con su fecha de
+  // actualización explícita, para que el modelo diga "último precio cargado" en vez de "hoy"
+  // cuando el dato no es del día.
   const pricesBlock = prices.length
-    ? prices.map((p) => `- ${p.label} (${p.market}): ${p.value} ${p.currency}/${p.unit}`).join('\n')
+    ? prices
+        .map((p) => {
+          const updated = new Date(p.updated_at).toLocaleDateString('es-PY', { day: 'numeric', month: 'short' })
+          return `- ${p.label} (${p.market}): ${p.value} ${p.currency}/${p.unit} — actualizado el ${updated}`
+        })
+        .join('\n')
     : '(sin precios cargados por el momento)'
 
   return [
@@ -94,10 +102,16 @@ async function loadOwnFarmContext(admin: ReturnType<typeof createSupabaseAdmin>,
   if (!farm || Object.keys(farm).length === 0) return ''
 
   const lines: string[] = []
-  if (farm.ubicacion) lines.push(`- Ubicación: ${farm.ubicacion}`)
-  if (typeof farm.hectareas === 'number') lines.push(`- Hectáreas: ${farm.hectareas}`)
-  for (const a of farm.animales ?? []) lines.push(`- Animales: ${a.cantidad} ${a.tipo}`)
-  for (const c of farm.cultivos ?? []) lines.push(`- Cultivo: ${c.tipo}, ${c.superficie_ha} ha`)
+  if (farm.nombre) lines.push(`- Finca: ${farm.nombre}`)
+  if (farm.depto || farm.distrito) lines.push(`- Ubicación: ${[farm.distrito, farm.depto].filter(Boolean).join(', ')}`)
+  if (typeof farm.hectareas === 'number') lines.push(`- Hectáreas totales: ${farm.hectareas}`)
+  for (const a of farm.animales ?? []) {
+    lines.push(`- Animales: ${a.cantidad} ${a.tipo}${a.raza ? ` (${a.raza})` : ''}${a.potrero ? `, potrero ${a.potrero}` : ''}`)
+  }
+  for (const c of farm.cultivos ?? []) {
+    lines.push(`- Cultivo: ${c.tipo}, ${c.hectareas} ha${c.variedad ? ` (${c.variedad})` : ''}${c.estado ? `, estado: ${c.estado}` : ''}`)
+  }
+  if (farm.notas) lines.push(`- Notas: ${farm.notas}`)
   if (!lines.length) return ''
 
   return `\n\nDatos de finca que este usuario ya registró con vos (información privada suya, no la compartas con otros usuarios):\n${lines.join('\n')}`

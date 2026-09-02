@@ -1,8 +1,7 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { ExtractedFarmData } from '@/lib/karai/farm-extraction'
-import { FarmProfileForm } from './FarmProfileForm'
+import { MisDatosClient } from './MisDatosClient'
 
 export default async function MisDatosPage() {
   const supabase = await createSupabaseServer()
@@ -11,26 +10,21 @@ export default async function MisDatosPage() {
 
   // RLS (auth.uid() = profile_id) ya restringe esto a la fila propia — el filtro explícito es
   // solo legibilidad, no la única barrera.
-  const { data } = await supabase.from('farm_profile').select('data').eq('profile_id', user.id).maybeSingle()
-  const initialData = (data?.data ?? {}) as ExtractedFarmData
+  const [{ data: farmRow }, { data: profile }, { data: leads }] = await Promise.all([
+    supabase.from('farm_profile').select('data').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('profiles').select('name,created_at').eq('id', user.id).maybeSingle(),
+    supabase.from('karai_leads').select('id,excerpt,status,created_at').eq('profile_id', user.id).order('created_at', { ascending: false }),
+  ])
+
+  const initialData = (farmRow?.data ?? {}) as ExtractedFarmData
+  const memberSince = profile?.created_at ? new Date(profile.created_at).getFullYear() : null
 
   return (
-    <div className="min-h-screen px-5 py-6">
-      <div className="max-w-lg mx-auto">
-        <Link href="/karai" className="text-muted text-sm hover:text-foreground transition-colors">
-          ← Volver al chat
-        </Link>
-
-        <div className="mt-4 mb-6">
-          <h1 className="font-display font-bold text-xl text-foreground">Mis datos</h1>
-          <p className="text-muted text-sm mt-1">
-            Esto es lo que Karai fue anotando de tu finca a partir de tus mensajes. Es solo tuyo — nadie
-            más lo puede ver, y lo podés corregir cuando quieras.
-          </p>
-        </div>
-
-        <FarmProfileForm initialData={initialData} />
-      </div>
-    </div>
+    <MisDatosClient
+      initialData={initialData}
+      profileName={profile?.name ?? null}
+      memberSince={memberSince}
+      leads={leads ?? []}
+    />
   )
 }

@@ -5,6 +5,12 @@ function isAgroAdminRole(role: unknown) {
   return role === 'admin' || role === 'agro_admin'
 }
 
+// `pathname.startsWith('/karai')` también matchea /karai-avatar.png (bug real: rompía el avatar y
+// el favicon, que quedaban pidiendo sesión) — hace falta el límite de segmento.
+function isPathUnder(pathname: string, base: string): boolean {
+  return pathname === base || pathname.startsWith(`${base}/`)
+}
+
 const KARAI_HOST_PREFIX = 'karai.'
 
 export async function proxy(request: NextRequest) {
@@ -25,10 +31,10 @@ export async function proxy(request: NextRequest) {
   if (
     isKaraiHost &&
     !isStaticAsset &&
-    !pathname.startsWith('/api') &&
-    !pathname.startsWith('/karai') &&
-    !pathname.startsWith('/_next') &&
-    !pathname.startsWith('/auth')
+    !isPathUnder(pathname, '/api') &&
+    !isPathUnder(pathname, '/karai') &&
+    !isPathUnder(pathname, '/_next') &&
+    !isPathUnder(pathname, '/auth')
   ) {
     effectivePathname = pathname === '/' ? '/karai' : `/karai${pathname}`
     needsRewrite = true
@@ -38,8 +44,8 @@ export async function proxy(request: NextRequest) {
     return needsRewrite ? NextResponse.rewrite(new URL(effectivePathname, request.url)) : NextResponse.next()
   }
 
-  const isAdminPath = effectivePathname.startsWith('/admin')
-  const isKaraiPath = effectivePathname.startsWith('/karai')
+  const isAdminPath = isPathUnder(effectivePathname, '/admin')
+  const isKaraiPath = isPathUnder(effectivePathname, '/karai')
   if (!isAdminPath && !isKaraiPath) return pass()
 
   // El favicon (y cualquier otro ícono que genere la convención de metadata de Next: apple-icon,

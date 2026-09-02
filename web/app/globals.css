@@ -36,6 +36,35 @@
   a    { @apply text-inherit no-underline; }
 }
 
+/* Karai tiene identidad visual propia, fija (no sigue el toggle claro/oscuro del sitio) — mismo
+   criterio que el subdominio y el favicon propios. Variables scoped a .karai-root, referenciadas
+   con la sintaxis arbitraria de Tailwind (bg-[var(--k-bg)]) en vez de tocar el theme del sitio. */
+.karai-root {
+  --k-bg: #070E1B;
+  --k-sidebar: #0A1322;
+  --k-card: #0C1526;
+  --k-border: #16233A;
+  --k-border-strong: #1C2A43;
+  --k-border-hover: #2A3C5C;
+  --k-text: #F0F4FA;
+  --k-text-soft: #DCE4F0;
+  --k-muted: #8C9AB4;
+  --k-muted-2: #66748F;
+  --k-muted-3: #5A6880;
+  --k-muted-4: #4E5C74;
+  --k-lime: #B7EE55;
+  --k-lime-hover: #C9F477;
+  --k-lime-bg: #18280F;
+  --k-lime-border: #2F4A22;
+  --k-positive: #6BE3A1;
+  --k-negative: #FF8080;
+  --k-warning: #F0A868;
+  --k-warning-bg: #251705;
+  --k-warning-border: #4A2F10;
+  --k-user-bubble: #132340;
+  --k-user-border: #1E3253;
+}
+
 @layer components {
   .site-container {
     @apply max-w-site mx-auto px-5 md:px-8;

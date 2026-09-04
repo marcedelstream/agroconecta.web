@@ -145,7 +145,7 @@ interface AppContextType {
   signIn: (email: string, password: string) => Promise<string | null>
   signUp: (email: string, password: string) => Promise<string | null>
   signInWithGoogle: () => Promise<string | null>
-  signInWithApple: () => Promise<string | null>
+  signInWithApple: () => Promise<{ error: string | null; fullName: string | null }>
   sendEmailOtp: (email: string) => Promise<string | null>
   verifyEmailOtp: (email: string, token: string) => Promise<string | null>
   signOut: () => Promise<void>
@@ -354,16 +354,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       })
-      if (!credential.identityToken) return 'No se pudo completar el login con Apple.'
+      if (!credential.identityToken) return { error: 'No se pudo completar el login con Apple.', fullName: null }
+
+      // Apple solo manda fullName/email la PRIMERA vez que este usuario autoriza esta app — hay
+      // que capturarlo ahora o se pierde para siempre. login.tsx lo usa para saltar el paso de
+      // nombre del onboarding (Apple Guideline 4 Design: no se le puede volver a pedir un dato que
+      // Authentication Services ya entregó).
+      const fullName = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ').trim() || null
+        : null
 
       const { error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
       })
-      return error?.message ?? null
+      return { error: error?.message ?? null, fullName }
     } catch (err) {
-      if (err instanceof Error && 'code' in err && err.code === 'ERR_REQUEST_CANCELED') return null
-      return err instanceof Error ? err.message : 'No se pudo completar el login con Apple.'
+      if (err instanceof Error && 'code' in err && err.code === 'ERR_REQUEST_CANCELED') return { error: null, fullName: null }
+      return { error: err instanceof Error ? err.message : 'No se pudo completar el login con Apple.', fullName: null }
     }
   }, [])
 

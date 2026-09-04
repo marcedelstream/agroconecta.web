@@ -28,7 +28,7 @@ type PasswordMode = 'signin' | 'signup'
 export default function LoginScreen() {
   const C = useColors()
   const { isDark } = useTheme()
-  const { signIn, signUp, signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession } = useApp()
+  const { signIn, signUp, signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp, resolveProfileForCurrentSession, updateOnboarding } = useApp()
   const [view, setView] = useState<LoginView>('options')
   const [error, setError] = useState<string | null>(null)
 
@@ -68,9 +68,12 @@ export default function LoginScreen() {
     setView('password')
   }
 
-  async function afterAuth() {
+  async function afterAuth(prefillName?: string | null) {
     const needsOnboarding = await resolveProfileForCurrentSession()
     if (needsOnboarding) {
+      // Sign in with Apple solo entrega el nombre la primera vez — si lo tenemos, saltamos
+      // directo al paso 1 para no pedirselo de nuevo (Apple Guideline 4 Design).
+      if (prefillName) updateOnboarding({ name: prefillName, step: 1 })
       router.replace('/(onboarding)')
     } else {
       router.replace('/(main)/(tabs)/home')
@@ -80,10 +83,10 @@ export default function LoginScreen() {
   async function handleApple() {
     setError(null)
     setAppleLoading(true)
-    const result = await signInWithApple()
+    const { error, fullName } = await signInWithApple()
     setAppleLoading(false)
-    if (result) { setError(result); return }
-    await afterAuth()
+    if (error) { setError(error); return }
+    await afterAuth(fullName)
   }
 
   async function handleGoogle() {

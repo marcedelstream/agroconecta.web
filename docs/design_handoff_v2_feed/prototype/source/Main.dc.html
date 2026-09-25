@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agroconecta iOS — prototipo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:-apple-system,"SF Pro Text","Figtree",system-ui,sans-serif;background:#0B1620;color:#0B1620;-webkit-font-smoothing:antialiased}
+a{color:#4E6B12}a:hover{color:#3A510C}
+button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input{font-family:inherit}
+.scroll{scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.feed{position:absolute;left:0;top:0;width:390px;height:844px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.feed::-webkit-scrollbar{display:none}
+.slide{position:relative;width:390px;height:844px;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#0B1620}
+.shade{position:absolute;left:0;top:0;width:390px;height:844px;pointer-events:none;background:linear-gradient(180deg,rgba(4,9,6,.42) 0%,rgba(4,9,6,0) 16%,rgba(4,9,6,0) 44%,rgba(4,9,6,.5) 64%,rgba(4,9,6,.9) 100%)}
+.glass{background:rgba(255,255,255,.16);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);border:1px solid rgba(255,255,255,.24)}
+.rail-btn{width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center;padding:0;color:#fff}
+.rail-count{font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.cta{position:absolute;left:18px;right:18px;bottom:104px;height:52px;border-radius:26px;border:0;background:#A4D233;color:#0B1620;font-size:16px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.cta:active{transform:scale(.98)}
+.typechip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;font-size:11px;font-weight:700;letter-spacing:.09em;color:#fff}
+.dot{width:6px;height:6px;border-radius:3px;background:#A4D233}
+.poll-opt{position:relative;height:46px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff;font-size:15px;font-weight:600;width:100%;text-align:left}
+.poll-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(164,210,51,.38);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.sc{position:absolute;left:0;top:0;width:390px;height:844px;overflow:hidden}
+.sc .sky{position:absolute;left:0;right:0;top:0;height:411px}
+.sc .land{position:absolute;left:0;right:0;top:410px;bottom:0}
+.sc .rows{position:absolute;left:0;top:410px;width:390px;height:434px}
+.sc .rows polygon{fill:var(--row);fill-opacity:var(--rowop)}
+.sc .sun{position:absolute;left:45px;top:250px;width:300px;height:300px;border-radius:50%}
+.sc .haze{position:absolute;left:0;right:0;top:350px;height:120px}
+.sc-soja{--row:#9CC23E;--rowop:.32}
+.sc-soja .sky{background:linear-gradient(180deg,#1E3550 0%,#5E6B7E 40%,#D8905A 82%,#F4C27E 100%)}
+.sc-soja .sun{background:radial-gradient(circle,rgba(255,228,168,.95) 0%,rgba(255,196,120,.45) 30%,rgba(255,170,90,0) 62%)}
+.sc-soja .land{background:linear-gradient(180deg,#6B7432 0%,#34521A 30%,#15260C 100%)}
+.sc-soja .haze{background:linear-gradient(180deg,rgba(244,194,126,0),rgba(244,194,126,.55) 50%,rgba(244,194,126,0))}
+.sc-verde{--row:#B4DA66;--rowop:.34}
+.sc-verde .sky{background:linear-gradient(180deg,#4F86A8 0%,#9FC4D6 55%,#E3ECE4 100%)}
+.sc-verde .sun{background:radial-gradient(circle,rgba(255,255,244,.75) 0%,rgba(255,255,244,0) 60%)}
+.sc-verde .land{background:linear-gradient(180deg,#7EA548 0%,#3F6A22 35%,#15290B 100%)}
+.sc-verde .haze{background:linear-gradient(180deg,rgba(227,236,228,0),rgba(227,236,228,.6) 50%,rgba(227,236,228,0))}
+.sc-trigo{--row:#F3D688;--rowop:.42}
+.sc-trigo .sky{background:linear-gradient(180deg,#34465C 0%,#9A8768 58%,#EBCB8C 100%)}
+.sc-trigo .sun{background:radial-gradient(circle,rgba(255,236,178,.9) 0%,rgba(255,220,150,.35) 32%,rgba(255,220,150,0) 62%)}
+.sc-trigo .land{background:linear-gradient(180deg,#CDA44E 0%,#94692A 35%,#3A280C 100%)}
+.sc-trigo .haze{background:linear-gradient(180deg,rgba(235,203,140,0),rgba(235,203,140,.5) 50%,rgba(235,203,140,0))}
+.sc-pastura{--row:#86AE40;--rowop:.12}
+.sc-pastura .sky{background:linear-gradient(180deg,#1C2140 0%,#5E4A68 48%,#D58A62 88%,#EDB07A 100%)}
+.sc-pastura .sun{background:radial-gradient(circle,rgba(255,196,136,.85) 0%,rgba(255,170,120,.3) 30%,rgba(255,170,120,0) 60%)}
+.sc-pastura .land{background:linear-gradient(180deg,#566E2E 0%,#2C4418 35%,#0E1908 100%)}
+.sc-pastura .haze{background:linear-gradient(180deg,rgba(237,176,122,0),rgba(237,176,122,.45) 50%,rgba(237,176,122,0))}
+.sc-remate{--row:#B8875A;--rowop:.16}
+.sc-remate .sky{background:linear-gradient(180deg,#36271C 0%,#87583A 55%,#DCA36A 100%)}
+.sc-remate .sun{background:radial-gradient(circle,rgba(255,206,140,.8) 0%,rgba(255,180,110,.3) 30%,rgba(255,180,110,0) 60%)}
+.sc-remate .land{background:linear-gradient(180deg,#7C5732 0%,#4E3419 35%,#1C1208 100%)}
+.sc-remate .haze{background:linear-gradient(180deg,rgba(220,163,106,0),rgba(220,163,106,.5) 50%,rgba(220,163,106,0))}
+.sc-studio .sky{height:844px;background:radial-gradient(circle at 50% 40%,#34503C 0%,#16231B 42%,#080E0A 78%)}
+.sc-studio .sun{background:radial-gradient(circle,rgba(164,210,51,.22) 0%,rgba(164,210,51,0) 62%)}
+.sc-studio .land,.sc-studio .rows,.sc-studio .haze{display:none}
+.thumb{width:64px;height:64px;border-radius:14px;flex-shrink:0;overflow:hidden}
+.thumb.sc-soja{background:linear-gradient(180deg,#5E6B7E 0%,#E39C5E 48%,#34521A 50%,#15260C 100%)}
+.thumb.sc-verde{background:linear-gradient(180deg,#6E9EBC 0%,#DDE8E0 48%,#4F7A2C 50%,#15290B 100%)}
+.thumb.sc-trigo{background:linear-gradient(180deg,#5A6272 0%,#EBCB8C 48%,#B88A38 50%,#3A280C 100%)}
+.thumb.sc-pastura{background:linear-gradient(180deg,#3A3558 0%,#E09B6C 48%,#3C5A20 50%,#0E1908 100%)}
+.thumb.sc-remate{background:linear-gradient(180deg,#5A3E2A 0%,#DCA36A 48%,#6A4826 50%,#1C1208 100%)}
+.thumb.sc-studio{background:radial-gradient(circle at 50% 45%,#4A6A52 0%,#0C140F 75%)}
+.nav{position:absolute;left:16px;right:16px;bottom:22px;height:66px;border-radius:33px;display:flex;align-items:center;justify-content:space-around;padding:0 6px;z-index:30;backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.nav-btn{width:60px;height:56px;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;font-size:10px;letter-spacing:.01em}
+.karai-btn{width:58px;height:58px;border-radius:29px;border:0;background:#A4D233;color:#0B1620;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 8px 20px rgba(164,210,51,.45),inset 0 1px 0 rgba(255,255,255,.6);transform:translateY(-12px)}
+.light{position:absolute;left:0;top:0;width:390px;height:844px;background:#F4F5F0;overflow-y:auto}
+.h1{margin:0;font-size:32px;line-height:1.1;font-weight:800;letter-spacing:-.025em;color:#0B1620}
+.sect{margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5A5F55}
+.card{background:#FFFFFF;border-radius:20px;border:1px solid rgba(11,22,32,.06)}
+.pill{height:38px;padding:0 16px;border-radius:19px;border:1px solid rgba(11,22,32,.12);background:#FFFFFF;font-size:14px;font-weight:600;color:#0B1620;white-space:nowrap;flex-shrink:0}
+.row-btn{display:flex;align-items:center;gap:14px;padding:12px;border:0;background:#FFFFFF;border-radius:18px;width:100%;text-align:left;color:#0B1620}
+.tile{height:84px;border-radius:18px;border:0;background:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:600;color:#0B1620;padding:0;box-shadow:0 1px 0 rgba(11,22,32,.05)}
+.tile-ic{width:36px;height:36px;border-radius:12px;background:#EEF4DC;color:#4E6B12;display:flex;align-items:center;justify-content:center}
+.seg{flex:1;height:36px;border:0;border-radius:18px;font-size:14px;font-weight:600}
+.sw{width:52px;height:32px;border-radius:16px;border:0;padding:0;position:relative;flex-shrink:0;transition:background .2s}
+.sw-knob{position:absolute;top:3px;width:26px;height:26px;border-radius:13px;background:#FFFFFF;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .2s}
+.bubble-me{align-self:flex-end;max-width:78%;background:#0B1620;color:#FFFFFF;padding:11px 15px;border-radius:20px 20px 6px 20px;font-size:15px;line-height:1.4}
+.bubble-bot{align-self:flex-start;max-width:86%;background:#FFFFFF;color:#0B1620;padding:12px 15px;border-radius:20px 20px 20px 6px;font-size:15px;line-height:1.45;border:1px solid rgba(11,22,32,.06)}
+.ref{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;border:1px solid rgba(11,22,32,.08);background:#F7F8F3;width:100%;text-align:left;color:#0B1620}
+.ptitle{margin:0;font-size:17px;font-weight:700;color:#0B1620}
+.ptext{margin:0;font-size:15px;line-height:1.5;color:#3E433B}
+.tag-light{height:32px;padding:0 12px;border-radius:16px;background:#EEF4DC;color:#3F5A0C;font-size:13px;font-weight:600;display:inline-flex;align-items:center}
+@keyframes prog{from{width:0}to{width:100%}}
+.prog{animation:prog 16s linear infinite}
+@keyframes fadeUp{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.toast{animation:fadeUp .25s ease-out}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.sheet{animation:sheetUp .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.live-dot{width:8px;height:8px;border-radius:4px;background:#FFFFFF;animation:pulse 1.6s infinite}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.typing span{display:inline-block;width:7px;height:7px;border-radius:4px;background:#8A9083;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #0B1620">
+
+<sc-if value="{{ showInicio }}" hint-placeholder-val="{{ true }}">
+<div class="feed" style="position: absolute; left: 0px; top: 0px">
+<sc-for list="{{ feed }}" as="item" hint-placeholder-count="2">
+<section class="slide" aria-label="{{ item.typeLabel }}: {{ item.title }}">
+
+<sc-if value="{{ item.isPhoto }}" hint-placeholder-val="{{ false }}">
+<img src="/_blob/6e7ccf52f4296d6c211640d503fbf60d" alt="Productores en un campo demostrativo" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; object-fit: cover; object-position: 50% 50%">
+</sc-if>
+<sc-if value="{{ item.isScene }}" hint-placeholder-val="{{ true }}">
+<div class="sc {{ item.scene }}">
+<div class="sky"></div>
+<div class="land"></div>
+<svg class="rows" viewBox="0 0 390 434" preserveAspectRatio="none" aria-hidden="true"><polygon points="24.6,0 29.9,0 -866,434 -900,434"></polygon><polygon points="35.8,0 41.1,0 -794,434 -828,434"></polygon><polygon points="47.0,0 52.3,0 -722,434 -756,434"></polygon><polygon points="58.2,0 63.5,0 -650,434 -684,434"></polygon><polygon points="69.4,0 74.7,0 -578,434 -612,434"></polygon><polygon points="80.6,0 85.9,0 -506,434 -540,434"></polygon><polygon points="91.8,0 97.1,0 -434,434 -468,434"></polygon><polygon points="103.0,0 108.3,0 -362,434 -396,434"></polygon><polygon points="114.2,0 119.5,0 -290,434 -324,434"></polygon><polygon points="125.4,0 130.7,0 -218,434 -252,434"></polygon><polygon points="136.6,0 141.9,0 -146,434 -180,434"></polygon><polygon points="147.8,0 153.1,0 -74,434 -108,434"></polygon><polygon points="159.0,0 164.3,0 -2,434 -36,434"></polygon><polygon points="170.3,0 175.5,0 70,434 36,434"></polygon><polygon points="181.5,0 186.8,0 142,434 108,434"></polygon><polygon points="192.7,0 198.0,0 214,434 180,434"></polygon><polygon points="203.9,0 209.2,0 286,434 252,434"></polygon><polygon points="215.1,0 220.4,0 358,434 324,434"></polygon><polygon points="226.3,0 231.6,0 430,434 396,434"></polygon><polygon points="237.5,0 242.8,0 502,434 468,434"></polygon><polygon points="248.7,0 254.0,0 574,434 540,434"></polygon><polygon points="259.9,0 265.2,0 646,434 612,434"></polygon><polygon points="271.1,0 276.4,0 718,434 684,434"></polygon><polygon points="282.3,0 287.6,0 790,434 756,434"></polygon><polygon points="293.5,0 298.8,0 862,434 828,434"></polygon><polygon points="304.7,0 310.0,0 934,434 900,434"></polygon><polygon points="315.9,0 321.2,0 1006,434 972,434"></polygon><polygon points="327.1,0 332.4,0 1078,434 1044,434"></polygon><polygon points="338.3,0 343.6,0 1150,434 1116,434"></polygon><polygon points="349.6,0 354.8,0 1222,434 1188,434"></polygon><polygon points="360.8,0 366.1,0 1294,434 1260,434"></polygon></svg>
+<div class="sun"></div>
+<div class="haze"></div>
+</div>
+</sc-if>
+<sc-if value="{{ item.isRemate }}" hint-placeholder-val="{{ false }}">
+<svg viewBox="0 0 390 60" aria-hidden="true" style="position: absolute; left: 0; top: 386px; width: 390px; height: 60px"><line x1="0" y1="20" x2="390" y2="20" stroke="#24160B" stroke-width="1.5"></line><line x1="0" y1="32" x2="390" y2="32" stroke="#24160B" stroke-width="1.5"></line><rect x="8" y="12" width="3" height="34" fill="#24160B"></rect><rect x="48" y="12" width="3" height="34" fill="#24160B"></rect><rect x="88" y="12" width="3" height="34" fill="#24160B"></rect><rect x="128" y="12" width="3" height="34" fill="#24160B"></rect><rect x="168" y="12" width="3" height="34" fill="#24160B"></rect><rect x="208" y="12" width="3" height="34" fill="#24160B"></rect><rect x="248" y="12" width="3" height="34" fill="#24160B"></rect><rect x="288" y="12" width="3" height="34" fill="#24160B"></rect><rect x="328" y="12" width="3" height="34" fill="#24160B"></rect><rect x="368" y="12" width="3" height="34" fill="#24160B"></rect></svg>
+</sc-if>
+<sc-if value="{{ item.isProduct }}" hint-placeholder-val="{{ false }}">
+<svg viewBox="0 0 180 300" aria-hidden="true" style="position: absolute; left: 105px; top: 170px; width: 180px; height: 300px"><ellipse cx="90" cy="290" rx="72" ry="8" fill="#000000" fill-opacity=".55"></ellipse><line x1="118" y1="18" x2="118" y2="64" stroke="#9AA39A" stroke-width="5" stroke-linecap="round"></line><circle cx="118" cy="16" r="6" fill="#A4D233"></circle><rect x="38" y="58" width="104" height="146" rx="24" fill="#E9ECE6"></rect><rect x="38" y="58" width="104" height="146" rx="24" fill="none" stroke="#FFFFFF" stroke-opacity=".6"></rect><rect x="54" y="80" width="72" height="46" rx="10" fill="#0B1620"></rect><rect x="64" y="108" width="8" height="10" rx="2" fill="#A4D233"></rect><rect x="76" y="100" width="8" height="18" rx="2" fill="#A4D233"></rect><rect x="88" y="94" width="8" height="24" rx="2" fill="#A4D233"></rect><rect x="100" y="104" width="8" height="14" rx="2" fill="#A4D233" fill-opacity=".6"></rect><circle cx="90" cy="170" r="7" fill="#A4D233"></circle><path d="M78 204h24l-8 80h-8z" fill="#8C938A"></path></svg>
+</sc-if>
+<sc-if value="{{ item.isVideo }}" hint-placeholder-val="{{ false }}">
+<button class="glass" aria-label="{{ playLabel }}" onClick="{{ togglePlay }}" style="position: absolute; left: 157px; top: 320px; width: 76px; height: 76px; border-radius: 38px; display: flex; align-items: center; justify-content: center; padding: 0; color: #FFFFFF; opacity: {{ playOpacity }}">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.4-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z"></path></svg>
+</button>
+</sc-if>
+
+<div class="shade"></div>
+
+<div style="position: absolute; left: 18px; right: 18px; top: 58px; display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 20px; font-weight: 800; letter-spacing: -.03em; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0,0,0,.35)"><span style="color: #A4D233">agro</span>conecta</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<button class="glass" aria-label="Mis puntos: {{ pointsLabel }}" onClick="{{ openCanjes }}" style="height: 44px; padding: 0 16px; border-radius: 22px; display: flex; align-items: center; color: #FFFFFF; font-size: 14px; font-weight: 700">{{ pointsLabel }}</button>
+<button class="glass" aria-label="Buscar" onClick="{{ goExplorar }}" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; padding: 0; color: #FFFFFF">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+</button>
+</div>
+</div>
+
+<sc-if value="{{ item.showRail }}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; right: 12px; bottom: 176px; display: flex; flex-direction: column; align-items: center; gap: 16px">
+<div style="position: relative; width: 52px; height: 62px; display: flex; justify-content: center">
+<button aria-label="Ver perfil de {{ item.org }}" onClick="{{ item.open }}" style="width: 52px; height: 52px; border-radius: 26px; border: 2px solid #FFFFFF; padding: 0; overflow: hidden; background: {{ item.orgColor }}; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 16px; font-weight: 800">
+<sc-if value="{{ item.hasLogo }}" hint-placeholder-val="{{ true }}"><img src="/_blob/814d28a1457689209d847b561d1953e7" alt="" style="width: 52px; height: 52px; object-fit: cover"></sc-if>
+<sc-if value="{{ item.noLogo }}" hint-placeholder-val="{{ false }}"><span>{{ item.initials }}</span></sc-if>
+</button>
+<button aria-label="{{ item.followLabel }}" onClick="{{ item.follow }}" style="position: absolute; left: 15px; bottom: 0; width: 22px; height: 22px; border-radius: 11px; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: {{ item.followBg }}; color: #0B1620">
+<sc-if value="{{ item.notFollowing }}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></sc-if>
+<sc-if value="{{ item.following }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg></sc-if>
+</button>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<button class="rail-btn glass" aria-label="Me gusta" aria-pressed="{{ item.likedStr }}" onClick="{{ item.like }}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="{{ item.heartFill }}" stroke="{{ item.heartStroke }}" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.4A4.9 4.9 0 0 1 12 7.2a4.9 4.9 0 0 1 9.3 3.9c-1.8 4.8-9.3 9.4-9.3 9.4z"></path></svg>
+</button>
+<span class="rail-count">{{ item.likeCount }}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<button class="rail-btn glass" aria-label="Guardar" aria-pressed="{{ item.savedStr }}" onClick="{{ item.save }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="{{ item.bmFill }}" stroke="{{ item.bmStroke }}" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"></path></svg>
+</button>
+<span class="rail-count">{{ item.saveLabel }}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<button class="rail-btn glass" aria-label="Compartir" onClick="{{ item.share }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4 9.5 14.5M20 4l-6.5 16-4-5.5L4 10.5z"></path></svg>
+</button>
+<span class="rail-count">Enviar</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ item.showInfo }}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 18px; right: 84px; bottom: 176px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span class="typechip glass" style="background: {{ item.chipBg }}; color: {{ item.chipFg }}"><span class="dot" style="background: {{ item.dotC }}"></span>{{ item.typeLabel }}</span>
+<span style="font-size: 14px; font-weight: 600; color: rgba(255,255,255,.9)">{{ item.org }}</span>
+</div>
+<h2 style="margin: 0; font-size: 26px; line-height: 1.14; font-weight: 800; letter-spacing: -.02em; color: #FFFFFF; text-wrap: pretty">{{ item.title }}</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.4; color: rgba(255,255,255,.84)">{{ item.desc }}</p>
+<sc-if value="{{ item.hasTags }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<sc-for list="{{ item.tags }}" as="tag" hint-placeholder-count="3">
+<span style="font-size: 14px; font-weight: 600; color: #D4ED8E">{{ tag }}</span>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ item.isAd }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ pautar }}" style="align-self: flex-start; height: 32px; padding: 0; border: 0; background: transparent; color: rgba(255,255,255,.78); font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px">¿Querés pautar tu contenido acá?</button>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ item.isPoll }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 18px; right: 18px; top: 180px; padding: 22px 20px 20px; border-radius: 28px; background: #FFFFFF; box-shadow: 0 24px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; color: #4E6B12">ENCUESTA · {{ item.org }}</span>
+<span style="height: 28px; padding: 0 10px; border-radius: 14px; background: {{ item.badgeBg }}; color: {{ item.badgeFg }}; font-size: 12px; font-weight: 800; display: flex; align-items: center">{{ item.pollBadge }}</span>
+</div>
+<h2 style="margin: 0; font-size: 24px; line-height: 1.18; font-weight: 800; letter-spacing: -.02em; color: #0B1620; text-wrap: pretty">{{ item.title }}</h2>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ item.pollOpts }}" as="opt" hint-placeholder-count="4">
+<button class="poll-opt" onClick="{{ opt.vote }}" aria-pressed="{{ opt.selStr }}" style="background: #F2F4EC; color: #0B1620; border: 1.5px solid {{ opt.border }}">
+<span class="poll-bar" style="width: {{ opt.barW }}; background: rgba(164,210,51,.5)"></span>
+<span style="position: relative">{{ opt.label }}</span>
+<span style="position: relative; font-size: 14px; font-weight: 800">{{ opt.pctLabel }}</span>
+</button>
+</sc-for>
+</div>
+<span style="font-size: 13px; color: #5A5F55">{{ item.pollFoot }}</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ item.isQuiz }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 18px; right: 18px; top: 170px; padding: 22px 20px 20px; border-radius: 28px; background: #FFFFFF; box-shadow: 0 24px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; color: #4E6B12">QUIZ AGRO · {{ quiz.stepLabel }}</span>
+<span style="height: 28px; padding: 0 10px; border-radius: 14px; background: #EEF4DC; color: #3F5A0C; font-size: 12px; font-weight: 800; display: flex; align-items: center">+10 pts por acierto</span>
+</div>
+<div style="display: flex; gap: 6px">
+<sc-for list="{{ quiz.dots }}" as="qd" hint-placeholder-count="3">
+<span style="flex: 1; height: 4px; border-radius: 2px; background: {{ qd.c }}"></span>
+</sc-for>
+</div>
+<sc-if value="{{ quiz.playing }}" hint-placeholder-val="{{ true }}">
+<h2 style="margin: 0; font-size: 22px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; color: #0B1620; text-wrap: pretty">{{ quiz.q }}</h2>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ quiz.opts }}" as="qo" hint-placeholder-count="3">
+<button class="poll-opt" onClick="{{ qo.pick }}" style="background: {{ qo.bg }}; color: #0B1620; border: 1.5px solid {{ qo.bd }}; opacity: {{ qo.op }}">
+<span>{{ qo.label }}</span>
+<span style="font-size: 12px; font-weight: 800; color: {{ qo.markC }}">{{ qo.mark }}</span>
+</button>
+</sc-for>
+</div>
+<sc-if value="{{ quiz.answered }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ quiz.next }}" style="height: 50px; border-radius: 25px; border: 0; background: #0B1620; color: #FFFFFF; font-size: 16px; font-weight: 700">{{ quiz.nextLabel }}</button>
+</sc-if>
+</sc-if>
+<sc-if value="{{ quiz.done }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 0 4px; text-align: center">
+<span style="width: 64px; height: 64px; border-radius: 32px; background: #A4D233; color: #0B1620; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"></path></svg></span>
+<span style="font-size: 22px; font-weight: 800; color: #0B1620">{{ quiz.scoreTitle }}</span>
+<span style="font-size: 15px; color: #5A5F55">{{ quiz.scoreSub }}</span>
+</div>
+<button onClick="{{ openCanjes }}" style="height: 50px; border-radius: 25px; border: 0; background: #A4D233; color: #0B1620; font-size: 16px; font-weight: 700">Ver qué puedo canjear</button>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ item.isVideo }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 18px; right: 18px; bottom: 96px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.25); overflow: hidden">
+<div class="prog" style="height: 3px; background: #FFFFFF; animation-play-state: {{ progState }}"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ item.hasCta }}" hint-placeholder-val="{{ true }}">
+<button class="cta" onClick="{{ item.open }}">{{ item.ctaLabel }}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</sc-if>
+</section>
+</sc-for>
+</div>
+<sc-if value="{{ liveBanner }}" hint-placeholder-val="{{ true }}">
+<div class="live-card" style="position: absolute; left: 14px; right: 14px; top: 112px; z-index: 20; border-radius: 22px; background: rgba(12,16,14,.62); backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 12px 30px rgba(0,0,0,.25); overflow: hidden">
+<div style="display: flex; align-items: center; gap: 4px; padding: 0 4px 0 0">
+<button onClick="{{ toggleLive }}" aria-expanded="{{ liveOpenStr }}" style="flex-grow: 1; min-width: 0; height: 52px; border: 0; background: transparent; padding: 0 8px 0 14px; display: flex; align-items: center; gap: 10px; color: #FFFFFF; text-align: left">
+<span style="height: 24px; padding: 0 8px; border-radius: 12px; background: #E5484D; font-size: 11px; font-weight: 800; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; flex-shrink: 0"><span class="live-dot"></span>EN VIVO</span>
+<span style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Feria de consumo · Remates del Chaco</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; transform: rotate({{ liveChevron }}deg); transition: transform .2s"><path d="m6 9 6 6 6-6"></path></svg>
+</button>
+<button aria-label="Ocultar avisos en vivo" onClick="{{ dismissLive }}" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: rgba(255,255,255,.12); color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+<sc-if value="{{ liveOpen }}" hint-placeholder-val="{{ false }}">
+<div style="padding: 2px 14px 14px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; gap: 12px; align-items: center">
+<div class="thumb sc-remate" style="width: 72px; height: 72px; position: relative"><span style="position: absolute; left: 6px; bottom: 6px; height: 18px; padding: 0 6px; border-radius: 9px; background: rgba(0,0,0,.55); color: #FFFFFF; font-size: 10px; font-weight: 700; display: flex; align-items: center">LOTE 12/40</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<span style="font-size: 16px; font-weight: 800; color: #FFFFFF; line-height: 1.2">Remate en vivo desde el predio</span>
+<span style="font-size: 13px; color: rgba(255,255,255,.78)">Novillos y vaquillas · 1.284 conectados</span>
+</div>
+</div>
+<div style="display: flex; gap: 8px">
+<button onClick="{{ openLive }}" style="flex-grow: 1; height: 44px; border-radius: 22px; border: 0; background: #A4D233; color: #0B1620; font-size: 15px; font-weight: 700">Ver en vivo</button>
+<button onClick="{{ dismissLive }}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #FFFFFF; font-size: 14px; font-weight: 600">No me interesa</button>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ showExplorar }}" hint-placeholder-val="{{ false }}">
+<div class="light scroll">
+<div style="padding: 64px 18px 130px; display: flex; flex-direction: column; gap: 20px">
+<h1 class="h1">Explorar</h1>
+<div style="position: relative">
+<label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar en Agroconecta</label>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A5F55" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 18px; top: 18px"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<input id="q" type="search" value="{{ q }}" onChange="{{ onQuery }}" placeholder="Buscar en Agroconecta" style="width: 100%; box-sizing: border-box; height: 56px; border-radius: 28px; border: 1px solid rgba(11,22,32,.1); background: #FFFFFF; padding: 0 52px 0 50px; font-size: 17px; color: #0B1620; outline-color: #A4D233; box-shadow: 0 6px 20px rgba(11,22,32,.06)">
+<sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+<button aria-label="Borrar búsqueda" onClick="{{ clearQuery }}" style="position: absolute; right: 8px; top: 8px; width: 40px; height: 40px; border-radius: 20px; border: 0; background: #EEF0EA; color: #0B1620; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</sc-if>
+</div>
+<div class="scroll" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -18px; padding: 0 18px">
+<sc-for list="{{ rubros }}" as="r" hint-placeholder-count="5">
+<button class="pill" onClick="{{ r.pick }}" aria-pressed="{{ r.selStr }}" style="background: {{ r.bg }}; color: {{ r.fg }}; border-color: {{ r.bd }}">{{ r.label }}</button>
+</sc-for>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 18px; background: #FFFFFF; border: 1px solid rgba(11,22,32,.06)">
+<span class="live-dot" style="background: #E5484D; flex-shrink: 0"></span>
+<button onClick="{{ openLive }}" style="flex-grow: 1; min-width: 0; border: 0; background: transparent; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 1px; color: #0B1620">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #B42318">EN VIVO AHORA</span>
+<span style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Feria de consumo · Remates del Chaco</span>
+</button>
+<sc-if value="{{ liveDismissed }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ showLiveAgain }}" aria-label="Volver a mostrar el aviso en vivo en Inicio" style="height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid rgba(11,22,32,.12); background: #FFFFFF; font-size: 12px; font-weight: 700; color: #0B1620; flex-shrink: 0">Mostrar en Inicio</button>
+</sc-if>
+<button onClick="{{ openLive }}" style="height: 36px; padding: 0 14px; border-radius: 18px; border: 0; background: #0B1620; color: #FFFFFF; font-size: 13px; font-weight: 700; flex-shrink: 0">Ver</button>
+</div>
+
+<sc-if value="{{ showResults }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 class="sect">{{ resultsTitle }}</h2>
+<button onClick="{{ resetExplore }}" style="height: 36px; padding: 0 12px; border: 0; background: transparent; font-size: 14px; font-weight: 700; color: #4E6B12">Limpiar</button>
+</div>
+<sc-for list="{{ results }}" as="it" hint-placeholder-count="3">
+<button class="row-btn" onClick="{{ it.open }}">
+<sc-if value="{{ it.isPhoto }}" hint-placeholder-val="{{ false }}"><img src="/_blob/6e7ccf52f4296d6c211640d503fbf60d" alt="" class="thumb" style="object-fit: cover"></sc-if>
+<sc-if value="{{ it.isScene }}" hint-placeholder-val="{{ true }}"><div class="thumb {{ it.scene }}"></div></sc-if>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #4E6B12">{{ it.typeLabel }}</span>
+<span style="font-size: 16px; font-weight: 700; line-height: 1.25; color: #0B1620">{{ it.title }}</span>
+<span style="font-size: 13px; color: #5A5F55">{{ it.org }}</span>
+</div>
+</button>
+</sc-for>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="padding: 24px; text-align: center; font-size: 15px; color: #5A5F55">No encontramos nada con eso. Probá con “soja”, “remate” o “curso”.</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ showBrowse }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 class="sect">Categorías</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<button class="tile" onClick="{{ pickType.noticia }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 9h8M8 13h8M8 17h5"></path></svg></span>Noticias</button>
+<button class="tile" onClick="{{ pickType.evento }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"></rect><path d="M4 10h16M9 3v4M15 3v4"></path></svg></span>Eventos</button>
+<button class="tile" onClick="{{ pickType.video }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="m10 9 5 3-5 3z"></path></svg></span>Videos</button>
+<button class="tile" onClick="{{ pickType.curso }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5z"></path><path d="M6 11v5c2 2 10 2 12 0v-5"></path></svg></span>Cursos</button>
+<button class="tile" onClick="{{ pickType.producto }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6z"></path><path d="M9 8a3 3 0 0 1 6 0"></path></svg></span>Productos</button>
+<button class="tile" onClick="{{ pickType.servicio }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-3-3z"></path></svg></span>Servicios</button>
+<button class="tile" onClick="{{ pickType.empleo }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"></rect><path d="M9 7V5h6v2M3 13h18"></path></svg></span>Empleos</button>
+<button class="tile" onClick="{{ pickType.remate }}"><span class="tile-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 4 7 7M10 7l7 7M11.5 5.5l-6 6 3 3 6-6M8.5 14.5 3 20M14 20h7"></path></svg></span>Remates</button>
+</div>
+<h2 class="sect" style="margin-top: 10px">Tendencias</h2>
+<div class="card" style="padding: 6px">
+<sc-for list="{{ trends }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.go }}" style="display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px; border: 0; background: transparent; text-align: left; border-radius: 14px">
+<span style="width: 28px; font-size: 20px; font-weight: 800; color: #A4D233">{{ t.n }}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<span style="font-size: 16px; font-weight: 700; color: #0B1620">{{ t.tag }}</span>
+<span style="font-size: 13px; color: #5A5F55">{{ t.sub }}</span>
+</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A9083" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showKarai }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: #F4F5F0; display: flex; flex-direction: column">
+<div style="padding: 60px 20px 12px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 30px; height: 30px; border-radius: 15px; background: #0B1620; color: #A4D233; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.7 5 2.5 6.8 7.5 7.5-5 .7-6.8 2.5-7.5 7.5-.7-5-2.5-6.8-7.5-7.5 5-.7 6.8-2.5 7.5-7.5z"></path></svg></span>
+<span style="font-size: 17px; font-weight: 800; letter-spacing: -.01em">Karai</span>
+<sc-if value="{{ hasMsgs }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ resetChat }}" style="margin-left: auto; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid rgba(11,22,32,.12); background: #FFFFFF; font-size: 13px; font-weight: 600; color: #0B1620">Nueva consulta</button>
+</sc-if>
+</div>
+<sc-if value="{{ noMsgs }}" hint-placeholder-val="{{ true }}">
+<h1 class="h1" style="margin-top: 18px; font-size: 34px">¿Qué necesitás saber del agro?</h1>
+</sc-if>
+</div>
+
+<sc-if value="{{ noMsgs }}" hint-placeholder-val="{{ true }}">
+<div class="scroll" style="flex-grow: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="4">
+<button onClick="{{ s.ask }}" style="display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 18px; border-radius: 18px; border: 1px solid rgba(11,22,32,.08); background: #FFFFFF; font-size: 16px; font-weight: 600; color: #0B1620; text-align: left">{{ s.text }}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4E6B12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+</sc-for>
+<div style="margin-top: 10px; border-radius: 24px; background: #0B1620; padding: 22px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; right: -30px; top: -52px; width: 130px; height: 130px; border-radius: 65px; border: 16px solid #A4D233; opacity: .9"></div>
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; color: #A4D233">KARAI CAMPO</span>
+<span style="font-size: 21px; font-weight: 800; line-height: 1.2; color: #FFFFFF; max-width: 250px">Administrá tu establecimiento con ayuda de inteligencia artificial.</span>
+<button onClick="{{ karaiCampo }}" style="align-self: flex-start; margin-top: 6px; height: 46px; padding: 0 20px; border-radius: 23px; border: 0; background: #A4D233; color: #0B1620; font-size: 15px; font-weight: 700">Conocer KARAI Campo</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasMsgs }}" hint-placeholder-val="{{ false }}">
+<div class="scroll" style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column-reverse; padding: 0 20px 12px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{ msgs }}" as="m" hint-placeholder-count="2">
+<sc-if value="{{ m.me }}" hint-placeholder-val="{{ true }}"><div class="bubble-me">{{ m.text }}</div></sc-if>
+<sc-if value="{{ m.bot }}" hint-placeholder-val="{{ false }}">
+<div class="bubble-bot" style="display: flex; flex-direction: column; gap: 10px">
+<span>{{ m.text }}</span>
+<sc-for list="{{ m.refs }}" as="rf" hint-placeholder-count="2">
+<button class="ref" onClick="{{ rf.open }}">
+<sc-if value="{{ rf.isPhoto }}" hint-placeholder-val="{{ false }}"><img src="/_blob/6e7ccf52f4296d6c211640d503fbf60d" alt="" class="thumb" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover"></sc-if>
+<sc-if value="{{ rf.isScene }}" hint-placeholder-val="{{ true }}"><div class="thumb {{ rf.scene }}" style="width: 44px; height: 44px; border-radius: 10px"></div></sc-if>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #4E6B12">{{ rf.typeLabel }}</span>
+<span style="font-size: 14px; font-weight: 700; line-height: 1.25">{{ rf.title }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+<div class="bubble-bot typing" aria-label="Karai está escribiendo" style="display: flex; gap: 5px; padding: 16px 18px"><span></span><span></span><span></span></div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<div style="padding: 8px 16px 112px; display: flex; gap: 8px; align-items: center">
+<label for="kin" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Mensaje para Karai</label>
+<input id="kin" value="{{ kInput }}" onChange="{{ onKInput }}" onKeyDown="{{ onKKey }}" placeholder="Preguntale a Karai…" style="flex-grow: 1; min-width: 0; height: 52px; border-radius: 26px; border: 1px solid rgba(11,22,32,.12); background: #FFFFFF; padding: 0 20px; font-size: 16px; color: #0B1620; outline-color: #A4D233">
+<button aria-label="Enviar" onClick="{{ sendK }}" style="width: 52px; height: 52px; border-radius: 26px; border: 0; background: #0B1620; color: #A4D233; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showGuardados }}" hint-placeholder-val="{{ false }}">
+<div class="light scroll">
+<div style="padding: 64px 18px 130px; display: flex; flex-direction: column; gap: 18px">
+<h1 class="h1">Guardados</h1>
+<div role="tablist" style="display: flex; gap: 4px; padding: 4px; border-radius: 22px; background: #E6E8E0">
+<sc-for list="{{ segs }}" as="sg" hint-placeholder-count="3">
+<button class="seg" role="tab" aria-selected="{{ sg.selStr }}" onClick="{{ sg.pick }}" style="background: {{ sg.bg }}; color: {{ sg.fg }}; box-shadow: {{ sg.sh }}">{{ sg.label }}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{ segSaved }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ savedItems }}" as="it" hint-placeholder-count="2">
+<button class="row-btn" onClick="{{ it.open }}">
+<sc-if value="{{ it.isPhoto }}" hint-placeholder-val="{{ false }}"><img src="/_blob/6e7ccf52f4296d6c211640d503fbf60d" alt="" class="thumb" style="object-fit: cover"></sc-if>
+<sc-if value="{{ it.isScene }}" hint-placeholder-val="{{ true }}"><div class="thumb {{ it.scene }}"></div></sc-if>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #4E6B12">{{ it.typeLabel }}</span>
+<span style="font-size: 16px; font-weight: 700; line-height: 1.25; color: #0B1620">{{ it.title }}</span>
+<span style="font-size: 13px; color: #5A5F55">{{ it.org }}</span>
+</div>
+</button>
+</sc-for>
+<sc-if value="{{ noSaved }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="padding: 28px 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#4E6B12" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"></path></svg>
+<span style="font-size: 16px; font-weight: 700">Todavía no guardaste nada</span>
+<span style="font-size: 14px; line-height: 1.45; color: #5A5F55">Tocá el marcador en cualquier publicación del Inicio y aparece acá.</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ segRem }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ reminders }}" as="rm" hint-placeholder-count="2">
+<div class="card" style="padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 14px">
+<div style="width: 52px; height: 56px; border-radius: 14px; background: #0B1620; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0">
+<span style="font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #A4D233">{{ rm.mon }}</span>
+<span style="font-size: 20px; font-weight: 800">{{ rm.day }}</span>
+</div>
+<button onClick="{{ rm.open }}" style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px; border: 0; background: transparent; padding: 0; text-align: left; color: #0B1620; min-width: 0">
+<span style="font-size: 16px; font-weight: 700">{{ rm.title }}</span>
+<span style="font-size: 14px; color: #5A5F55">{{ rm.when }}</span>
+</button>
+<button class="sw" role="switch" aria-checked="{{ rm.onStr }}" aria-label="Recordatorio: {{ rm.title }}" onClick="{{ rm.toggle }}" style="background: {{ rm.track }}"><span class="sw-knob" style="left: {{ rm.knob }}"></span></button>
+</div>
+</sc-for>
+<p style="margin: 4px 4px 0; font-size: 13px; line-height: 1.45; color: #5A5F55">Te avisamos 1 hora antes. Activá recordatorios desde cualquier evento o remate.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ segAct }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ activity }}" as="ac" hint-placeholder-count="4">
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 15px; font-weight: 700">{{ ac.label }}</span>
+<span style="min-width: 28px; height: 24px; padding: 0 8px; border-radius: 12px; background: #EEF4DC; color: #3F5A0C; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{ ac.count }}</span>
+</div>
+<span style="font-size: 14px; line-height: 1.45; color: #5A5F55">{{ ac.detail }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showPerfil }}" hint-placeholder-val="{{ false }}">
+<div class="light scroll">
+<div style="position: relative; height: 170px; background: #0B1620; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; right: 36px; top: 52px; width: 150px; height: 150px; border-radius: 75px; border: 20px solid #A4D233"></div>
+</div>
+<div style="padding: 0 18px 130px; display: flex; flex-direction: column; gap: 16px; margin-top: -48px; position: relative">
+<div style="width: 96px; height: 96px; border-radius: 48px; background: #A4D233; border: 4px solid #F4F5F0; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; color: #0B1620">ME</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 class="h1" style="font-size: 28px">Marcelo Escobar</h1>
+<span style="font-size: 16px; font-weight: 600; color: #0B1620">Cofundador — Agroconecta</span>
+<span style="font-size: 15px; color: #5A5F55">Administración Agraria · Paraguay</span>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span class="tag-light">Agricultura</span>
+<span class="tag-light">Tecnología</span>
+<span class="tag-light">Comunicación</span>
+</div>
+<div style="display: flex; gap: 10px">
+<button onClick="{{ shareProfile }}" style="flex-grow: 1; height: 50px; border-radius: 25px; border: 0; background: #0B1620; color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4 9.5 14.5M20 4l-6.5 16-4-5.5L4 10.5z"></path></svg>Compartir perfil</button>
+<button aria-label="Editar perfil" onClick="{{ editProfile }}" style="width: 50px; height: 50px; border-radius: 25px; border: 1px solid rgba(11,22,32,.14); background: #FFFFFF; color: #0B1620; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></button>
+</div>
+<span style="font-size: 13px; color: #5A5F55">agroconecta.com.py/marcelo</span>
+
+<div class="card" style="padding: 16px; display: flex; align-items: center; gap: 14px">
+<span style="width: 48px; height: 48px; border-radius: 24px; background: #A4D233; color: #0B1620; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"></path></svg></span>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 13px; font-weight: 600; color: #5A5F55">Puntos Agroconecta</span>
+<span style="font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: #0B1620">{{ points }} pts</span>
+<span style="font-size: 12px; color: #5A5F55">Encuestas y quizzes suman puntos</span>
+</div>
+<button onClick="{{ openCanjes }}" style="height: 44px; padding: 0 18px; border-radius: 22px; border: 0; background: #0B1620; color: #FFFFFF; font-size: 15px; font-weight: 700; flex-shrink: 0">Canjear</button>
+</div>
+
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 8px">
+<h2 class="ptitle">Sobre mí</h2>
+<p class="ptext">[Escribí 2–3 líneas sobre vos: a qué te dedicás en el agro y qué estás construyendo.]</p>
+</div>
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<h2 class="ptitle">Experiencia</h2>
+<div style="display: flex; gap: 12px">
+<img src="/_blob/814d28a1457689209d847b561d1953e7" alt="" style="width: 44px; height: 44px; border-radius: 12px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 15px; font-weight: 700">Cofundador</span>
+<span style="font-size: 14px; color: #3E433B">Agroconecta</span>
+<span style="font-size: 13px; color: #5A5F55">2022 — hoy</span>
+</div>
+</div>
+<div style="display: flex; gap: 12px">
+<div style="width: 44px; height: 44px; border-radius: 12px; background: #E6E8E0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #5A5F55">+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; justify-content: center">
+<span style="font-size: 14px; color: #5A5F55">[Agregar experiencia]</span>
+</div>
+</div>
+</div>
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<h2 class="ptitle">Especialidades</h2>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span class="tag-light">[Especialidad 1]</span>
+<span class="tag-light">[Especialidad 2]</span>
+<span class="tag-light">[Especialidad 3]</span>
+</div>
+</div>
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 8px">
+<h2 class="ptitle">Formación</h2>
+<span style="font-size: 15px; font-weight: 700">Administración Agraria</span>
+<span style="font-size: 14px; color: #5A5F55">[Institución · Año]</span>
+</div>
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<h2 class="ptitle">Organizaciones</h2>
+<div style="display: flex; align-items: center; gap: 12px">
+<img src="/_blob/814d28a1457689209d847b561d1953e7" alt="" style="width: 40px; height: 40px; border-radius: 20px">
+<span style="font-size: 15px; font-weight: 600">Agroconecta</span>
+</div>
+</div>
+<div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<h2 class="ptitle">Redes sociales</h2>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button class="pill" onClick="{{ socialTap }}">Instagram</button>
+<button class="pill" onClick="{{ socialTap }}">LinkedIn</button>
+<button class="pill" onClick="{{ socialTap }}">WhatsApp</button>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; background: rgba(4,9,6,.5); z-index: 40">
+<div class="sheet scroll" role="dialog" aria-label="{{ det.title }}" style="position: absolute; left: 0; right: 0; top: 48px; bottom: 0; background: #F4F5F0; border-radius: 28px 28px 0 0; overflow-y: auto">
+<div style="position: relative; height: 250px; overflow: hidden; border-radius: 28px 28px 0 0">
+<sc-if value="{{ det.isPhoto }}" hint-placeholder-val="{{ false }}"><img src="/_blob/6e7ccf52f4296d6c211640d503fbf60d" alt="" style="width: 390px; height: 250px; object-fit: cover"></sc-if>
+<sc-if value="{{ det.isScene }}" hint-placeholder-val="{{ true }}">
+<div class="sc {{ det.scene }}" style="top: -290px">
+<div class="sky"></div>
+<div class="land"></div>
+<div class="sun"></div>
+<div class="haze"></div>
+</div>
+</sc-if>
+<button aria-label="Cerrar" onClick="{{ closeDetail }}" class="glass" style="position: absolute; right: 14px; top: 14px; width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; padding: 0; color: #FFFFFF; background: rgba(11,22,32,.35)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+<div style="padding: 20px 20px 40px; display: flex; flex-direction: column; gap: 16px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #4E6B12">{{ det.typeLabel }}</span>
+<h2 style="margin: 0; font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -.02em">{{ det.title }}</h2>
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="width: 40px; height: 40px; border-radius: 20px; overflow: hidden; background: {{ det.orgColor }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0">
+<sc-if value="{{ det.hasLogo }}" hint-placeholder-val="{{ true }}"><img src="/_blob/814d28a1457689209d847b561d1953e7" alt="" style="width: 40px; height: 40px"></sc-if>
+<sc-if value="{{ det.noLogo }}" hint-placeholder-val="{{ false }}"><span>{{ det.initials }}</span></sc-if>
+</div>
+<span style="flex-grow: 1; font-size: 15px; font-weight: 700">{{ det.org }}</span>
+<button onClick="{{ det.follow }}" style="height: 36px; padding: 0 16px; border-radius: 18px; border: 1px solid {{ det.followBd }}; background: {{ det.followBg2 }}; color: #0B1620; font-size: 14px; font-weight: 700">{{ det.followText }}</button>
+</div>
+<sc-if value="{{ det.hasWhen }}" hint-placeholder-val="{{ false }}">
+<div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 15px; font-weight: 700">{{ det.when }}</span>
+<span style="font-size: 14px; color: #5A5F55">{{ det.place }}</span>
+</div>
+</sc-if>
+<sc-for list="{{ det.bodyA }}" as="p" hint-placeholder-count="1">
+<p class="ptext" style="font-size: 16px">{{ p }}</p>
+</sc-for>
+<sc-if value="{{ det.hasAd }}" hint-placeholder-val="{{ false }}">
+<aside aria-label="Publicidad" style="border-radius: 20px; background: #FFFFFF; border: 1px solid rgba(11,22,32,.08); overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(11,22,32,.06)">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .1em; color: #8A9083">PATROCINADO</span>
+<button aria-label="Por qué veo este anuncio" onClick="{{ adWhy }}" style="height: 28px; padding: 0 8px; border: 0; background: transparent; font-size: 12px; font-weight: 600; color: #5A5F55">¿Por qué lo veo?</button>
+</div>
+<div style="display: flex; gap: 14px; padding: 14px; align-items: center">
+<div class="thumb sc-soja" style="width: 84px; height: 84px; border-radius: 16px"></div>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<span style="font-size: 13px; font-weight: 700; color: #4E6B12">Semillería El Surco</span>
+<span style="font-size: 16px; font-weight: 800; line-height: 1.25; color: #0B1620">Semilla de soja certificada para esta zafra</span>
+<span style="font-size: 13px; color: #5A5F55">Entrega en tu cooperativa</span>
+</div>
+</div>
+<div style="padding: 0 14px 14px">
+<button onClick="{{ adClick }}" style="width: 100%; height: 44px; border-radius: 22px; border: 1px solid rgba(11,22,32,.14); background: #F4F5F0; color: #0B1620; font-size: 15px; font-weight: 700">Conocer más</button>
+</div>
+</aside>
+</sc-if>
+<sc-for list="{{ det.bodyB }}" as="p" hint-placeholder-count="1">
+<p class="ptext" style="font-size: 16px">{{ p }}</p>
+</sc-for>
+<div style="display: flex; gap: 10px; padding-top: 4px">
+<button onClick="{{ det.primary }}" style="flex-grow: 1; height: 52px; border-radius: 26px; border: 0; background: {{ det.primaryBg }}; color: {{ det.primaryFg }}; font-size: 16px; font-weight: 700">{{ det.primaryText }}</button>
+<button aria-label="Compartir" onClick="{{ det.share }}" style="width: 52px; height: 52px; border-radius: 26px; border: 1px solid rgba(11,22,32,.14); background: #FFFFFF; color: #0B1620; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4 9.5 14.5M20 4l-6.5 16-4-5.5L4 10.5z"></path></svg></button>
+</div>
+<span style="font-size: 12px; color: #8A9083">Contenido de ejemplo — prototipo</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showCanjes }}" hint-placeholder-val="{{ false }}">
+<div class="light scroll sheet" role="dialog" aria-label="Canjear puntos" style="z-index: 45">
+<div style="padding: 56px 18px 48px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Volver" onClick="{{ closeCanjes }}" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid rgba(11,22,32,.12); background: #FFFFFF; color: #0B1620; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+<h1 class="h1" style="font-size: 26px">Canjear puntos</h1>
+</div>
+
+<div style="position: relative; overflow: hidden; border-radius: 26px; background: #0B1620; padding: 22px; display: flex; flex-direction: column; gap: 6px">
+<div aria-hidden="true" style="position: absolute; right: -24px; top: -40px; width: 120px; height: 120px; border-radius: 60px; border: 16px solid #A4D233; opacity: .9"></div>
+<span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #A4D233">TUS PUNTOS</span>
+<span style="font-size: 44px; font-weight: 800; letter-spacing: -.03em; color: #FFFFFF; line-height: 1">{{ points }}<span style="font-size: 18px; font-weight: 700; color: rgba(255,255,255,.7)"> pts</span></span>
+<span style="font-size: 14px; color: rgba(255,255,255,.8); margin-top: 6px">{{ nextGoal }}</span>
+<div style="height: 8px; border-radius: 4px; background: rgba(255,255,255,.14); overflow: hidden; margin-top: 4px"><div style="height: 8px; border-radius: 4px; background: #A4D233; width: {{ nextPct }}"></div></div>
+</div>
+
+<h2 class="sect">Cursos y eventos</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ rewards }}" as="rw" hint-placeholder-count="4">
+<div class="card" style="padding: 12px; display: flex; gap: 12px; align-items: center">
+<div class="thumb {{ rw.scene }}"></div>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #4E6B12">{{ rw.kind }}</span>
+<span style="font-size: 15px; font-weight: 700; line-height: 1.25; color: #0B1620">{{ rw.title }}</span>
+<span style="font-size: 13px; color: #5A5F55">{{ rw.org }}</span>
+</div>
+<button onClick="{{ rw.redeem }}" aria-disabled="{{ rw.disabledStr }}" style="min-width: 84px; height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid {{ rw.bd }}; background: {{ rw.bg }}; color: {{ rw.fg }}; font-size: 13px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; flex-shrink: 0"><span>{{ rw.cost }} pts</span><span style="font-size: 11px; font-weight: 600">{{ rw.cta }}</span></button>
+</div>
+</sc-for>
+</div>
+
+<sc-if value="{{ hasRedeemed }}" hint-placeholder-val="{{ false }}">
+<h2 class="sect">Mis canjes</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ redeemed }}" as="rd" hint-placeholder-count="1">
+<div class="card" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+<span style="font-size: 15px; font-weight: 700">{{ rd.title }}</span>
+<span style="font-size: 13px; color: #5A5F55">Mostrá este código al organizador</span>
+</div>
+<span style="height: 34px; padding: 0 12px; border-radius: 10px; background: #EEF4DC; color: #3F5A0C; font-size: 14px; font-weight: 800; letter-spacing: .06em; display: flex; align-items: center; flex-shrink: 0; font-family: ui-monospace, Menlo, monospace">{{ rd.code }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<h2 class="sect">Cómo sumar puntos</h2>
+<div class="card" style="padding: 6px 16px">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(11,22,32,.06)"><span style="font-size: 15px">Responder una encuesta</span><span style="font-size: 15px; font-weight: 800; color: #4E6B12">+10</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0"><span style="font-size: 15px">Acertar una pregunta de quiz</span><span style="font-size: 15px; font-weight: 800; color: #4E6B12">+10</span></div>
+</div>
+
+<h2 class="sect">Historial</h2>
+<div class="card" style="padding: 6px 16px">
+<sc-for list="{{ pointsLog }}" as="lg" hint-placeholder-count="2">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(11,22,32,.06)"><span style="font-size: 14px; color: #3E433B">{{ lg.text }}</span><span style="font-size: 14px; font-weight: 800; color: {{ lg.c }}; flex-shrink: 0">{{ lg.pts }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<nav class="nav" aria-label="Navegación principal" style="background: {{ navBg }}; border: 1px solid {{ navBd }}">
+<button class="nav-btn" aria-label="Inicio" onClick="{{ goInicio }}" style="color: {{ nav.inicio }}; font-weight: {{ navW.inicio }}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7V20a.5.5 0 0 1-.5.5h-5v-6h-6v6H4a.5.5 0 0 1-.5-.5z"></path></svg>Inicio</button>
+<button class="nav-btn" aria-label="Explorar" onClick="{{ goExplorar }}" style="color: {{ nav.explorar }}; font-weight: {{ navW.explorar }}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="m15.5 8.5-2 5-5 2 2-5z"></path></svg>Explorar</button>
+<button class="karai-btn" aria-label="Karai" onClick="{{ goKarai }}">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.7 5 2.5 6.8 7.5 7.5-5 .7-6.8 2.5-7.5 7.5-.7-5-2.5-6.8-7.5-7.5 5-.7 6.8-2.5 7.5-7.5z"></path><path d="M19 15.5c.3 2 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1 3-3z"></path></svg>
+</button>
+<button class="nav-btn" aria-label="Guardados" onClick="{{ goGuardados }}" style="color: {{ nav.guardados }}; font-weight: {{ navW.guardados }}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-6-4.2-6 4.2z"></path></svg>Guardados</button>
+<button class="nav-btn" aria-label="Perfil" onClick="{{ goPerfil }}" style="color: {{ nav.perfil }}; font-weight: {{ navW.perfil }}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20.5c1.5-3.8 4.4-5.5 8-5.5s6.5 1.7 8 5.5"></path></svg>Perfil</button>
+</nav>
+
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div class="toast" role="status" style="position: absolute; left: 50%; top: 110px; transform: translateX(-50%); z-index: 60; max-width: 330px; padding: 12px 18px; border-radius: 22px; background: rgba(11,22,32,.86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); color: #FFFFFF; font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.25)">{{ toast }}</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'inicio', liked: {}, saved: {}, following: {}, vote: null, playing: true,
+      detail: null, toast: '', q: '', rubro: null, typeF: null,
+      msgs: [], kInput: '', typing: false, seg: 'saved',
+      reminders: { e1: true, r1: false }, viewed: {},
+      points: 120, pointsLog: [{ text: 'Puntos de bienvenida', pts: 120 }], quiz: { step: 0, picks: [] },
+      liveDismissed: false, liveOpen: false, showCanjes: false, redeemed: []
+    };
+  }
+
+  items() {
+    return [
+      { id: 'n1', type: 'noticia', org: 'Agroconecta Noticias', orgId: 'agroconecta', logo: true, title: 'Arranca la siembra de soja con buena humedad en el este', desc: 'Productores de Itapúa y Alto Paraná adelantan labores tras las lluvias de la semana.', tags: ['#soja', '#zafra', '#clima'], rubro: 'agricultura', likes: 1240, scene: 'sc-soja', feed: true,
+        body: ['Las lluvias de los últimos días dejaron los perfiles con buena recarga de humedad y muchos productores decidieron adelantar la siembra.', 'Los técnicos recomiendan revisar el poder germinativo de la semilla y la regulación de sembradoras antes de entrar al lote.'] },
+      { id: 'v1', type: 'video', org: 'Campo Técnico', orgId: 'campotec', initials: 'CT', color: '#2F6B4F', title: 'Calibrá tu pulverizadora en 5 pasos', desc: 'Video técnico · 4:32 · Buenas prácticas de aplicación', tags: ['#pulverización', '#tecnología'], rubro: 'tecnologia', likes: 856, scene: 'sc-verde', feed: true,
+        body: ['Un repaso práctico para medir caudal por pico, ajustar presión y verificar la uniformidad antes de cada aplicación.', 'Ideal para compartir con el equipo de campo antes de la campaña.'] },
+      { id: 'e1', type: 'evento', org: 'Cooperativa del Sur', orgId: 'coopsur', initials: 'CS', color: '#8A5A2B', title: 'Jornada de Campo: maíz zafriña', desc: 'Mañana · 08:00 · Campo demostrativo', tags: ['#maíz', '#jornada'], rubro: 'agricultura', likes: 432, photo: true, feed: true, when: 'Mañana — 08:00', place: '[Campo demostrativo · Ubicación]', mon: 'SEP', day: '26',
+        body: ['Recorrida por parcelas demostrativas de híbridos de maíz zafriña, con charlas técnicas sobre densidad de siembra y manejo de malezas.', 'Entrada libre. Se recomienda llegar 15 minutos antes.'] },
+      { id: 'ad1', type: 'anuncio', ad: true, org: 'Agroveterinaria Don Pedro', orgId: 'donpedro', initials: 'DP', color: '#7A4B1E', title: 'Vacunación en tu establecimiento: agendá la campaña de primavera', desc: 'Retiro y aplicación en finca · Cupos limitados', tags: ['#sanidad', '#ganadería'], rubro: 'ganaderia', likes: 96, scene: 'sc-pastura', feed: true,
+        body: ['Contenido pautado por Agroveterinaria Don Pedro.', 'Coordinamos la visita, llevamos las dosis y dejamos el registro sanitario al día.'] },
+      { id: 'p1', type: 'encuesta', org: 'Agroconecta', orgId: 'agroconecta', logo: true, title: '¿Cuál es tu mayor desafío esta zafra?', desc: 'Votá y mirá qué opina el sector.', tags: [], rubro: 'mercados', likes: 318, scene: 'sc-trigo', feed: true, poll: true,
+        options: [['Costo de insumos', 412], ['Clima', 356], ['Precio de venta', 298], ['Mano de obra', 97]], body: [] },
+      { id: 'pr1', type: 'producto', org: 'AgroSensores', orgId: 'agrosens', initials: 'AS', color: '#23405E', title: 'Sensor de humedad de suelo inalámbrico', desc: '₲ 1.850.000 · Lecturas cada 15 minutos en tu celular', tags: ['#agtech', '#riego'], rubro: 'tecnologia', likes: 204, scene: 'sc-studio', feed: true,
+        body: ['Medí humedad y temperatura de suelo a dos profundidades y recibí alertas cuando el lote necesita riego.', 'Batería de larga duración y conexión por red celular.'] },
+      { id: 'q1', type: 'quiz', quiz: true, org: 'Agroconecta', orgId: 'agroconecta', logo: true, title: 'Quiz agro', desc: '', tags: [], rubro: 'agricultura', likes: 0, scene: 'sc-verde', feed: true, body: [] },
+      { id: 'c1', type: 'curso', org: 'Escuela Agro Digital', orgId: 'escuela', initials: 'EA', color: '#4B5A2A', title: 'Manejo de pasturas y carga animal', desc: '6 módulos · Online · Con certificado', tags: ['#ganadería', '#pasturas'], rubro: 'ganaderia', likes: 611, scene: 'sc-pastura', feed: true,
+        body: ['Aprendé a calcular la receptividad de tus potreros, planificar rotaciones y ajustar la carga según la estación.', 'Clases grabadas + una sesión en vivo por módulo.'] },
+      { id: 'r1', type: 'remate', org: 'Remates del Chaco', orgId: 'rchaco', initials: 'RC', color: '#6B3A1E', title: 'Remate de invernada · 450 cabezas', desc: 'Jueves 2 oct · 14:00 · Transmisión en vivo', tags: ['#remate', '#invernada'], rubro: 'ganaderia', likes: 377, scene: 'sc-remate', feed: true, when: 'Jue 2 oct — 14:00', place: 'Transmisión en vivo desde el predio', mon: 'OCT', day: '2',
+        body: ['Lotes de terneros y desmamantes de establecimientos de la zona. Catálogo disponible 48 horas antes.', 'Podés seguir la transmisión y ofertar desde la app.'] },
+      { id: 's1', type: 'servicio', org: 'Laboratorio Tierra Viva', orgId: 'tierraviva', initials: 'TV', color: '#6A4A2A', title: 'Análisis de suelo con retiro en finca', desc: 'Resultados en 7 días', tags: ['#suelo'], rubro: 'agricultura', likes: 90, scene: 'sc-verde',
+        body: ['Retiramos las muestras en tu establecimiento y te entregamos el informe con recomendaciones de fertilización.'] },
+      { id: 'j1', type: 'empleo', org: 'Estancia San Miguel', orgId: 'sanmiguel', initials: 'SM', color: '#3E5A2A', title: 'Encargado/a de estancia — Chaco Central', desc: 'Tiempo completo · Vivienda incluida', tags: ['#empleo'], rubro: 'ganaderia', likes: 55, scene: 'sc-pastura',
+        body: ['Buscamos persona con experiencia en manejo de rodeo de cría y personal de campo.'] },
+      { id: 'h1', type: 'noticia', org: 'Agroconecta Noticias', orgId: 'agroconecta', logo: true, title: 'Tomate bajo invernadero: cómo bajar el calor de octubre', desc: 'Malla sombra, ventilación y riego por goteo.', tags: ['#horticultura'], rubro: 'horticultura', likes: 140, scene: 'sc-verde',
+        body: ['Con temperaturas altas, el cuajado del tomate cae. Tres ajustes simples ayudan a sostener la producción.'] },
+      { id: 'n2', type: 'noticia', org: 'Agroconecta Noticias', orgId: 'agroconecta', logo: true, title: 'Novillo gordo cierra la semana estable', desc: 'Resumen semanal de precios ganaderos.', tags: ['#mercados', '#ganadería'], rubro: 'mercados', likes: 260, scene: 'sc-remate',
+        body: ['La referencia del novillo se mantuvo sin cambios respecto a la semana anterior, con buena oferta en ferias.'] },
+      { id: 'l1', type: 'remate', live: true, org: 'Remates del Chaco', orgId: 'rchaco', initials: 'RC', color: '#6B3A1E', title: 'Feria de consumo · Remate en vivo', desc: 'Lote 12 de 40 · 1.284 conectados', tags: ['#envivo', '#remate'], rubro: 'ganaderia', likes: 520, scene: 'sc-remate', when: 'En vivo ahora', place: 'Transmisión desde el predio · Lote 12 de 40',
+        body: ['Se están rematando novillos y vaquillas gordas. Podés seguir la transmisión y ver el precio de cada lote en tiempo real.'] }
+    ];
+  }
+
+  quizData() {
+    return [
+      { q: '¿Qué cultivo ocupa la mayor superficie sembrada en Paraguay?', opts: ['Soja', 'Maíz', 'Trigo'], ok: 0 },
+      { q: 'La zafriña de maíz normalmente se siembra…', opts: ['Antes de la soja', 'Después de cosechar la soja', 'En pleno invierno'], ok: 1 },
+      { q: '¿Qué mide un pluviómetro?', opts: ['Humedad del suelo', 'Velocidad del viento', 'Lluvia caída'], ok: 2 }
+    ];
+  }
+  rewardsData() {
+    return [
+      { id: 'rw1', kind: 'CHARLA', title: 'Lugar en charla técnica: manejo de malezas', org: 'Campo Técnico', cost: 60, scene: 'sc-verde' },
+      { id: 'rw2', kind: 'EVENTO', title: 'Entrada a Jornada de Campo', org: 'Cooperativa del Sur', cost: 80, scene: 'sc-soja' },
+      { id: 'rw3', kind: 'CURSO', title: '50% en un curso online a elección', org: 'Escuela Agro Digital', cost: 150, scene: 'sc-trigo' },
+      { id: 'rw4', kind: 'EVENTO', title: 'Entrada a expo regional', org: '[Organizador]', cost: 200, scene: 'sc-remate' },
+      { id: 'rw5', kind: 'CURSO', title: 'Curso completo: Manejo de pasturas', org: 'Escuela Agro Digital', cost: 300, scene: 'sc-pastura' }
+    ];
+  }
+  addPoints(n, text, msg) {
+    const st = this.state;
+    this.setState({ points: st.points + n, pointsLog: [{ text: text, pts: n }].concat(st.pointsLog) });
+    this.flash(msg);
+  }
+
+  typeLabel(t) {
+    return ({ noticia: 'NOTICIA', video: 'VIDEO', evento: 'EVENTO', encuesta: 'ENCUESTA', anuncio: 'PATROCINADO', quiz: 'QUIZ', producto: 'PRODUCTO', curso: 'CURSO', servicio: 'SERVICIO', empleo: 'EMPLEO', remate: 'REMATE' })[t];
+  }
+  ctaLabel(t) {
+    return ({ noticia: 'Ver noticia', video: 'Ver video', evento: 'Ver evento', producto: 'Ver producto', curso: 'Ver curso', servicio: 'Ver servicio', empleo: 'Ver oportunidad', remate: 'Ver remate', anuncio: 'Ver promoción' })[t] || 'Ver más';
+  }
+  fmt(n) {
+    return n >= 1000 ? (n / 1000).toFixed(1).replace('.', ',') + ' mil' : String(n);
+  }
+  norm(s) {
+    return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+  flash(msg) {
+    clearTimeout(this._t);
+    this.setState({ toast: msg });
+    this._t = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+  toggleKey(key, id) {
+    const m = Object.assign({}, this.state[key]);
+    m[id] = !m[id];
+    this.setState({ [key]: m });
+    return m[id];
+  }
+  open(id) {
+    const v = Object.assign({}, this.state.viewed);
+    v[id] = true;
+    this.setState({ detail: id, viewed: v });
+  }
+  searchItems(text) {
+    const words = this.norm(text).split(/\s+/).filter((w) => w.length > 2);
+    if (!words.length) return [];
+    return this.items().filter((it) => !it.poll && !it.quiz && !it.ad && words.some((w) => this.norm(it.title + ' ' + it.desc + ' ' + it.tags.join(' ') + ' ' + it.type + ' ' + it.rubro).indexOf(w) >= 0));
+  }
+  answer(text) {
+    const t = this.norm(text);
+    const byId = (ids) => ids.map((id) => this.items().find((x) => x.id === id));
+    if (t.indexOf('hoy') >= 0) return { text: 'Hoy se destacan tres cosas: arranca la siembra de soja con buena humedad, el novillo gordo se mantiene estable y mañana hay jornada de campo sobre maíz zafriña.', refs: byId(['n1', 'n2', 'e1']) };
+    if (t.indexOf('evento') >= 0 || t.indexOf('semana') >= 0) return { text: 'Esta semana tenés dos citas: la jornada de campo de mañana y el remate de invernada del jueves. ¿Querés que active los recordatorios?', refs: byId(['e1', 'r1']) };
+    if (t.indexOf('curso') >= 0) return { text: 'Hay un curso abierto que encaja con tus intereses:', refs: byId(['c1']) };
+    if (t.indexOf('ganader') >= 0) return { text: 'Lo último sobre ganadería en Agroconecta:', refs: byId(['n2', 'c1', 'r1']) };
+    const found = this.searchItems(text).slice(0, 3);
+    if (found.length) return { text: 'Encontré esto en Agroconecta:', refs: found };
+    return { text: 'Respuesta simulada del prototipo. En la versión real, Karai va a buscar en noticias, eventos, cursos y precios para responderte.', refs: [] };
+  }
+  ask(text) {
+    const q = String(text || '').trim();
+    if (!q) return;
+    const msgs = this.state.msgs.concat([{ from: 'me', text: q }]);
+    this.setState({ msgs: msgs, kInput: '', typing: true });
+    clearTimeout(this._k);
+    this._k = setTimeout(() => {
+      const a = this.answer(q);
+      this.setState({ typing: false, msgs: this.state.msgs.concat([{ from: 'bot', text: a.text, refs: a.refs.map((r) => r.id) }]) });
+    }, 900);
+  }
+  componentWillUnmount() {
+    clearTimeout(this._t);
+    clearTimeout(this._k);
+  }
+
+  decorate(it) {
+    const s = this.state;
+    return Object.assign({}, it, {
+      typeLabel: this.typeLabel(it.type),
+      isPhoto: !!it.photo, isScene: !it.photo,
+      hasLogo: !!it.logo, noLogo: !it.logo,
+      orgColor: it.logo ? '#0B1620' : it.color,
+      open: () => this.open(it.id)
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const all = this.items();
+    const find = (id) => all.find((x) => x.id === id);
+
+    const feed = all.filter((x) => x.feed).map((it) => {
+      const d = this.decorate(it);
+      const liked = !!s.liked[it.id];
+      const saved = !!s.saved[it.id];
+      const following = !!s.following[it.orgId];
+      const total = it.poll ? it.options.reduce((a, o) => a + o[1], 0) + (s.vote !== null ? 1 : 0) : 0;
+      return Object.assign(d, {
+        likedStr: String(liked), savedStr: String(saved),
+        heartFill: liked ? '#FF5A5F' : 'none', heartStroke: liked ? '#FF5A5F' : '#FFFFFF',
+        likeCount: this.fmt(it.likes + (liked ? 1 : 0)),
+        bmFill: saved ? '#A4D233' : 'none', bmStroke: saved ? '#A4D233' : '#FFFFFF',
+        saveLabel: saved ? 'Guardado' : 'Guardar',
+        following: following, notFollowing: !following,
+        followBg: following ? '#FFFFFF' : '#A4D233',
+        followLabel: following ? 'Dejar de seguir a ' + it.org : 'Seguir a ' + it.org,
+        isVideo: it.type === 'video', isProduct: it.type === 'producto', isRemate: it.type === 'remate',
+        isPoll: !!it.poll, isQuiz: !!it.quiz, isAd: !!it.ad, hasCta: !it.poll && !it.quiz, hasTags: it.tags.length > 0,
+        showRail: !it.poll && !it.quiz, showInfo: !it.poll && !it.quiz,
+        chipBg: it.ad ? 'rgba(255,255,255,.92)' : 'rgba(255,255,255,.16)', chipFg: it.ad ? '#0B1620' : '#FFFFFF', dotC: it.ad ? '#E0A100' : '#A4D233',
+        pollBadge: s.vote === null ? '+10 pts' : '+10 pts ganados', badgeBg: s.vote === null ? '#EEF4DC' : '#A4D233', badgeFg: s.vote === null ? '#3F5A0C' : '#0B1620',
+        ctaLabel: this.ctaLabel(it.type),
+        infoBottom: it.poll ? 104 : 176,
+        pollFoot: s.vote === null ? 'Tocá una opción para votar' : this.fmt(total) + ' votos · Gracias por participar',
+        pollOpts: it.poll ? it.options.map((o, i) => {
+          const votes = o[1] + (s.vote === i ? 1 : 0);
+          const pct = Math.round((votes / total) * 100);
+          const voted = s.vote !== null;
+          return {
+            label: o[0], selStr: String(s.vote === i),
+            pctLabel: voted ? pct + '%' : '',
+            barW: voted ? pct + '%' : '0%',
+            border: s.vote === i ? '#6E9A1E' : 'rgba(11,22,32,.08)',
+            vote: () => { if (s.vote === null) { this.setState({ vote: i }); this.addPoints(10, 'Respondiste una encuesta', '¡Voto registrado! +10 puntos'); } }
+          };
+        }) : [],
+        like: () => this.toggleKey('liked', it.id),
+        save: () => { const on = this.toggleKey('saved', it.id); this.flash(on ? 'Guardado en tu lista' : 'Quitado de Guardados'); },
+        follow: () => { const on = this.toggleKey('following', it.orgId); this.flash(on ? 'Ahora seguís a ' + it.org : 'Dejaste de seguir a ' + it.org); },
+        share: () => this.flash('Enlace copiado · agroconecta.com.py/p/' + it.id)
+      });
+    });
+
+    // Explorar
+    const rubroDefs = [['agricultura', 'Agricultura'], ['ganaderia', 'Ganadería'], ['horticultura', 'Horticultura'], ['tecnologia', 'Tecnología'], ['mercados', 'Mercados']];
+    const rubros = rubroDefs.map((r) => {
+      const sel = s.rubro === r[0];
+      return { label: r[1], selStr: String(sel), bg: sel ? '#0B1620' : '#FFFFFF', fg: sel ? '#FFFFFF' : '#0B1620', bd: sel ? '#0B1620' : 'rgba(11,22,32,.12)', pick: () => this.setState({ rubro: sel ? null : r[0], typeF: null, q: '' }) };
+    });
+    const typeNames = { noticia: 'Noticias', evento: 'Eventos', video: 'Videos', curso: 'Cursos', producto: 'Productos', servicio: 'Servicios', empleo: 'Empleos', remate: 'Remates' };
+    const pickType = {};
+    Object.keys(typeNames).forEach((k) => { pickType[k] = () => this.setState({ typeF: k, rubro: null, q: '' }); });
+    let res = [];
+    let resultsTitle = '';
+    if (s.q.trim()) { res = this.searchItems(s.q); resultsTitle = 'Resultados para “' + s.q.trim() + '”'; }
+    else if (s.typeF) { res = all.filter((x) => x.type === s.typeF); resultsTitle = typeNames[s.typeF]; }
+    else if (s.rubro) { res = all.filter((x) => x.rubro === s.rubro && !x.poll); resultsTitle = rubroDefs.find((r) => r[0] === s.rubro)[1]; }
+    const showResults = !!(s.q.trim() || s.typeF || s.rubro);
+    const trends = [['#zafra2026', 'Siembra de soja', 'soja'], ['#remates', 'Invernada en el Chaco', 'remate'], ['#pasturas', 'Carga animal y rotación', 'pasturas'], ['#agtech', 'Sensores y riego', 'sensor']].map((t, i) => ({ n: i + 1, tag: t[0], sub: t[1], go: () => this.setState({ q: t[2], rubro: null, typeF: null }) }));
+
+    // Karai
+    const suggestions = ['¿Qué pasó hoy en el agro?', 'Eventos esta semana', 'Mostrame cursos disponibles', 'Noticias sobre ganadería'].map((t) => ({ text: t, ask: () => this.ask(t) }));
+    const msgs = s.msgs.map((m) => ({ text: m.text, me: m.from === 'me', bot: m.from === 'bot', refs: (m.refs || []).map((id) => this.decorate(find(id))) }));
+
+    // Guardados
+    const segDefs = [['saved', 'Guardados'], ['rem', 'Recordatorios'], ['act', 'Actividad']];
+    const segs = segDefs.map((d) => {
+      const sel = s.seg === d[0];
+      return { label: d[1], selStr: String(sel), bg: sel ? '#FFFFFF' : 'transparent', fg: sel ? '#0B1620' : '#5A5F55', sh: sel ? '0 1px 4px rgba(11,22,32,.12)' : 'none', pick: () => this.setState({ seg: d[0] }) };
+    });
+    const savedItems = all.filter((x) => s.saved[x.id]).map((x) => this.decorate(x));
+    const reminders = ['e1', 'r1'].map((id) => {
+      const it = find(id);
+      const on = !!s.reminders[id];
+      return {
+        title: id === 'e1' ? 'Jornada de Campo' : 'Remate de invernada', when: it.when, mon: it.mon, day: it.day,
+        onStr: String(on), track: on ? '#A4D233' : '#CFD2C9', knob: on ? '23px' : '3px',
+        toggle: () => { const r = Object.assign({}, s.reminders); r[id] = !on; this.setState({ reminders: r }); this.flash(!on ? 'Recordatorio activado' : 'Recordatorio desactivado'); },
+        open: () => this.open(id)
+      };
+    });
+    const viewedN = Object.keys(s.viewed).length;
+    const activity = [
+      { label: 'Contenido visto', count: 12 + viewedN, detail: 'Soja, pulverización, pasturas y 9 más esta semana.' },
+      { label: 'Encuestas respondidas', count: s.vote === null ? 2 : 3, detail: s.vote === null ? 'Precios de insumos · Uso de drones' : '¿Cuál es tu mayor desafío esta zafra? · y 2 más' },
+      { label: 'Productos consultados', count: s.viewed.pr1 ? 2 : 1, detail: s.viewed.pr1 ? 'Sensor de humedad de suelo · Semillas de maíz' : 'Semillas de maíz' },
+      { label: 'Eventos visitados', count: s.viewed.e1 ? 2 : 1, detail: s.viewed.e1 ? 'Jornada de Campo: maíz zafriña · Expo regional' : 'Expo regional' }
+    ];
+
+    // Detalle
+    let det = {};
+    const dit = s.detail ? find(s.detail) : null;
+    if (dit) {
+      const following = !!s.following[dit.orgId];
+      const isLive = !!dit.live;
+      const isRem = !isLive && (dit.type === 'evento' || dit.type === 'remate');
+      const remOn = !!s.reminders[dit.id];
+      const saved = !!s.saved[dit.id];
+      det = Object.assign(this.decorate(dit), {
+        hasWhen: !!dit.when,
+        bodyA: dit.body.slice(0, 1), bodyB: dit.body.slice(1), hasAd: dit.type === 'noticia',
+        followText: following ? 'Siguiendo' : 'Seguir',
+        followBg2: following ? '#FFFFFF' : '#A4D233', followBd: following ? 'rgba(11,22,32,.16)' : '#A4D233',
+        follow: () => this.toggleKey('following', dit.orgId),
+        primaryText: isLive ? 'Ver transmisión en vivo' : isRem ? (remOn ? 'Recordatorio activado' : 'Activar recordatorio') : (saved ? 'Guardado' : 'Guardar'),
+        primaryBg: isLive ? '#E5484D' : (isRem ? remOn : saved) ? '#E6E8E0' : '#0B1620',
+        primaryFg: isLive ? '#FFFFFF' : (isRem ? remOn : saved) ? '#0B1620' : '#FFFFFF',
+        primary: () => {
+          if (isLive) { this.flash('Abriría la transmisión en vivo (simulado)'); return; }
+          if (isRem) { const r = Object.assign({}, s.reminders); r[dit.id] = !remOn; this.setState({ reminders: r }); this.flash(!remOn ? 'Te avisamos 1 hora antes' : 'Recordatorio desactivado'); }
+          else { const on = this.toggleKey('saved', dit.id); this.flash(on ? 'Guardado en tu lista' : 'Quitado de Guardados'); }
+        },
+        share: () => this.flash('Enlace copiado · agroconecta.com.py/p/' + dit.id)
+      });
+    }
+
+    // Quiz
+    const qd = this.quizData();
+    const qs = s.quiz;
+    const qDone = qs.step >= qd.length;
+    const cur = qd[Math.min(qs.step, qd.length - 1)];
+    const picked = qs.picks[qs.step];
+    const answered = !qDone && picked !== undefined;
+    const correctN = qs.picks.filter((pk, i) => pk === qd[i].ok).length;
+    const quiz = {
+      playing: !qDone, done: qDone, answered: answered,
+      stepLabel: qDone ? 'COMPLETO' : (qs.step + 1) + ' DE ' + qd.length,
+      q: cur.q,
+      dots: qd.map((x, i) => ({ c: i < qs.step || (i === qs.step && answered) ? (qs.picks[i] === x.ok ? '#A4D233' : '#E5484D') : '#E6E8E0' })),
+      opts: cur.opts.map((label, i) => {
+        const isOk = i === cur.ok, isPick = i === picked;
+        return {
+          label: label,
+          bg: answered && isOk ? '#EEF6D6' : answered && isPick ? '#FDECEA' : '#F2F4EC',
+          bd: answered && isOk ? '#6E9A1E' : answered && isPick ? '#C2410C' : 'rgba(11,22,32,.08)',
+          op: answered && !isOk && !isPick ? 0.55 : 1,
+          mark: answered && isOk ? 'Correcta' : answered && isPick ? 'Tu respuesta' : '',
+          markC: isOk ? '#4E6B12' : '#B42318',
+          pick: () => {
+            if (answered || qDone) return;
+            const picks = qs.picks.slice(); picks[qs.step] = i;
+            this.setState({ quiz: { step: qs.step, picks: picks } });
+            if (isOk) this.addPoints(10, 'Acierto en quiz agro', '¡Correcto! +10 puntos');
+            else this.flash('Casi. Te marcamos la correcta');
+          }
+        };
+      }),
+      nextLabel: qs.step === qd.length - 1 ? 'Ver resultado' : 'Siguiente pregunta',
+      next: () => this.setState({ quiz: { step: qs.step + 1, picks: qs.picks } }),
+      scoreTitle: correctN + ' de ' + qd.length + ' correctas',
+      scoreSub: correctN > 0 ? 'Sumaste ' + correctN * 10 + ' puntos a tu perfil' : 'Esta vez no sumaste, ¡mañana hay otro quiz!'
+    };
+
+    // Canjes
+    const rewards = this.rewardsData().map((r) => {
+      const done = s.redeemed.some((x) => x.id === r.id);
+      const can = s.points >= r.cost;
+      return Object.assign({}, r, {
+        disabledStr: String(done || !can),
+        cta: done ? 'Canjeado' : can ? 'Canjear' : 'Faltan ' + (r.cost - s.points),
+        bg: done ? '#EEF4DC' : can ? '#A4D233' : '#FFFFFF',
+        fg: done ? '#3F5A0C' : can ? '#0B1620' : '#5A5F55',
+        bd: done ? '#EEF4DC' : can ? '#A4D233' : 'rgba(11,22,32,.14)',
+        redeem: () => {
+          if (done) return;
+          if (!can) { this.flash('Te faltan ' + (r.cost - s.points) + ' pts. Respondé encuestas y quizzes.'); return; }
+          const code = 'AGRO-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+          this.setState({ points: s.points - r.cost, redeemed: s.redeemed.concat([{ id: r.id, title: r.title, code: code }]), pointsLog: [{ text: 'Canje: ' + r.title, pts: -r.cost }].concat(s.pointsLog) });
+          this.flash('¡Canje listo! Código ' + code);
+        }
+      });
+    });
+    const nextR = this.rewardsData().filter((r) => r.cost > s.points && !s.redeemed.some((x) => x.id === r.id))[0];
+    const nextGoal = nextR ? 'Te faltan ' + (nextR.cost - s.points) + ' pts para: ' + nextR.title : 'Podés canjear todo el catálogo';
+    const nextPct = nextR ? Math.round((s.points / nextR.cost) * 100) + '%' : '100%';
+
+    const t = s.tab;
+    const dark = t === 'inicio';
+    const act = dark ? '#FFFFFF' : '#0B1620';
+    const idle = dark ? 'rgba(255,255,255,.7)' : '#6B7066';
+    const nav = {}, navW = {};
+    ['inicio', 'explorar', 'guardados', 'perfil'].forEach((k) => { nav[k] = t === k ? act : idle; navW[k] = t === k ? 700 : 500; });
+    const go = (k) => () => this.setState({ tab: k, detail: null, showCanjes: false });
+
+    return {
+      showInicio: t === 'inicio', showExplorar: t === 'explorar', showKarai: t === 'karai', showGuardados: t === 'guardados', showPerfil: t === 'perfil',
+      feed: feed,
+      playLabel: s.playing ? 'Pausar video' : 'Reproducir video',
+      playOpacity: s.playing ? 0 : 1,
+      progState: s.playing ? 'running' : 'paused',
+      togglePlay: () => this.setState({ playing: !s.playing }),
+      q: s.q, hasQuery: !!s.q,
+      onQuery: (e) => this.setState({ q: e.target.value, rubro: null, typeF: null }),
+      clearQuery: () => this.setState({ q: '' }),
+      resetExplore: () => this.setState({ q: '', rubro: null, typeF: null }),
+      rubros: rubros, pickType: pickType, trends: trends,
+      showResults: showResults, showBrowse: !showResults, resultsTitle: resultsTitle,
+      results: res.map((x) => this.decorate(x)), noResults: showResults && res.length === 0,
+      suggestions: suggestions, msgs: msgs, hasMsgs: s.msgs.length > 0, noMsgs: s.msgs.length === 0, typing: s.typing,
+      kInput: s.kInput,
+      onKInput: (e) => this.setState({ kInput: e.target.value }),
+      onKKey: (e) => { if (e.key === 'Enter') this.ask(s.kInput); },
+      sendK: () => this.ask(s.kInput),
+      resetChat: () => this.setState({ msgs: [], typing: false }),
+      karaiCampo: () => this.flash('KARAI Campo · Próximamente'),
+      segs: segs, segSaved: s.seg === 'saved', segRem: s.seg === 'rem', segAct: s.seg === 'act',
+      savedItems: savedItems, noSaved: savedItems.length === 0, reminders: reminders, activity: activity,
+      shareProfile: () => this.flash('Enlace copiado · agroconecta.com.py/marcelo'),
+      editProfile: () => this.flash('Edición de perfil · fuera del prototipo'),
+      socialTap: () => this.flash('Abriría la red social (simulado)'),
+      hasDetail: !!dit, det: det, closeDetail: () => this.setState({ detail: null }),
+      navBg: dark ? 'rgba(14,20,16,.34)' : 'rgba(255,255,255,.74)',
+      navBd: dark ? 'rgba(255,255,255,.18)' : 'rgba(11,22,32,.08)',
+      nav: nav, navW: navW,
+      goInicio: go('inicio'), goExplorar: go('explorar'), goKarai: go('karai'), goGuardados: go('guardados'), goPerfil: go('perfil'),
+      hasToast: !!s.toast, toast: s.toast,
+      pointsLabel: s.points + ' pts', points: s.points,
+      quiz: quiz,
+      liveBanner: !s.liveDismissed, liveOpen: s.liveOpen, liveOpenStr: String(s.liveOpen), liveChevron: s.liveOpen ? 180 : 0,
+      liveDismissed: s.liveDismissed,
+      toggleLive: () => this.setState({ liveOpen: !s.liveOpen }),
+      dismissLive: () => { this.setState({ liveDismissed: true, liveOpen: false }); this.flash('Listo, no lo mostramos más acá. Lo tenés en Explorar.'); },
+      showLiveAgain: () => { this.setState({ liveDismissed: false }); this.flash('El aviso en vivo vuelve a Inicio'); },
+      openLive: () => this.open('l1'),
+      pautar: () => this.flash('Pautá tu contenido · formulario simulado'),
+      adClick: () => this.flash('Abriría el sitio del anunciante (simulado)'),
+      adWhy: () => this.flash('Te lo mostramos por tu interés en Agricultura'),
+      showCanjes: s.showCanjes,
+      openCanjes: () => this.setState({ showCanjes: true, detail: null }),
+      closeCanjes: () => this.setState({ showCanjes: false }),
+      rewards: rewards, redeemed: s.redeemed, hasRedeemed: s.redeemed.length > 0,
+      nextGoal: nextGoal, nextPct: nextPct,
+      pointsLog: s.pointsLog.map((l) => ({ text: l.text, pts: (l.pts > 0 ? '+' : '') + l.pts, c: l.pts > 0 ? '#4E6B12' : '#B42318' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

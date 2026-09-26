@@ -112,8 +112,15 @@ function ThemedRoot() {
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as Record<string, string> | null
+      // Recordatorios y "Empezó…" del servidor mandan eventSlug / videoId / listingId.
       if (data?.articleId) {
         router.push({ pathname: '/article/[id]', params: { id: data.articleId } })
+      } else if (data?.eventSlug) {
+        router.push(`/(main)/event/${data.eventSlug}` as never)
+      } else if (data?.videoId) {
+        router.push(`/(main)/video/${data.videoId}` as never)
+      } else if (data?.listingId) {
+        router.push(`/(main)/listing/${data.listingId}` as never)
       }
     })
     return () => sub.remove()

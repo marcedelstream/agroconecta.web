@@ -146,6 +146,8 @@ export const GUARDADOS_TEXT = {
   error: 'No pudimos cargar tus guardados.',
   retry: 'Reintentar',
   reminderSwitch: 'Recordatorio',
+  guestTitle: 'Tus guardados, en un solo lugar',
+  guestBody: 'Iniciá sesión para guardar noticias, eventos y cursos, activar recordatorios y ver tu actividad.',
 } as const
 
 export const PROFILE_TEXT = {
@@ -276,7 +278,9 @@ export const ONBOARDING_TEXT = {
   next: 'Siguiente',
   skip: 'Saltar',
   back: 'Volver',
-  finish: 'Empezar',
+  finish: 'Empezar a usar Agroconecta',
+  start: 'Empezar',
+  stepOf: (step: number, total: number) => `Paso ${step} de ${total}`,
   finishing: 'Preparando tu feed…',
   welcomeTitle: 'Bienvenido a Agroconecta',
   welcomeBody: 'El feed del agro paraguayo, hecho a tu medida.',
@@ -331,6 +335,8 @@ export const KARAI_TEXT = {
   quota: (left: number) => (left === 1 ? 'Te queda 1 consulta hoy' : `Te quedan ${left} consultas hoy`),
   error: 'No pudimos conectar con Karai. Probá de nuevo en un momento.',
   membersOnlyCta: 'Ver cómo sumarme',
+  guestTitle: 'Preguntale a Karai',
+  guestBody: 'Iniciá sesión para consultar precios, eventos y todo lo que necesites saber del agro.',
 } as const
 
 export const AD_TEXT = {

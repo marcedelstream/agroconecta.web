@@ -9,6 +9,8 @@ import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { KaraiIntro } from '@/components/v2/karai/KaraiIntro'
 import { KaraiBubble, TypingBubble } from '@/components/v2/karai/KaraiMessages'
 import { ToastHost } from '@/components/v2/ToastHost'
+import { GuestPrompt } from '@/components/v2/GuestPrompt'
+import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
@@ -26,6 +28,7 @@ export default function KaraiScreen() {
   const [input, setInput] = useState('')
   const [refItem, setRefItem] = useState<FeedContentItem | null>(null)
   const scroll = useRef<ScrollView>(null)
+  const { session } = useApp()
 
   const update = useCallback<ItemUpdater>((fn) => setRefItem((i) => (i ? fn(i) : i)), [])
   const { actions } = useItemActions(update)
@@ -73,12 +76,14 @@ export default function KaraiScreen() {
             {messages.map((m) => <KaraiBubble key={m.id} message={m} onOpenRef={openRef} />)}
             {typing && <TypingBubble />}
           </>
-        ) : (
+        ) : session ? (
           <KaraiIntro onAsk={submit} />
+        ) : (
+          <GuestPrompt icon="sparkles" title={KARAI_TEXT.guestTitle} body={KARAI_TEXT.guestBody} />
         )}
       </ScrollView>
 
-      <View style={[styles.inputRow, { paddingBottom: bottomSpace + 8 }]}>
+      {session && <View style={[styles.inputRow, { paddingBottom: bottomSpace + 8 }]}>
         <TextInput
           value={input}
           onChangeText={setInput}
@@ -93,7 +98,7 @@ export default function KaraiScreen() {
         <TouchableOpacity onPress={() => submit()} disabled={!input.trim() || typing} accessibilityRole="button" accessibilityLabel={KARAI_TEXT.send} style={[styles.send, (!input.trim() || typing) && styles.sendOff]}>
           <Ionicons name="arrow-up" size={22} color={Colors.v2.navy} />
         </TouchableOpacity>
-      </View>
+      </View>}
 
       <ToastHost />
       <DetailSheet item={refItem} actions={actions} onClose={() => setRefItem(null)} />

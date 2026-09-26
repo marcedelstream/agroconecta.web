@@ -4,7 +4,8 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { ALLY_PLAN_LABELS, type OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
-import { PageHeader } from '@/components/admin/ui'
+import { PageHeader, Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 const STATUS_ORDER: Record<string, number> = { overdue: 0, trial: 1, active: 2, paused: 3 }
@@ -36,11 +37,11 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 interface Props {
-  searchParams: Promise<{ estado?: string }>
+  searchParams: Promise<{ estado?: string } & FeedbackParams>
 }
 
 export default async function OrganizacionesPage({ searchParams }: Props) {
-  const { estado } = await searchParams
+  const { estado, ...feedback } = await searchParams
   const allOrgs = await loadOrgs()
   const overdueCount = allOrgs.filter((org) => org.commercial_status === 'overdue').length
   const orgs = estado === 'overdue' ? allOrgs.filter((org) => org.commercial_status === 'overdue') : allOrgs
@@ -51,6 +52,7 @@ export default async function OrganizacionesPage({ searchParams }: Props) {
         title="Organizaciones"
         help="Medios, gremios y empresas que publican en Agroconecta, y el estado de su plan."
       />
+      <Notice {...feedback} />
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted">{orgs.length} cuentas</p>
         <div className="flex items-center gap-2">

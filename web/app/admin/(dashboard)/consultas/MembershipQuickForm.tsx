@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { activateMembershipByEmail, type MembershipActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 const initialState: MembershipActionState = { error: null, success: null }
 
@@ -11,7 +12,7 @@ export function MembershipQuickForm() {
   return (
     <form action={formAction} className="card flex flex-wrap items-end gap-3 mb-6">
       <div className="flex-1 min-w-[240px]">
-        <label className="block text-sm font-medium text-foreground mb-1.5">Activar membresía por email</label>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Activar membresía por email<Help text="El email de la cuenta de la persona. Le habilita publicar y 15 consultas de Karai por día." /></label>
         <input
           name="email"
           type="email"

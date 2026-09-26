@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { backWithOk } from '@/lib/admin-feedback'
 import mammoth from 'mammoth'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
@@ -81,7 +82,7 @@ export async function createKnowledgeSource(
   }
 
   revalidatePath('/admin/karai/fuentes')
-  return { error: null }
+  backWithOk('/admin/karai/fuentes', 'Fuente cargada. Karai la usa cuando esté aprobada y vigente.')
 }
 
 export async function setKnowledgeSourceStatus(id: string, status: KaraiSourceStatus) {

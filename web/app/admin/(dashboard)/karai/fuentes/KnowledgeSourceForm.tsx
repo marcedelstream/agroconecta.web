@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { createKnowledgeSource, type KnowledgeActionState } from './actions'
 import { SOURCE_LEVEL_LABELS, type KaraiSourceLevel } from '@/lib/karai/knowledge-types'
+import { Help } from '@/components/admin/ui'
 
 const LEVEL_OPTIONS = Object.entries(SOURCE_LEVEL_LABELS) as [KaraiSourceLevel, string][]
 
@@ -18,7 +19,7 @@ export function KnowledgeSourceForm() {
       )}
 
       <div>
-        <label className="block text-sm text-muted mb-1.5">Tipo</label>
+        <label className="block text-sm text-muted mb-1.5">Tipo<Help text="Un link a una página confiable, o un documento Word que se sube." /></label>
         <select name="kind" value={kind} onChange={(e) => setKind(e.target.value as 'link' | 'document')} className="input">
           <option value="link">Link (URL de referencia)</option>
           <option value="document">Documento (texto pegado o .docx)</option>
@@ -75,7 +76,7 @@ export function KnowledgeSourceForm() {
             <input name="publisher" placeholder="Ej: MAG, ARP, equipo Agroconecta" className="input" />
           </div>
           <div>
-            <label className="block text-sm text-muted mb-1.5">Nivel de autoridad</label>
+            <label className="block text-sm text-muted mb-1.5">Nivel de autoridad<Help text="Qué tan oficial es la fuente. Karai prefiere las más oficiales." /></label>
             <select name="source_level" defaultValue="" className="input">
               <option value="">Sin clasificar</option>
               {LEVEL_OPTIONS.map(([value, label]) => (
@@ -84,11 +85,11 @@ export function KnowledgeSourceForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-muted mb-1.5">Tema</label>
+            <label className="block text-sm text-muted mb-1.5">Tema<Help text="De qué habla (ej. pasturas, soja). Ayuda a Karai a encontrarla." /></label>
             <input name="topic" placeholder="Ej: sanidad animal, mercados, normativa" className="input" />
           </div>
           <div>
-            <label className="block text-sm text-muted mb-1.5">Alcance geográfico</label>
+            <label className="block text-sm text-muted mb-1.5">Alcance geográfico<Help text="Dónde aplica: todo el país, un departamento o una región." /></label>
             <input name="geography" defaultValue="Paraguay" className="input" />
           </div>
           <div>
@@ -96,13 +97,13 @@ export function KnowledgeSourceForm() {
             <input name="issued_at" type="date" className="input" />
           </div>
           <div>
-            <label className="block text-sm text-muted mb-1.5">Vence el (opcional)</label>
+            <label className="block text-sm text-muted mb-1.5">Vence el (opcional)<Help text="Después de esta fecha Karai deja de usarla." /></label>
             <input name="expires_at" type="date" className="input" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm text-muted mb-1.5">Notas de verificación</label>
+          <label className="block text-sm text-muted mb-1.5">Notas de verificación<Help text="Solo interno: cómo se verificó que la fuente es confiable." /></label>
           <textarea name="verification_notes" rows={2} placeholder="Cómo se confirmó que esta fuente es confiable..." className="input resize-none" />
         </div>
 

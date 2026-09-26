@@ -4,6 +4,7 @@ import { loadFeedDetail, type FeedDetail } from './detail'
 import { DETAIL_TEXT } from './labels'
 import { canRemind, fetchReminderEnabled, setReminder } from './reminders'
 import { showToast } from './toast'
+import { requireSession } from './guest'
 import type { FeedContentItem } from './types'
 
 const REMINDER_TOAST = {
@@ -36,7 +37,7 @@ export function useFeedDetail(item: FeedContentItem | null) {
   }, [key])
 
   const toggleReminder = useCallback(async () => {
-    if (!item) return
+    if (!item || !(await requireSession())) return
     const next = !reminderOn
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
     setReminderOn(next)

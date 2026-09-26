@@ -67,6 +67,13 @@ export async function answerQuiz(questionId: string, choice: number): Promise<Qu
   return data as QuizAnswerResult
 }
 
+/** Puntos de bienvenida configurados (para mostrarlos en la tarjeta de invitado). */
+export async function fetchWelcomePoints(): Promise<number | null> {
+  const { data } = await supabase.from('points_config').select('value').eq('key', 'welcome').maybeSingle()
+  const value = (data as { value: number | null } | null)?.value
+  return value ? Number(value) : null
+}
+
 /** Bienvenida al terminar el onboarding. Idempotente en el servidor: llamarla dos veces no suma dos veces. */
 export async function claimWelcomePoints(): Promise<number> {
   const { data, error } = await supabase.rpc('claim_welcome_points')

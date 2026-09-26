@@ -8,12 +8,12 @@ export const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://www
 
 export class FeedAuthError extends Error {}
 
-async function authorizedGet<T>(path: string, params: URLSearchParams): Promise<T> {
+async function authorizedGet<T>(path: string, params: URLSearchParams, allowGuest = false): Promise<T> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
-  if (!token) throw new FeedAuthError('Sin sesión')
+  if (!token && !allowGuest) throw new FeedAuthError('Sin sesión')
   const res = await fetch(`${WEB_BASE_URL}${path}?${params.toString()}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (res.status === 401) throw new FeedAuthError('Sesión inválida')
   if (!res.ok) throw new Error(`${path} HTTP ${res.status}`)
@@ -25,7 +25,7 @@ export async function fetchFeedPage(cursor: string | null, seen: string[], limit
   const params = new URLSearchParams({ limit: String(limit) })
   if (cursor) params.set('cursor', cursor)
   if (seen.length > 0) params.set('seen', seen.join(','))
-  return authorizedGet<FeedPage>('/api/feed', params)
+  return authorizedGet<FeedPage>('/api/feed', params, true)
 }
 
 export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage> {
@@ -33,7 +33,7 @@ export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage
   if (filters.query.trim()) params.set('q', filters.query.trim())
   if (filters.type) params.set('type', filters.type)
   if (filters.rubro) params.set('rubro', filters.rubro)
-  return authorizedGet<ExplorePage>('/api/explore', params)
+  return authorizedGet<ExplorePage>('/api/explore', params, true)
 }
 
 export async function fetchGuardados(): Promise<GuardadosPage> {

@@ -6,10 +6,13 @@ import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { POINTS_TEXT } from '@/lib/feed-v2/labels'
 import { usePoints } from '@/lib/feed-v2/points'
+import { useApp } from '@/lib/app-context'
 
 // Píldora de puntos de la cabecera del feed: solo el número ("120 pts"). Lleva a Canjear.
 export function PointsPill() {
   const { balance } = usePoints()
+  const { session } = useApp()
+  if (!session) return null
   return (
     <TouchableOpacity
       onPress={() => router.push('/(main)/canjes' as never)}

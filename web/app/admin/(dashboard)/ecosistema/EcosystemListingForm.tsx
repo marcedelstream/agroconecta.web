@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { ECOSYSTEM_KIND_LABELS, type EcosystemListingKind, type EcosystemListingRow } from '@/lib/types'
 import type { EcosystemListingActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 interface Props {
   listing?: EcosystemListingRow
@@ -65,7 +66,7 @@ export function EcosystemListingForm({ listing, action, submitLabel }: Props) {
           />
         </div>
         <div>
-          <label className={labelClass}>Modalidad *</label>
+          <label className={labelClass}>Modalidad *<Help text="Presencial, remoto, a convenir… Se ve en la tarjeta del aviso." /></label>
           <input
             name="modality"
             required
@@ -94,7 +95,7 @@ export function EcosystemListingForm({ listing, action, submitLabel }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Categoría *</label>
+          <label className={labelClass}>Categoría *<Help text="El rubro del aviso (ej. Ganadería). Se ve como etiqueta." /></label>
           <input
             name="category_label"
             required
@@ -108,7 +109,7 @@ export function EcosystemListingForm({ listing, action, submitLabel }: Props) {
           </datalist>
         </div>
         <div>
-          <label className={labelClass}>Publica *</label>
+          <label className={labelClass}>Publica *<Help text="Quién publica el aviso: empresa o persona." /></label>
           <input
             name="publisher_name"
             required
@@ -120,7 +121,7 @@ export function EcosystemListingForm({ listing, action, submitLabel }: Props) {
       </div>
 
       <div>
-        <label className={labelClass}>Contacto (WhatsApp o URL)</label>
+        <label className={labelClass}>Contacto (WhatsApp o URL)<Help text="WhatsApp con código de país (595…) o un link. Es a donde lleva el botón 'Contactar'." /></label>
         <input
           name="contact_url"
           defaultValue={listing?.contact_url ?? ''}

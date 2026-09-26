@@ -11,7 +11,8 @@ interface Props {
   onToggle: (value: string) => void
 }
 
-// Chips grandes para elegir (una o varias opciones). Quien los usa decide si es selección única.
+// Opciones grandes del onboarding. Elegida = fondo verde claro, borde verde y tilde; se entiende de un
+// vistazo qué está marcado. Quien los usa decide si es selección única o múltiple.
 export function ChoiceChips({ options, selected, onToggle }: Props) {
   return (
     <View style={styles.wrap}>
@@ -29,8 +30,10 @@ export function ChoiceChips({ options, selected, onToggle }: Props) {
             accessibilityState={{ checked: on }}
             style={[styles.chip, on && styles.chipOn]}
           >
-            {on && <Ionicons name="checkmark" size={18} color={Colors.v2.white} />}
-            <Text family="noto-sans" weight="semibold" size={16} color={on ? Colors.v2.white : Colors.v2.navy}>{o.label}</Text>
+            <View style={[styles.check, on && styles.checkOn]}>
+              {on && <Ionicons name="checkmark" size={14} color={Colors.v2.navy} />}
+            </View>
+            <Text family="noto-sans" weight={on ? 'bold' : 'semibold'} size={16} color={Colors.v2.navy}>{o.label}</Text>
           </TouchableOpacity>
         )
       })}
@@ -41,15 +44,18 @@ export function ChoiceChips({ options, selected, onToggle }: Props) {
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   chip: {
-    minHeight: 48,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.v2.sheet.border,
+    minHeight: 52,
+    paddingLeft: 14,
+    paddingRight: 18,
+    borderRadius: 26,
+    borderWidth: 1.5,
+    borderColor: Colors.v2.light.inputBorder,
     backgroundColor: Colors.v2.surface,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 10,
   },
-  chipOn: { backgroundColor: Colors.v2.navy, borderColor: Colors.v2.navy },
+  chipOn: { backgroundColor: Colors.v2.limeTint, borderColor: Colors.v2.limeText },
+  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: Colors.v2.sheet.border, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: Colors.v2.lime, borderColor: Colors.v2.lime },
 })

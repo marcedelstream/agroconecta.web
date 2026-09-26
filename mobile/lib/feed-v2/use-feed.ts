@@ -3,6 +3,7 @@ import { fetchFeedPage } from './api'
 import { getSessionSeenKeys } from './telemetry'
 import type { FeedItem } from './types'
 import { useItemActions, type ItemUpdater } from './use-item-actions'
+import { useApp } from '@/lib/app-context'
 
 type Status = 'loading' | 'ready' | 'error'
 
@@ -10,6 +11,8 @@ type Status = 'loading' | 'ready' | 'error'
 export const PREFETCH_THRESHOLD = 3
 
 export function useFeed() {
+  const { session } = useApp()
+  const signedIn = !!session
   const [items, setItems] = useState<FeedItem[]>([])
   const [status, setStatus] = useState<Status>('loading')
   const [refreshing, setRefreshing] = useState(false)
@@ -28,7 +31,7 @@ export function useFeed() {
       const page = await fetchFeedPage(null, seenAtLoad.current)
       cursor.current = page.nextCursor
       hasMore.current = page.nextCursor !== null
-      setItems(page.items)
+      setItems(signedIn ? page.items : [{ kind: 'welcome', key: 'welcome' }, ...page.items])
       setStatus('ready')
     } catch {
       // En un refresh fallido se conserva lo que ya estaba en pantalla.
@@ -36,8 +39,9 @@ export function useFeed() {
     } finally {
       setRefreshing(false)
     }
-  }, [])
+  }, [signedIn])
 
+  // Al iniciar o cerrar sesión el feed se arma de nuevo (con o sin personalización).
   useEffect(() => {
     void loadFirst(false)
   }, [loadFirst])

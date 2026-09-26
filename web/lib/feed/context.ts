@@ -23,7 +23,7 @@ export interface RankingContext {
   engagement: Map<string, FeedEngagement>
 }
 
-export async function loadRankingContext(admin: SupabaseClient, userId: string, asOf: Date): Promise<RankingContext> {
+export async function loadRankingContext(admin: SupabaseClient, userId: string | null, asOf: Date): Promise<RankingContext> {
   const [posts, listings, events, state, weights, engagement] = await Promise.all([
     loadPostCandidates(admin, asOf),
     loadListingCandidates(admin, asOf),

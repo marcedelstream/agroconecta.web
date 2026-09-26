@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { sendManualPush, type SendState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 const initial: SendState = { error: null, sent: false }
 
@@ -51,7 +52,7 @@ export function NotificationsForm() {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
           ID de artículo <span className="text-muted font-normal">(opcional — abre la nota al tocar)</span>
-        </label>
+        <Help text="Opcional. Si ponés el ID de una nota, al tocar la notificación se abre esa nota." /></label>
         <input
           name="article_id"
           placeholder="UUID de la publicación"
@@ -62,7 +63,7 @@ export function NotificationsForm() {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
           Categoría <span className="text-muted font-normal">(filtra por lo que cada usuario activó en su perfil)</span>
-        </label>
+        <Help text="Solo la reciben quienes tienen esa categoría activada. Sin categoría, llega a todos." /></label>
         <select
           name="category"
           defaultValue=""

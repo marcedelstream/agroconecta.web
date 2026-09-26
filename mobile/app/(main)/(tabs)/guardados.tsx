@@ -8,6 +8,8 @@ import { ActivityList, RemindersList, SavedList } from '@/components/v2/guardado
 import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { SegmentedControl } from '@/components/v2/SegmentedControl'
 import { ToastHost } from '@/components/v2/ToastHost'
+import { GuestPrompt } from '@/components/v2/GuestPrompt'
+import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import { GUARDADOS_TEXT } from '@/lib/feed-v2/labels'
 import { useGuardados } from '@/lib/feed-v2/use-guardados'
@@ -26,8 +28,10 @@ export default function GuardadosScreen() {
   const bottomSpace = useFloatingTabBarSpace()
   const [segment, setSegment] = useState<Segment>('saved')
   const g = useGuardados()
+  const { session } = useApp()
 
   function body() {
+    if (!session) return <GuestPrompt icon="bookmark" title={GUARDADOS_TEXT.guestTitle} body={GUARDADOS_TEXT.guestBody} />
     if (g.status === 'loading') return <ActivityIndicator color={Colors.v2.limeText} style={styles.loading} />
     if (g.status === 'error') {
       return (

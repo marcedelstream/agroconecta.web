@@ -3,7 +3,7 @@ import { router } from 'expo-router'
 import * as Notifications from 'expo-notifications'
 import { FormField } from '@/components/v2/form/FormField'
 import { ChoiceChips } from '@/components/v2/onboarding/ChoiceChips'
-import { ConsentPicker, NotificationsPicker, OrgsPicker, WelcomeItems } from '@/components/v2/onboarding/SpecialSteps'
+import { ConsentPicker, NotificationsPicker, OrgsPicker, WelcomeHero, WelcomeItems } from '@/components/v2/onboarding/SpecialSteps'
 import { StepShell } from '@/components/v2/onboarding/StepShell'
 import { useApp } from '@/lib/app-context'
 import { HOME_ROUTE } from '@/lib/feature-flags'
@@ -22,6 +22,8 @@ interface Step {
   content?: React.ReactNode
   canContinue: boolean
   optional?: boolean
+  /** Solo la bienvenida: ilustración arriba del título y sin barra de progreso. */
+  hero?: React.ReactNode
 }
 
 // Onboarding v2 (ONBOARDING-V2.md): un concepto por pantalla, ≤ 60 segundos, y al terminar +50 pts
@@ -46,7 +48,7 @@ export function OnboardingV2() {
   const productionOptions = useMemo(() => rubros.flatMap((r) => PRODUCTION_BY_RUBRO[r] ?? []), [rubros])
 
   const steps: Step[] = [
-    { title: T.welcomeTitle, body: T.welcomeBody, content: <WelcomeItems />, canContinue: true },
+    { title: T.welcomeTitle, body: T.welcomeBody, content: <WelcomeItems />, canContinue: true, hero: <WelcomeHero /> },
     { title: T.nameTitle, content: <FormField label={T.nameLabel} value={name} onChangeText={setName} maxLength={60} autoCapitalize="words" />, canContinue: name.trim().length >= 2 },
     { title: T.rubrosTitle, body: T.rubrosBody, content: <ChoiceChips options={RUBRO_OPTIONS} selected={rubros} onToggle={(v) => setRubros((l) => toggle(l, v))} />, canContinue: rubros.length > 0 },
     { title: T.productionTitle, body: T.productionBody, content: <ChoiceChips options={productionOptions} selected={production} onToggle={(v) => setProduction((l) => toggle(l, v))} />, canContinue: true, optional: true },
@@ -87,10 +89,13 @@ export function OnboardingV2() {
 
   return (
     <StepShell
-      progress={(i + 1) / steps.length}
+      step={i}
+      total={steps.length - 1}
+      hero={!!step.hero}
+      heroContent={step.hero}
       title={step.title}
       body={step.body}
-      primaryLabel={busy ? T.finishing : last ? T.finish : T.next}
+      primaryLabel={busy ? T.finishing : last ? T.finish : step.hero ? T.start : T.next}
       primaryDisabled={!step.canContinue}
       busy={busy}
       onPrimary={() => (last ? void finish() : setI(i + 1))}

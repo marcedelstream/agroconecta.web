@@ -3,6 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 import type { EcosystemListingKind } from '@/lib/types'
@@ -97,7 +98,7 @@ export async function createListing(
   }
 
   revalidatePath('/admin/ecosistema')
-  redirect('/admin/ecosistema')
+  backWithOk('/admin/ecosistema', 'Aviso publicado. Ya aparece en la app.')
 }
 
 export async function updateListing(

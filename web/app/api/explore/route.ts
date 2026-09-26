@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { authenticateKaraiRequest } from '@/lib/karai/auth'
+import { authenticateOptional } from '@/lib/feed/guest-auth'
 import { EXPLORE_RUBROS, EXPLORE_TYPES } from '@/lib/feed/explore'
 import { buildExplorePage } from '@/lib/feed/service'
 import type { FeedContentType } from '@/lib/feed/types'
@@ -11,7 +11,7 @@ const MAX_QUERY_LENGTH = 80
 // Explorar de la app v2: búsqueda + filtro por tipo y rubro + tendencias. Mismo contenido y mismo
 // orden que /api/feed. Auth: JWT de Supabase por Bearer.
 export async function GET(request: Request) {
-  const auth = await authenticateKaraiRequest(request)
+  const auth = await authenticateOptional(request)
   if ('error' in auth) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const params = new URL(request.url).searchParams
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const query = (params.get('q') ?? '').slice(0, MAX_QUERY_LENGTH)
 
   try {
-    const page = await buildExplorePage(auth.admin, auth.profileId, { query, type, rubro })
+    const page = await buildExplorePage(auth.admin, auth.userId, { query, type, rubro })
     return NextResponse.json(page, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
     console.error('GET /api/explore falló:', err)

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import * as Haptics from 'expo-haptics'
 import { setFollowing, setLiked, setSaved, shareItem } from './actions'
 import { DETAIL_TEXT } from './labels'
+import { requireSession } from './guest'
 import { trackFeedEvent } from './telemetry'
 import { showToast } from './toast'
 import type { FeedContentItem } from './types'
@@ -19,6 +20,7 @@ export function useItemActions(update: ItemUpdater) {
 
   const toggleLike = useCallback(
     async (item: FeedContentItem) => {
+      if (!(await requireSession())) return
       const on = !item.liked
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
       patch(item.key, { liked: on, likes: item.likes + (on ? 1 : -1) })
@@ -31,7 +33,8 @@ export function useItemActions(update: ItemUpdater) {
 
   // Doble toque: solo marca. Si ya estaba marcado, alcanza con la vibración y el corazón.
   const likeOnce = useCallback(
-    (item: FeedContentItem) => {
+    async (item: FeedContentItem) => {
+      if (!(await requireSession())) return
       if (item.liked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
       else void toggleLike(item)
     },
@@ -40,6 +43,7 @@ export function useItemActions(update: ItemUpdater) {
 
   const toggleSave = useCallback(
     async (item: FeedContentItem) => {
+      if (!(await requireSession())) return
       const on = !item.saved
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
       patch(item.key, { saved: on, saves: item.saves + (on ? 1 : -1) })
@@ -53,6 +57,7 @@ export function useItemActions(update: ItemUpdater) {
   // Desde la ficha: mismo guardado, con aviso (en el feed alcanza con el cambio del ícono).
   const toggleSaveWithToast = useCallback(
     async (item: FeedContentItem) => {
+      if (!(await requireSession())) return
       showToast(item.saved ? DETAIL_TEXT.toastUnsaved : DETAIL_TEXT.toastSaved)
       await toggleSave(item)
     },
@@ -62,6 +67,7 @@ export function useItemActions(update: ItemUpdater) {
   // Seguir afecta a todos los items de la misma organización, no solo al visible.
   const toggleFollow = useCallback(
     async (item: FeedContentItem) => {
+      if (!(await requireSession())) return
       const on = !item.following
       const apply = (value: boolean) =>
         update((i) => (i.organizationId === item.organizationId ? { ...i, following: value } : i))

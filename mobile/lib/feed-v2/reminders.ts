@@ -2,13 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Notifications from 'expo-notifications'
 import { supabase } from '@/lib/supabase'
 import { currentUserId } from './api'
+import { registerPushToken } from '@/lib/push-notifications'
 import type { FeedContentItem } from './types'
 
-// Recordatorios de eventos y remates: fila en `reminders` (Guardados → Recordatorios, y base para el
-// push del servidor más adelante) + notificación local 1 hora antes (README §3.5).
+// Recordatorios de eventos y remates: fila en `reminders`. El aviso "En 1 hora: …" lo manda el servidor
+// (supabase/fix-v2-reminder-push.sql), así llega aunque se cambie de teléfono. Acá solo se pide el
+// permiso y se asegura que el teléfono tenga su token de push registrado.
 
 const REMIND_BEFORE_MS = 60 * 60 * 1000
-// id de la notificación local por item, para poder cancelarla al desactivar (vive solo en este equipo).
+// Versiones anteriores programaban una notificación local: se guarda su id para cancelarla y no
+// duplicar el aviso que ahora manda el servidor.
 const LOCAL_IDS_KEY = '@agroconecta:v2-reminder-ids'
 
 export type ReminderResult = 'on' | 'off' | 'denied' | 'error'
@@ -53,17 +56,13 @@ export async function setReminder(item: FeedContentItem, on: boolean): Promise<R
   if (on) {
     const { status } = await Notifications.requestPermissionsAsync()
     if (status !== 'granted') return 'denied'
-    if (remindAt.getTime() > Date.now()) {
-      ids[item.key] = await Notifications.scheduleNotificationAsync({
-        content: { title: item.title, body: item.location ?? item.organizationName },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: remindAt },
-      })
-    }
-  } else if (ids[item.key]) {
+    await registerPushToken(userId).catch(() => null)
+  }
+  if (ids[item.key]) {
     await Notifications.cancelScheduledNotificationAsync(ids[item.key]).catch(() => null)
     delete ids[item.key]
+    await writeLocalIds(ids)
   }
-  await writeLocalIds(ids)
 
   const { error } = await supabase.from('reminders').upsert(
     {
@@ -73,6 +72,8 @@ export async function setReminder(item: FeedContentItem, on: boolean): Promise<R
       title: item.title,
       remind_at: remindAt.toISOString(),
       enabled: on,
+      // Reactivarlo con otra fecha vuelve a habilitar el envío.
+      sent_at: null,
     },
     { onConflict: 'user_id,source,source_id' },
   )

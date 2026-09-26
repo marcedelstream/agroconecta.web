@@ -86,7 +86,13 @@ export interface FeedSponsoredItem {
   linkTarget: string | null
 }
 
-export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem | FeedSponsoredItem
+/** Primera tarjeta del feed para quien no inició sesión: invita a entrar y a sumar los puntos de bienvenida. */
+export interface FeedWelcomeItem {
+  kind: 'welcome'
+  key: 'welcome'
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem | FeedSponsoredItem | FeedWelcomeItem
 
 export interface LiveItem {
   key: string

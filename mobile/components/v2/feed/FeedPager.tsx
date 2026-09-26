@@ -16,6 +16,7 @@ import { MarketFeedSlide } from '@/components/v2/feed/MarketFeedSlide'
 import { PollSlide } from '@/components/v2/interactive/PollSlide'
 import { QuizSlide } from '@/components/v2/interactive/QuizSlide'
 import { SponsoredSlide } from '@/components/v2/feed/SponsoredSlide'
+import { WelcomeSlide } from '@/components/v2/feed/WelcomeSlide'
 import { RefreshingPill } from '@/components/v2/feed/RefreshingPill'
 import { useFeedInsets } from '@/components/v2/feed/layout'
 import { V2Layout } from '@/constants/spacing'
@@ -115,6 +116,8 @@ export function FeedPager({ controller }: Props) {
           return <PollSlide item={item} height={height} />
         case 'quiz':
           return <QuizSlide item={item} height={height} />
+        case 'welcome':
+          return <WelcomeSlide height={height} />
         case 'sponsored':
           return <SponsoredSlide item={item} height={height} active={focused && index === activeIndex} />
         default:

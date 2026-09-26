@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { backWithOk } from '@/lib/admin-feedback'
 
 export type BannerActionState = { error: string | null }
 
@@ -110,7 +111,7 @@ export async function createBanner(
   if (error) return { error: error.message }
 
   revalidatePath('/admin/banners')
-  return { error: null }
+  backWithOk('/admin/banners', 'Anuncio creado. Ya se muestra donde lo marcaste.')
 }
 
 export async function toggleBanner(formData: FormData) {

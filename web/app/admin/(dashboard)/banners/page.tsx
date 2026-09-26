@@ -4,7 +4,8 @@ import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS,
 import { deleteBanner, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
-import { PageHeader, SectionTabs } from '@/components/admin/ui'
+import { PageHeader, SectionTabs, Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 async function loadBanners() {
@@ -33,12 +34,14 @@ function SegmentText({ banner }: { banner: AdCampaignRow }) {
   return <span>{parts.join(' · ')}</span>
 }
 
-export default async function BannersPage() {
+export default async function BannersPage({ searchParams }: { searchParams: Promise<FeedbackParams> }) {
+  const feedback = await searchParams
   const { banners, error } = await loadBanners()
 
   return (
     <div className="max-w-6xl">
       <PageHeader title="Publicidad" help="Los anuncios de la app y la web. Elegís dónde aparecen y a quién se muestran; en Reporte ves cómo les va." />
+      <Notice {...feedback} />
       <SectionTabs tabs={[{ href: '/admin/banners', label: 'Banners' }, { href: '/admin/publicidad', label: 'Reporte' }]} current="/admin/banners" />
 
       {error && (

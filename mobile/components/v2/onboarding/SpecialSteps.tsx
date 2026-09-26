@@ -14,6 +14,26 @@ import type { NotificationPreferences, Organization } from '@/lib/types'
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 const T = ONBOARDING_TEXT
 
+const logo = require('@/assets/images/logo-light.png')
+const LOGO_HEIGHT = 34
+const LOGO_RATIO = 590 / 127
+const HERO = 150
+
+/** Logo + ilustración de la bienvenida (va arriba del título). */
+export function WelcomeHero() {
+  return (
+    <View style={styles.hero}>
+      <Image source={logo} style={styles.logo} contentFit="contain" accessibilityLabel="Agroconecta" />
+      <View style={styles.heroArt}>
+        <View style={styles.heroRing} />
+        <View style={styles.heroCore}>
+          <Ionicons name="leaf" size={54} color={Colors.v2.navy} />
+        </View>
+      </View>
+    </View>
+  )
+}
+
 export function WelcomeItems() {
   return (
     <View style={styles.list}>
@@ -110,13 +130,18 @@ const styles = StyleSheet.create({
   list: { gap: 12 },
   flex: { flex: 1 },
   fill: { width: '100%', height: '100%' },
-  welcome: { flexDirection: 'row', gap: 14, alignItems: 'flex-start', backgroundColor: Colors.v2.surface, borderRadius: 18, padding: 16 },
-  welcomeIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: Colors.v2.lime, alignItems: 'center', justifyContent: 'center' },
-  org: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: Colors.v2.surface },
+  hero: { alignItems: 'center', gap: 28, marginBottom: 8 },
+  logo: { height: LOGO_HEIGHT, width: LOGO_HEIGHT * LOGO_RATIO },
+  heroArt: { width: HERO, height: HERO, alignItems: 'center', justifyContent: 'center' },
+  heroRing: { position: 'absolute', width: HERO, height: HERO, borderRadius: HERO / 2, borderWidth: 18, borderColor: Colors.v2.lime, opacity: 0.35 },
+  heroCore: { width: HERO - 50, height: HERO - 50, borderRadius: (HERO - 50) / 2, backgroundColor: Colors.v2.lime, alignItems: 'center', justifyContent: 'center' },
+  welcome: { flexDirection: 'row', gap: 14, alignItems: 'center', backgroundColor: Colors.v2.ground, borderRadius: 20, padding: 16 },
+  welcomeIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: Colors.v2.surface, alignItems: 'center', justifyContent: 'center' },
+  org: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: Colors.v2.surface, borderWidth: 1.5, borderColor: Colors.v2.light.inputBorder },
   orgLogo: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: Colors.v2.limeTint },
   notifBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 26, backgroundColor: Colors.v2.navy },
   notifOn: { backgroundColor: Colors.v2.limeTint },
-  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 16, borderRadius: 16, backgroundColor: Colors.v2.surface },
-  check: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, borderRadius: 16, backgroundColor: Colors.v2.surface },
+  notifRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingHorizontal: 16, borderRadius: 16, backgroundColor: Colors.v2.ground },
+  check: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, borderRadius: 16, backgroundColor: Colors.v2.ground },
   links: { flexDirection: 'row', gap: 20, paddingHorizontal: 4 },
 })

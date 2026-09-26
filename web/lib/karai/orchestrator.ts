@@ -3,7 +3,7 @@ import { classifyMessage, hasCommercialIntent, hasFarmDataIntent, OUT_OF_SCOPE_R
 import { getAIProvider, type AIProvider } from './ai-provider'
 import { buildContext } from './context'
 import { extractAndSaveFarmData } from './farm-extraction'
-import { DAILY_TEXT_LIMIT, getUsageToday, QUOTA_REACHED_REPLY } from './quota'
+import { dailyLimitFor, getUsageToday, isActiveMember, quotaReachedReply } from './quota'
 import { BLOCKED_CATEGORIES, type ChatMessage, type KaraiChannel, type ScopeCategory } from './types'
 
 // Reglas de "educación" del modelo, en capas — el prompt es la ÚLTIMA línea de defensa, no la
@@ -53,9 +53,6 @@ Datos de finca:
 Fuentes de referencia:
 - Si usaste algo del bloque "Fuentes de referencia adicionales" para responder, cerrá tu respuesta con una línea aparte: "Fuente: <título de la fuente>". Si no usaste ninguna, no agregues esa línea.`
 
-const MEMBERSHIP_REQUIRED_REPLY =
-  'Karai es un beneficio para miembros de Agroconecta. Activá tu membresía anual desde la app o escribinos por WhatsApp para más información.'
-
 interface OrchestrateInput {
   admin: ReturnType<typeof createSupabaseAdmin>
   profileId: string
@@ -67,11 +64,6 @@ interface OrchestrateInput {
 type OrchestrateResult =
   | { ok: true; reply: string; conversationId: string; category: ScopeCategory }
   | { ok: false; status: number; error: string }
-
-async function isActiveMember(admin: ReturnType<typeof createSupabaseAdmin>, profileId: string): Promise<boolean> {
-  const { data } = await admin.from('profiles').select('is_member').eq('id', profileId).maybeSingle()
-  return data?.is_member === true
-}
 
 async function ensureConversation(
   admin: ReturnType<typeof createSupabaseAdmin>,
@@ -191,9 +183,8 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
   const trimmed = message.trim()
   if (!trimmed) return { ok: false, status: 400, error: 'Mensaje vacío.' }
 
-  if (!(await isActiveMember(admin, profileId))) {
-    return { ok: false, status: 402, error: MEMBERSHIP_REQUIRED_REPLY }
-  }
+  // Plan gratis para todos (5 por día) y 15 para miembros: ya no se corta a quien no es miembro.
+  const member = await isActiveMember(admin, profileId)
 
   const rawCategory = classifyMessage(trimmed)
   const conversationId = await ensureConversation(admin, profileId, channel, input.conversationId)
@@ -207,10 +198,10 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
   }
 
   const usageToday = await getUsageToday(admin, profileId)
-  if (usageToday >= DAILY_TEXT_LIMIT) {
+  if (usageToday >= dailyLimitFor(member)) {
     await persistMessage(admin, conversationId, 'user', trimmed, category, null)
-    await persistMessage(admin, conversationId, 'assistant', QUOTA_REACHED_REPLY, category, null)
-    return { ok: true, reply: QUOTA_REACHED_REPLY, conversationId, category }
+    await persistMessage(admin, conversationId, 'assistant', quotaReachedReply(member), category, null)
+    return { ok: true, reply: quotaReachedReply(member), conversationId, category }
   }
 
   const provider = getAIProvider()
@@ -273,9 +264,8 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
   const trimmed = message.trim()
   if (!trimmed) return { ok: false, status: 400, error: 'Mensaje vacío.' }
 
-  if (!(await isActiveMember(admin, profileId))) {
-    return { ok: false, status: 402, error: MEMBERSHIP_REQUIRED_REPLY }
-  }
+  // Plan gratis para todos (5 por día) y 15 para miembros: ya no se corta a quien no es miembro.
+  const member = await isActiveMember(admin, profileId)
 
   const rawCategory = classifyMessage(trimmed)
   const conversationId = await ensureConversation(admin, profileId, channel, input.conversationId)
@@ -289,10 +279,10 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
   }
 
   const usageToday = await getUsageToday(admin, profileId)
-  if (usageToday >= DAILY_TEXT_LIMIT) {
+  if (usageToday >= dailyLimitFor(member)) {
     await persistMessage(admin, conversationId, 'user', trimmed, category, null)
-    await persistMessage(admin, conversationId, 'assistant', QUOTA_REACHED_REPLY, category, null)
-    return { ok: true, conversationId, category, stream: singleChunkStream(QUOTA_REACHED_REPLY) }
+    await persistMessage(admin, conversationId, 'assistant', quotaReachedReply(member), category, null)
+    return { ok: true, conversationId, category, stream: singleChunkStream(quotaReachedReply(member)) }
   }
 
   const provider = getAIProvider()

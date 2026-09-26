@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { LIBRARY_CATEGORY_LABELS, type LibraryCategory } from '@/lib/types'
 import { createLibraryItem, type LibraryActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 const initialState: LibraryActionState = { error: null }
 
@@ -36,7 +37,7 @@ export function LibraryForm() {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Categoría</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Categoría<Help text="La sección de la biblioteca donde aparece." /></label>
           <select name="category" className="input" defaultValue="manual">
             {(Object.entries(LIBRARY_CATEGORY_LABELS) as [LibraryCategory, string][]).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
@@ -50,7 +51,7 @@ export function LibraryForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Portada</label>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Portada<Help text="Imagen vertical, como la tapa de un libro." /></label>
         <input
           name="cover_file"
           type="file"
@@ -62,7 +63,7 @@ export function LibraryForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Archivo (PDF)</label>
+        <label className="block text-sm font-medium text-foreground mb-1.5">Archivo (PDF)<Help text="El PDF que se lee dentro de la app." /></label>
         <input
           name="item_file"
           type="file"

@@ -33,7 +33,14 @@ export interface UserFeedState {
   saved: Set<string>
 }
 
-export async function loadUserFeedState(db: SupabaseClient, userId: string, now: Date): Promise<UserFeedState> {
+const GUEST_STATE: UserFeedState = {
+  signals: { department: null, profession: null, interests: [], followedOrgIds: new Set(), seen: new Map() },
+  liked: new Set(),
+  saved: new Set(),
+}
+
+export async function loadUserFeedState(db: SupabaseClient, userId: string | null, now: Date): Promise<UserFeedState> {
+  if (!userId) return GUEST_STATE
   const seenSince = new Date(now.getTime() - SEEN_WINDOW_DAYS * 86_400_000).toISOString()
 
   const [profile, interests, facets, subs, events, likes, saves] = await Promise.all([

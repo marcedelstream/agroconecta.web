@@ -4,7 +4,8 @@ import { LIBRARY_CATEGORY_LABELS, type LibraryItemRow } from '@/lib/types'
 import { deleteLibraryItem, togglePublished } from './actions'
 import { LibraryForm } from './LibraryForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
-import { PageHeader } from '@/components/admin/ui'
+import { PageHeader, Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 async function loadItems() {
@@ -19,12 +20,14 @@ async function loadItems() {
   }
 }
 
-export default async function BibliotecaPage() {
+export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<FeedbackParams> }) {
+  const feedback = await searchParams
   const { items, error } = await loadItems()
 
   return (
     <div className="max-w-6xl">
       <PageHeader title="Biblioteca" help="Libros y guías en PDF que la gente lee desde la app." />
+      <Notice {...feedback} />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

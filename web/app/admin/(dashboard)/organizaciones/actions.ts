@@ -3,6 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 
@@ -107,7 +108,7 @@ export async function createOrganization(
 
   revalidatePath('/admin/organizaciones')
   revalidatePath('/')
-  redirect('/admin/organizaciones')
+  backWithOk('/admin/organizaciones', 'Organización creada.')
 }
 
 export async function updateOrganization(

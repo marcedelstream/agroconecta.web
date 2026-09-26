@@ -11,6 +11,7 @@ import {
   type OrganizationType,
 } from '@/lib/types'
 import type { OrganizationActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 interface Props {
   organization?: OrganizationRow
@@ -71,7 +72,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Slug</label>
+          <label className={labelClass}>Slug<Help text="La parte final del link de la organización (ej. arp). Sin espacios ni tildes." /></label>
           <input
             name="slug"
             defaultValue={organization?.slug ?? ''}
@@ -95,7 +96,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className={labelClass}>Tipo</label>
+          <label className={labelClass}>Tipo<Help text="Medio, gremio, empresa, etc. Sirve para ordenar y filtrar." /></label>
           <select name="type" defaultValue={organization?.type ?? 'asociacion'} className={inputClass}>
             {ORGANIZATION_TYPES.map((type) => (
               <option key={type.value} value={type.value}>{type.label}</option>
@@ -104,7 +105,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Estado comercial</label>
+          <label className={labelClass}>Estado comercial<Help text="Si está al día con su plan. 'Vencida' se marca en rojo en la lista." /></label>
           <select name="commercial_status" defaultValue={organization?.commercial_status ?? 'trial'} className={inputClass}>
             {COMMERCIAL_STATUSES.map((status) => (
               <option key={status.value} value={status.value}>{status.label}</option>
@@ -113,7 +114,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Plan</label>
+          <label className={labelClass}>Plan<Help text="Nombre del plan contratado. Solo lo ve el equipo." /></label>
           <input
             name="plan_name"
             defaultValue={organization?.plan_name ?? 'Piloto'}
@@ -123,7 +124,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
       </div>
 
       <div>
-        <label className={labelClass}>Notas de facturación</label>
+        <label className={labelClass}>Notas de facturación<Help text="Solo interno: nadie fuera del panel lo ve." /></label>
         <textarea
           name="billing_notes"
           rows={2}
@@ -136,7 +137,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>Foto / logo 1:1</label>
+          <label className={labelClass}>Foto / logo 1:1<Help text="Logo cuadrado. En la app se ve redondo." /></label>
           <input
             name="logo_file"
             type="file"
@@ -159,7 +160,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
       </div>
 
       <div>
-        <label className={labelClass}>Slug de organizador en eventosagropy.com (opcional)</label>
+        <label className={labelClass}>Slug de organizador en eventosagropy.com (opcional)<Help text="Si organiza eventos en eventosagropy.com, poné su slug para mostrar sus eventos." /></label>
         <input
           name="events_organizer_slug"
           defaultValue={organization?.events_organizer_slug ?? ''}
@@ -177,7 +178,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Plan de Aliado</label>
+            <label className={labelClass}>Plan de Aliado<Help text="Solo si es aliado: define cómo aparece en el directorio de Aliados." /></label>
             <select name="ally_plan" defaultValue={organization?.ally_plan ?? ''} className={inputClass}>
               <option value="">Ninguno — no es Aliado</option>
               {ALLY_PLANS.map((plan) => (
@@ -187,7 +188,7 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
           </div>
 
           <div>
-            <label className={labelClass}>Categoría del Aliado</label>
+            <label className={labelClass}>Categoría del Aliado<Help text="El rubro con el que aparece en el directorio de Aliados." /></label>
             <select name="ally_category" defaultValue={organization?.ally_category ?? ''} className={inputClass}>
               <option value="">Sin categoría</option>
               {ALLY_CATEGORIES.map((cat) => (

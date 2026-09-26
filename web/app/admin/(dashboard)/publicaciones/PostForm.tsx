@@ -4,6 +4,7 @@ import { useActionState, useRef } from 'react'
 import type { PostRow, OrganizationRow, NewsCategory, ContentType, AuctionStatus, EditorialStatus, Department } from '@/lib/types'
 import { CATEGORY_LABELS, CONTENT_TYPE_LABELS, AUCTION_STATUS_LABELS, STATUS_LABELS, DEPARTMENT_LABELS } from '@/lib/types'
 import type { ActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 interface Props {
   post?: PostRow
@@ -94,7 +95,7 @@ export function PostForm({ post, orgs, action }: Props) {
       </div>
 
       <div>
-        <label className={labelClass}>Resumen</label>
+        <label className={labelClass}>Resumen<Help text="La bajada: una o dos líneas que se ven en el feed debajo del título." /></label>
         <textarea
           name="summary"
           rows={2}
@@ -131,7 +132,7 @@ export function PostForm({ post, orgs, action }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className={labelClass}>Categoría *</label>
+          <label className={labelClass}>Categoría *<Help text="Define en qué rubro aparece y a quién se le recomienda en la app." /></label>
           <select
             name="category"
             required
@@ -145,7 +146,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Tipo de contenido</label>
+          <label className={labelClass}>Tipo de contenido<Help text="Nota, video, remate o aviso. Video y remate necesitan el link de YouTube." /></label>
           <select
             name="content_type"
             defaultValue={post?.content_type ?? 'article'}
@@ -158,7 +159,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Estado de transmisión</label>
+          <label className={labelClass}>Estado de transmisión<Help text="Solo para remates. 'En vivo' lo muestra en el aviso EN VIVO de la app." /></label>
           <select
             name="auction_status"
             defaultValue={post?.auction_status ?? ''}
@@ -173,7 +174,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Estado editorial</label>
+          <label className={labelClass}>Estado editorial<Help text="Borrador no se ve. Publicado aparece en la app y la web." /></label>
           <select
             name="editorial_status"
             defaultValue={post?.editorial_status ?? 'draft'}
@@ -186,7 +187,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Organización</label>
+          <label className={labelClass}>Organización<Help text="Quién publica. A quienes siguen esa organización se les muestra más arriba." /></label>
           <select
             name="organization_id"
             defaultValue={post?.organization_id ?? ''}
@@ -200,7 +201,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Imagen destacada</label>
+          <label className={labelClass}>Imagen destacada<Help text="Horizontal y de buena calidad: en la app se ve a pantalla completa." /></label>
           <input
             name="image_file"
             type="file"
@@ -222,7 +223,7 @@ export function PostForm({ post, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>URL de YouTube</label>
+          <label className={labelClass}>URL de YouTube<Help text="El link del video o de la transmisión en YouTube." /></label>
           <input
             name="youtube_url"
             type="text"
@@ -235,7 +236,7 @@ export function PostForm({ post, orgs, action }: Props) {
 
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <label className="text-sm font-medium text-foreground">Departamentos destino</label>
+          <label className="text-sm font-medium text-foreground">Departamentos destino<Help text="Vacío = todo el país. Si elegís departamentos, se le muestra más arriba a quien vive ahí." /></label>
           <span className="text-xs text-muted">Sin selección = nacional</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">

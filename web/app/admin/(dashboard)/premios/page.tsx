@@ -1,6 +1,7 @@
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { createReward, markRedemptionUsed, toggleReward } from './actions'
-import { FieldLabel, Help, Notice, PageHeader } from '@/components/admin/ui'
+import { createReward, toggleReward } from './actions'
+import { ValidateCodeForm } from './ValidateCodeForm'
+import { FieldLabel, Notice, PageHeader } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
@@ -46,11 +47,7 @@ export default async function PremiosPage({ searchParams }: Props) {
 
       {error && <div className="card border-danger/40 text-danger text-sm">No se pudo leer (¿se corrió fix-v2-rewards.sql?): {error.message}</div>}
 
-      <form action={markRedemptionUsed} className="card flex flex-wrap items-center gap-3">
-        <span className="text-sm font-semibold text-foreground">Validar código<Help text="Cuando el aliado te pase un código AGRO-XXXX, escribilo acá. Una vez marcado como usado no se puede volver atrás." /></span>
-        <input name="code" required className="input max-w-[200px] uppercase" placeholder="AGRO-XXXX" />
-        <button type="submit" className="btn-primary text-sm">Marcar como usado</button>
-      </form>
+      <ValidateCodeForm />
 
       <div className="mb-5 flex justify-end">
         <CreateDrawer label="Nuevo premio" title="Nuevo premio" description="Cargá solo premios confirmados por el aliado.">

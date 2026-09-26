@@ -82,3 +82,19 @@ export async function sendPushToAll(payload: PushPayload, category?: Notificatio
     await sendBatch(tokens.slice(i, i + 100), payload)
   }
 }
+
+/** Push a usuarios puntuales (ej. quienes activaron un recordatorio de ese evento). */
+export async function sendPushToUsers(userIds: string[], payload: PushPayload): Promise<number> {
+  if (userIds.length === 0) return 0
+  const supabase = createSupabaseAdmin()
+  const { data: rows } = await supabase
+    .from('push_tokens')
+    .select('expo_token')
+    .eq('enabled', true)
+    .in('user_id', [...new Set(userIds)])
+  const tokens = (rows ?? []).map((r) => r.expo_token as string).filter(Boolean)
+  for (let i = 0; i < tokens.length; i += 100) {
+    await sendBatch(tokens.slice(i, i + 100), payload)
+  }
+  return tokens.length
+}

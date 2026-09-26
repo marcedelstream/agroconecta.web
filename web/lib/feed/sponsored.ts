@@ -37,13 +37,13 @@ export function matchesTargeting(c: Targeting, u: Pick<FeedUserSignals, 'profess
   )
 }
 
-export async function loadSponsored(db: SupabaseClient, userId: string, signals: FeedUserSignals, now: Date): Promise<FeedSponsoredItem[]> {
+export async function loadSponsored(db: SupabaseClient, userId: string | null, signals: FeedUserSignals, now: Date): Promise<FeedSponsoredItem[]> {
   const nowIso = now.toISOString()
   // select('*'): las columnas nuevas (advertiser_name, body, cta_label) pueden no existir si la
   // migración no se corrió; así esta consulta no rompe el feed.
   const [campaigns, dismissed] = await Promise.all([
     db.from('ad_campaigns').select('*').eq('is_active', true).contains('placement', ['feed']).lte('starts_at', nowIso),
-    db.from('user_dismissals').select('ref_id').eq('user_id', userId).eq('kind', 'ad'),
+    userId ? db.from('user_dismissals').select('ref_id').eq('user_id', userId).eq('kind', 'ad') : Promise.resolve({ data: [] }),
   ])
   if (campaigns.error) return []
   const hidden = new Set(((dismissed.data ?? []) as { ref_id: string }[]).map((d) => d.ref_id))

@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import type { EventScheduleItemRow, PostRow } from '@/lib/types'
 import { addScheduleItem, deleteScheduleItem, tagPostToEvent, saveEventMedia } from './actions'
 import { PageHeader } from '@/components/admin/ui'
+import { Help } from '@/components/admin/ui'
 
 interface EventMediaRow {
   event_slug: string
@@ -74,7 +75,7 @@ export default async function EventosPage({
 
       <form action="/admin/eventos" className="card flex flex-wrap items-end gap-3 mb-6">
         <div className="flex-1 min-w-[240px]">
-          <label className="block text-sm font-medium text-foreground mb-1.5">Slug del evento</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Slug del evento<Help text="La parte final del link del evento en eventosagropy.com (ej. expo-pioneros-2026)." /></label>
           <input
             name="slug"
             defaultValue={slug ?? ''}
@@ -134,7 +135,7 @@ export default async function EventosPage({
               </label>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Banner promocional</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Banner promocional<Help text="Imagen que se muestra arriba del evento en la app." /></label>
                 {data.media?.banner_image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

@@ -2,7 +2,8 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { KnowledgeSourceForm } from './KnowledgeSourceForm'
 import { SourceRowActions } from './SourceRowActions'
 import { SOURCE_LEVEL_LABELS, SOURCE_STATUS_LABELS, type KaraiSourceLevel, type KaraiSourceStatus } from '@/lib/karai/knowledge-types'
-import { PageHeader, SectionTabs } from '@/components/admin/ui'
+import { PageHeader, SectionTabs, Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 interface SourceRow {
@@ -42,12 +43,14 @@ function isExpired(expiresAt: string | null) {
   return Boolean(expiresAt && new Date(expiresAt) < new Date())
 }
 
-export default async function KnowledgeSourcesPage() {
+export default async function KnowledgeSourcesPage({ searchParams }: { searchParams: Promise<FeedbackParams> }) {
+  const feedback = await searchParams
   const sources = await loadSources()
 
   return (
     <div className="max-w-5xl">
       <PageHeader title="Karai" help="Fuentes confiables (links y documentos) que Karai usa para responder. Solo se usan las aprobadas y vigentes." />
+      <Notice {...feedback} />
       <SectionTabs tabs={[{ href: '/admin/karai', label: 'Uso y leads' }, { href: '/admin/karai/fuentes', label: 'Base de conocimiento' }]} current="/admin/karai/fuentes" />
 
       <div className="mb-5 flex justify-end">

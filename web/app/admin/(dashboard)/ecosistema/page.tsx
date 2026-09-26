@@ -5,7 +5,8 @@ import { ECOSYSTEM_KIND_LABELS, type EcosystemListingKind, type EcosystemListing
 import { deleteListing, toggleActive, createListing } from './actions'
 import { EcosystemListingForm } from './EcosystemListingForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
-import { PageHeader } from '@/components/admin/ui'
+import { PageHeader, Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 async function loadListings() {
@@ -21,11 +22,11 @@ async function loadListings() {
 }
 
 interface Props {
-  searchParams: Promise<{ kind?: string }>
+  searchParams: Promise<{ kind?: string } & FeedbackParams>
 }
 
 export default async function EcosistemaPage({ searchParams }: Props) {
-  const { kind } = await searchParams
+  const { kind, ...feedback } = await searchParams
   const { listings, error } = await loadListings()
   const filtered = kind ? listings.filter((l) => l.kind === kind) : listings
 
@@ -37,6 +38,7 @@ export default async function EcosistemaPage({ searchParams }: Props) {
   return (
     <div className="max-w-6xl">
       <PageHeader title="Ecosistema" help="Empleos, clasificados y cursos que aparecen en la app. Los videos y remates se cargan en Publicaciones." />
+      <Notice {...feedback} />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

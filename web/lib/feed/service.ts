@@ -43,7 +43,7 @@ export function parseSeenParam(raw: string | null): Set<string> {
 
 export async function buildFeedPage(
   admin: SupabaseClient,
-  userId: string,
+  userId: string | null,
   cursor: Cursor | null,
   pageSize: number,
   sessionSeen: Set<string> = new Set(),
@@ -53,7 +53,7 @@ export async function buildFeedPage(
 
   const [ctx, interactive] = await Promise.all([
     loadRankingContext(admin, userId, asOf),
-    loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]),
+    userId ? loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]) : Promise.resolve([] as FeedInteractiveItem[]),
   ])
   const ranked = deprioritizeSeen(
     chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)),
@@ -88,7 +88,7 @@ export interface ExplorePage {
 }
 
 /** Resultados de Explorar, ordenados con el mismo ranking del feed (lo más relevante para el usuario primero). */
-export async function buildExplorePage(admin: SupabaseClient, userId: string, filters: ExploreFilters): Promise<ExplorePage> {
+export async function buildExplorePage(admin: SupabaseClient, userId: string | null, filters: ExploreFilters): Promise<ExplorePage> {
   const asOf = new Date()
   const ctx = await loadRankingContext(admin, userId, asOf)
   const matches = filterCandidates(ctx.candidates, filters)

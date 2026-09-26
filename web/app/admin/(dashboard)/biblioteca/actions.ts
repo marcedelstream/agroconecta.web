@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
+import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 
@@ -100,7 +101,7 @@ export async function createLibraryItem(
   if (error) return { error: error.message }
 
   revalidatePath('/admin/biblioteca')
-  return { error: null }
+  backWithOk('/admin/biblioteca', 'Título agregado a la biblioteca.')
 }
 
 export async function togglePublished(formData: FormData) {

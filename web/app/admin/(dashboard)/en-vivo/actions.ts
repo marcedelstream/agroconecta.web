@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 import { backWithError, backWithOk } from '@/lib/admin-feedback'
+import { sendPushToUsers } from '@/lib/push'
 
 const PATH = '/admin/en-vivo'
 
@@ -40,12 +41,40 @@ export async function toggleLiveSession(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   const turnOn = formData.get('is_live') !== 'true'
   const now = new Date().toISOString()
-  await createSupabaseAdmin()
+  const db = createSupabaseAdmin()
+  const { data: session } = await db
     .from('live_sessions')
     .update(turnOn ? { is_live: true, started_at: now, ended_at: null } : { is_live: false, ended_at: now })
     .eq('id', id)
+    .select('title,source,source_id')
+    .maybeSingle()
   revalidatePath(PATH)
-  backWithOk(PATH, turnOn ? 'Listo: ya aparece arriba del feed de la app.' : 'Apagada: ya no aparece en la app.')
+  if (!turnOn) backWithOk(PATH, 'Apagada: ya no aparece en la app.')
+
+  const notified = session ? await notifyLiveStarted(session as LiveRow) : 0
+  backWithOk(PATH, notified > 0
+    ? `Listo: ya aparece arriba del feed, y avisamos a ${notified} teléfono(s) con recordatorio.`
+    : 'Listo: ya aparece arriba del feed de la app.')
+}
+
+interface LiveRow {
+  title: string
+  source: 'event' | 'post' | 'listing' | null
+  source_id: string | null
+}
+
+// "Empezó: …" para quienes activaron el recordatorio de ese evento o remate.
+async function notifyLiveStarted(live: LiveRow): Promise<number> {
+  if (!live.source || !live.source_id) return 0
+  const { data } = await createSupabaseAdmin()
+    .from('reminders')
+    .select('user_id')
+    .eq('enabled', true)
+    .eq('source', live.source)
+    .eq('source_id', live.source_id)
+  const userIds = ((data ?? []) as { user_id: string }[]).map((r) => r.user_id)
+  const target: Record<string, string> = live.source === 'event' ? { eventSlug: live.source_id } : { videoId: live.source_id }
+  return sendPushToUsers(userIds, { title: `Empezó: ${live.title}`, body: 'Está en vivo ahora. Tocá para verlo.', data: target })
 }
 
 // El dato en vivo del aviso ("Lote 12/40 · 1.284 conectados") se actualiza a mano durante la transmisión.

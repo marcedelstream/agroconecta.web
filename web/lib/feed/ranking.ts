@@ -185,5 +185,24 @@ export function deprioritizeSeen<T extends { key: string }>(ranked: T[], seenKey
   return [...ranked.filter((c) => !seenKeys.has(c.key)), ...ranked.filter((c) => seenKeys.has(c.key))]
 }
 
+const DATED_TYPES: FeedContentType[] = ['evento', 'remate']
+const isDated = (c: FeedCandidate) => DATED_TYPES.includes(c.contentType) && !!c.startsAt
+
+/** Eventos y remates con fecha, del más próximo al más lejano (sin fecha van al final). */
+export function sortByStart<T extends FeedCandidate>(items: T[]): T[] {
+  const time = (c: T) => (c.startsAt ? new Date(c.startsAt).getTime() : Number.POSITIVE_INFINITY)
+  return [...items].sort((a, b) => time(a) - time(b) || a.key.localeCompare(b.key))
+}
+
+/**
+ * Los eventos y remates conservan los lugares que les dio el ranking, pero los ocupan en orden
+ * cronológico: nunca aparece un evento de diciembre antes que uno de esta semana.
+ */
+export function chronologicalEvents<T extends FeedCandidate>(ranked: T[]): T[] {
+  const dated = sortByStart(ranked.filter(isDated))
+  let next = 0
+  return ranked.map((c) => (isDated(c) ? dated[next++] : c))
+}
+
 /** Posición (0-based) de la tarjeta "Tu mercado hoy" en la primera página. */
 export const MARKET_CARD_POSITION = 2

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadRankingContext, toContentItem } from './context'
-import { deprioritizeSeen, MARKET_CARD_POSITION, rankFeed } from './ranking'
+import { chronologicalEvents, deprioritizeSeen, MARKET_CARD_POSITION, rankFeed, sortByStart } from './ranking'
 import { filterCandidates, searchRefs, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
 import { interleaveEvery, interleaveInteractive, loadInteractive } from './interactive'
 import { loadSponsored, SPONSORED_EVERY, SPONSORED_FIRST_POSITION } from './sponsored'
@@ -56,7 +56,7 @@ export async function buildFeedPage(
     loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]),
   ])
   const ranked = deprioritizeSeen(
-    rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf),
+    chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)),
     sessionSeen,
   )
   const sponsored = await loadSponsored(admin, userId, ctx.state.signals, asOf).catch(() => [] as FeedSponsoredItem[])
@@ -92,7 +92,9 @@ export async function buildExplorePage(admin: SupabaseClient, userId: string, fi
   const asOf = new Date()
   const ctx = await loadRankingContext(admin, userId, asOf)
   const matches = filterCandidates(ctx.candidates, filters)
-  const ranked = rankFeed(matches, ctx.state.signals, ctx.engagement, ctx.weights, asOf)
+  // Eventos y remates se buscan por fecha: en esas categorías la lista es estrictamente cronológica.
+  const byDate = filters.type === 'evento' || filters.type === 'remate'
+  const ranked = byDate ? sortByStart(matches) : chronologicalEvents(rankFeed(matches, ctx.state.signals, ctx.engagement, ctx.weights, asOf))
   return {
     items: ranked.slice(0, EXPLORE_LIMIT).map((c) => toContentItem(c, ctx)),
     trending: trendingTags(ctx.candidates, asOf),

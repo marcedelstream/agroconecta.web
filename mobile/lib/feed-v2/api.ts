@@ -1,10 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import type { FeedPage } from './types'
 
-// Mismo dominio que el resto de las llamadas a la web (delete-account, shorts, service-lead).
-// EXPO_PUBLIC_WEB_BASE_URL permite apuntar a un deploy de preview de Vercel mientras /api/feed
-// todavía no está en producción.
-export const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://agroconecta.com.py'
+// Con www a propósito: agroconecta.com.py redirige (308) a www, y en esa redirección el celular
+// descarta el header Authorization → la API respondería 401 (delete-account lo esquiva mandando el
+// token también en el body). EXPO_PUBLIC_WEB_BASE_URL permite apuntar a otro deploy para pruebas.
+export const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://www.agroconecta.com.py'
 
 export class FeedAuthError extends Error {}
 

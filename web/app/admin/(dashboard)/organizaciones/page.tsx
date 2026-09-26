@@ -4,6 +4,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { ALLY_PLAN_LABELS, type OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
+import { PageHeader } from '@/components/admin/ui'
 
 const STATUS_ORDER: Record<string, number> = { overdue: 0, trial: 1, active: 2, paused: 3 }
 
@@ -45,11 +46,12 @@ export default async function OrganizacionesPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl">
+      <PageHeader
+        title="Organizaciones"
+        help="Medios, gremios y empresas que publican en Agroconecta, y el estado de su plan."
+      />
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-foreground">Organizaciones</h1>
-          <p className="text-muted text-sm mt-0.5">{orgs.length} cuentas</p>
-        </div>
+        <p className="text-sm text-muted">{orgs.length} cuentas</p>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/organizaciones"

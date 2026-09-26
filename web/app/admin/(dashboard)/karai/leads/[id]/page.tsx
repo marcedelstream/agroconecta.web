@@ -43,7 +43,7 @@ export default async function LeadDetailPage({ params }: Props) {
       </div>
 
       <div className="card">
-        <h1 className="font-display font-bold text-xl text-white mb-1">{profile?.name ?? 'Sin perfil'}</h1>
+        <h1 className="font-display font-bold text-xl text-foreground mb-1">{profile?.name ?? 'Sin perfil'}</h1>
         <p className="text-muted text-sm mb-4">
           {profile?.email ?? '—'} {profile?.phone ? `· ${profile.phone}` : ''}
         </p>

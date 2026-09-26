@@ -186,3 +186,29 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+
+/* ── Panel admin (rediseño 2026-09): siempre claro, con la paleta y la tipografía (Figtree) de la
+   app v2. Scoped a .admin-root: redefine las variables de color y de fuente solo dentro del panel,
+   así la web pública no cambia (sigue con Lexend y su toggle claro/oscuro). */
+.admin-root {
+  --clr-bg:        244 245 240;   /* #F4F5F0 */
+  --clr-surface:   255 255 255;
+  --clr-secondary: 238 240 234;   /* #EEF0EA */
+  --clr-bdr:       227 230 221;   /* #E3E6DD */
+  --clr-fg:        11 22 32;      /* #0B1620 */
+  --clr-muted:     90 95 85;      /* #5A5F55 */
+  --clr-lime:      164 210 51;    /* #A4D233 — solo como fondo */
+  --clr-lime-dk:   139 184 43;
+  --font-dm-sans:  var(--font-figtree);
+  --font-poppins:  var(--font-figtree);
+  color: rgb(var(--clr-fg));
+  font-family: var(--font-figtree), system-ui, sans-serif;
+}
+/* El lima no se lee como texto sobre blanco: en el panel, los textos "lima" usan el verde oscuro
+   accesible (mismo #4E6B12 de la app v2); los botones siguen siendo lima con texto oscuro. */
+.admin-root .text-lime { color: #4E6B12; }
+.admin-root .hover\:text-lime:hover { color: #3F5A0C; }
+.admin-root .btn-primary { color: rgb(11 22 32); font-weight: 600; }
+.admin-root .input { background-color: rgb(255 255 255); }
+.admin-root .admin-table th { background-color: rgb(248 249 245); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.admin-root .card { border-radius: 16px; }

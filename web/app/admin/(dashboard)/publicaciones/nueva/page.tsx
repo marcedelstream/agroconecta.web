@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { PostForm } from '../PostForm'
 import { createPost } from '../actions'
 import type { OrganizationRow } from '@/lib/types'
+import { PageHeader } from '@/components/admin/ui'
 
 async function loadOrgs() {
   const supabase = await createSupabaseServer()
@@ -17,10 +18,7 @@ export default async function NuevaPublicacionPage() {
 
   return (
     <div className="max-w-4xl">
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl text-foreground">Nueva publicación</h1>
-        <p className="text-muted text-sm mt-0.5">Completá los campos y guardá como borrador o publicá directamente.</p>
-      </div>
+      <PageHeader title="Nueva publicación" help="Completá los campos. Podés guardarla como borrador o publicarla directo." />
 
       <div className="card">
         <PostForm orgs={orgs} action={createPost} />

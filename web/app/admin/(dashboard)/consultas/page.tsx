@@ -3,6 +3,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { SERVICE_LABELS, PUBLISH_LEAD_TARGETS } from './service-labels'
 import { markLeadHandled, reopenLead, activateMembership } from './actions'
 import { MembershipQuickForm } from './MembershipQuickForm'
+import { PageHeader } from '@/components/admin/ui'
 
 interface ServiceLeadRow {
   id: string
@@ -62,14 +63,10 @@ export default async function ConsultasPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl text-white">Consultas de servicio</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Formularios enviados desde las páginas de servicio de la app (menú lateral → Servicios), pedidos de
-          membresía anual y pedidos de publicación (evento/empleo/clasificado/curso).
-          {pendingCount > 0 && <span className="text-warning"> {pendingCount} sin atender.</span>}
-        </p>
-      </div>
+      <PageHeader
+        title="Consultas"
+        help={`Pedidos de contacto que llegan desde la app: servicios, membresías y publicaciones. Cuando los atiendas, marcalos como atendidos.${pendingCount > 0 ? ` Hay ${pendingCount} sin atender.` : ''}`}
+      />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

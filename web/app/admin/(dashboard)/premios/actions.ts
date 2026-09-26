@@ -1,9 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { backWithError, backWithOk } from '@/lib/admin-feedback'
+
+const PATH = '/admin/premios'
 
 const KINDS = ['curso', 'evento', 'charla'] as const
 
@@ -17,7 +19,7 @@ export async function createReward(formData: FormData) {
   const kind = String(formData.get('kind') ?? '')
   const cost = Number(formData.get('cost'))
   const stockRaw = String(formData.get('stock') ?? '').trim()
-  if (!title || !(KINDS as readonly string[]).includes(kind) || !(cost > 0)) throw new Error('Título, tipo y costo (> 0) son obligatorios.')
+  if (!title || !(KINDS as readonly string[]).includes(kind) || !(cost > 0)) backWithError(PATH, 'Faltan datos: título, tipo y costo en puntos (mayor a 0).')
   const { error } = await createSupabaseAdmin().from('rewards').insert({
     title,
     kind,
@@ -27,8 +29,9 @@ export async function createReward(formData: FormData) {
     description: String(formData.get('description') ?? '').trim() || null,
     valid_until: String(formData.get('valid_until') ?? '') || null,
   })
-  if (error) throw new Error(error.message)
-  revalidatePath('/admin/premios')
+  if (error) backWithError(PATH, `No se pudo crear el premio: ${error.message}`)
+  revalidatePath(PATH)
+  backWithOk(PATH, 'Premio creado. Ya se puede canjear en la app.')
 }
 
 export async function toggleReward(formData: FormData) {
@@ -37,7 +40,8 @@ export async function toggleReward(formData: FormData) {
     .from('rewards')
     .update({ is_active: formData.get('is_active') !== 'true' })
     .eq('id', String(formData.get('id') ?? ''))
-  revalidatePath('/admin/premios')
+  revalidatePath(PATH)
+  backWithOk(PATH, formData.get('is_active') === 'true' ? 'Premio pausado.' : 'Premio activado.')
 }
 
 // El aliado u organizador valida el código AGRO-XXXX al momento de usarlo.
@@ -50,6 +54,7 @@ export async function markRedemptionUsed(formData: FormData) {
     .eq('code', code)
     .eq('status', 'emitido')
     .select('id')
-  revalidatePath('/admin/premios')
-  redirect(`/admin/premios?codigo=${encodeURIComponent(code)}&resultado=${data && data.length > 0 ? 'ok' : 'no'}`)
+  revalidatePath(PATH)
+  if (data && data.length > 0) backWithOk(PATH, `Código ${code} validado: quedó marcado como usado.`)
+  backWithError(PATH, `No hay un código ${code} pendiente de uso. No lo aceptes.`)
 }

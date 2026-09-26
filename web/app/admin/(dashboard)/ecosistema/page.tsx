@@ -5,6 +5,7 @@ import { ECOSYSTEM_KIND_LABELS, type EcosystemListingKind, type EcosystemListing
 import { deleteListing, toggleActive, createListing } from './actions'
 import { EcosystemListingForm } from './EcosystemListingForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
+import { PageHeader } from '@/components/admin/ui'
 
 async function loadListings() {
   const supabase = createSupabaseAdmin()
@@ -34,13 +35,7 @@ export default async function EcosistemaPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl">
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl text-white">Ecosistema</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Empleos, clasificados y cursos que se ven en la app (tab Ecosistema). &quot;Galería de videos&quot; no
-          está acá — usa las publicaciones de tipo Video/Remate en <Link href="/admin/publicaciones" className="text-lime">Publicaciones</Link>.
-        </p>
-      </div>
+      <PageHeader title="Ecosistema" help="Empleos, clasificados y cursos que aparecen en la app. Los videos y remates se cargan en Publicaciones." />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

@@ -4,6 +4,7 @@ import { LIBRARY_CATEGORY_LABELS, type LibraryItemRow } from '@/lib/types'
 import { deleteLibraryItem, togglePublished } from './actions'
 import { LibraryForm } from './LibraryForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
+import { PageHeader } from '@/components/admin/ui'
 
 async function loadItems() {
   const supabase = createSupabaseAdmin()
@@ -22,12 +23,7 @@ export default async function BibliotecaPage() {
 
   return (
     <div className="max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-white">Biblioteca</h1>
-          <p className="text-muted text-sm mt-0.5">{items.length} títulos</p>
-        </div>
-      </div>
+      <PageHeader title="Biblioteca" help="Libros y guías en PDF que la gente lee desde la app." />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

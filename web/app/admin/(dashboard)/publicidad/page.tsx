@@ -1,4 +1,5 @@
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { PageHeader, SectionTabs } from '@/components/admin/ui'
 
 interface ReportRow {
   campaign_id: string
@@ -39,8 +40,8 @@ export default async function PublicidadPage() {
 
   return (
     <div className="max-w-6xl">
-      <h1 className="font-display font-bold text-2xl text-white">Reporte de publicidad</h1>
-      <p className="text-muted text-sm mt-0.5 mb-6">Resultados de las campañas en la app v2 (feed y dentro de la noticia).</p>
+      <PageHeader title="Publicidad" help="Cuánta gente vio y tocó cada anuncio de la app. Es lo que se le muestra al anunciante." />
+      <SectionTabs tabs={[{ href: '/admin/banners', label: 'Banners' }, { href: '/admin/publicidad', label: 'Reporte' }]} current="/admin/publicidad" />
 
       {report.error && <div className="card mb-6 border-danger/40 text-danger text-sm">No se pudo leer el reporte (¿se corrió fix-v2-live-ads.sql?): {report.error.message}</div>}
 
@@ -55,7 +56,7 @@ export default async function PublicidadPage() {
               return (
                 <tr key={r.campaign_id}>
                   <td>
-                    <p className="text-white font-medium">{r.title}</p>
+                    <p className="text-foreground font-medium">{r.title}</p>
                     {r.advertiser_name && <p className="text-xs text-muted">{r.advertiser_name}</p>}
                   </td>
                   <td>{fmt(r.impressions)}</td>

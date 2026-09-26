@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { startOfTodayAsuncionUtc } from '@/lib/karai/quota'
+import { PageHeader, SectionTabs } from '@/components/admin/ui'
 
 // Importante: esta pantalla NO expone conversaciones privadas de los usuarios (decisión de
 // producto, 2026-09-01) — solo agregados de uso y "leads" (el mensaje puntual que el clasificador
@@ -80,13 +81,8 @@ export default async function KaraiAdminPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-2xl text-white">Karai</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Uso agregado y oportunidades comerciales detectadas. Las conversaciones de los usuarios son privadas —
-          este panel no las expone, solo el mensaje puntual de cada lead.
-        </p>
-      </div>
+      <PageHeader title="Karai" help="Cuánto se usa el asistente y quién mostró interés comercial. Las conversaciones son privadas: acá solo ves el mensaje de cada lead." />
+      <SectionTabs tabs={[{ href: '/admin/karai', label: 'Uso y leads' }, { href: '/admin/karai/fuentes', label: 'Base de conocimiento' }]} current="/admin/karai" />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {stats.map(({ label, value, color }) => (
@@ -99,7 +95,7 @@ export default async function KaraiAdminPage() {
 
       <div className="card p-0 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-bdr">
-          <h2 className="font-display font-semibold text-white">Oportunidades comerciales detectadas</h2>
+          <h2 className="font-display font-semibold text-foreground">Oportunidades comerciales detectadas</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="admin-table">

@@ -3,6 +3,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { KnowledgeSourceForm } from './KnowledgeSourceForm'
 import { SourceRowActions } from './SourceRowActions'
 import { SOURCE_LEVEL_LABELS, SOURCE_STATUS_LABELS, type KaraiSourceLevel, type KaraiSourceStatus } from '@/lib/karai/knowledge-types'
+import { PageHeader, SectionTabs } from '@/components/admin/ui'
 
 interface SourceRow {
   id: string
@@ -52,17 +53,12 @@ export default async function KnowledgeSourcesPage() {
         </Link>
       </div>
 
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-2xl text-white">Base de conocimiento</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Links y documentos de confianza que Karai usa cuando Agroconecta no tiene el dato en noticias o precios.
-          Solo las fuentes <strong>aprobadas y vigentes</strong> se usan en el chat.
-        </p>
-      </div>
+      <PageHeader title="Karai" help="Fuentes confiables (links y documentos) que Karai usa para responder. Solo se usan las aprobadas y vigentes." />
+      <SectionTabs tabs={[{ href: '/admin/karai', label: 'Uso y leads' }, { href: '/admin/karai/fuentes', label: 'Base de conocimiento' }]} current="/admin/karai/fuentes" />
 
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
         <div>
-          <h2 className="font-display font-semibold text-base text-white mb-3">Nueva fuente</h2>
+          <h2 className="font-display font-semibold text-base text-foreground mb-3">Nueva fuente</h2>
           <KnowledgeSourceForm />
         </div>
 

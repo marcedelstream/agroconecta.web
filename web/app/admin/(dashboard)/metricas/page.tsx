@@ -1,4 +1,5 @@
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { PageHeader } from '@/components/admin/ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="card">
       <p className="text-xs text-muted">{label}</p>
-      <p className="font-display font-bold text-2xl text-white mt-1">{value}</p>
+      <p className="font-display font-bold text-2xl text-foreground mt-1">{value}</p>
     </div>
   )
 }
@@ -43,10 +44,8 @@ export default async function MetricasPage() {
 
   return (
     <div className="max-w-6xl space-y-6">
-      <div>
-        <h1 className="font-display font-bold text-2xl text-white">Métricas de la app v2</h1>
-        <p className="text-muted text-sm mt-0.5">Últimos 30 días.</p>
-      </div>
+      <PageHeader title="Métricas" help="Cómo viene la app en los últimos 30 días: cuánta gente la usa y cuánto participa." />
+
       {error && <div className="card border-danger/40 text-danger text-sm">No se pudo leer (¿se corrió fix-v2-metrics.sql?): {error.message}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

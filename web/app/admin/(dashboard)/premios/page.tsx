@@ -1,5 +1,7 @@
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { createReward, markRedemptionUsed, toggleReward } from './actions'
+import { FieldLabel, Help, Notice, PageHeader } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,13 +24,13 @@ interface RedemptionRow {
 }
 
 interface Props {
-  searchParams: Promise<{ codigo?: string; resultado?: string }>
+  searchParams: Promise<FeedbackParams>
 }
 
 // Catálogo de canjes de la app v2 y validación de códigos. No lanzar premios sin confirmación real
 // del aliado (decisión D4 del rediseño).
 export default async function PremiosPage({ searchParams }: Props) {
-  const { codigo, resultado } = await searchParams
+  const feedback = await searchParams
   const db = createSupabaseAdmin()
   const [rewards, redemptions] = await Promise.all([
     db.from('rewards').select('id,kind,title,partner_name,cost,stock,is_active').order('created_at', { ascending: false }),
@@ -38,23 +40,21 @@ export default async function PremiosPage({ searchParams }: Props) {
 
   return (
     <div className="max-w-6xl space-y-8">
-      <div>
-        <h1 className="font-display font-bold text-2xl text-white">Premios y canjes</h1>
-        <p className="text-muted text-sm mt-0.5">Lo que los usuarios de la app pueden canjear con sus puntos.</p>
-      </div>
+      <PageHeader title="Premios y canjes" help="Lo que los usuarios canjean con sus puntos. Acá cargás premios y validás los códigos que te pasa el aliado." />
+      <Notice {...feedback} />
+
       {error && <div className="card border-danger/40 text-danger text-sm">No se pudo leer (¿se corrió fix-v2-rewards.sql?): {error.message}</div>}
 
       <form action={markRedemptionUsed} className="card flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-foreground">Validar código</span>
-        <input name="code" required className="input max-w-[200px] uppercase" placeholder="AGRO-XXXX" defaultValue={codigo ?? ''} />
+        <span className="text-sm font-semibold text-foreground">Validar código<Help text="Cuando el aliado te pase un código AGRO-XXXX, escribilo acá. Una vez marcado como usado no se puede volver atrás." /></span>
+        <input name="code" required className="input max-w-[200px] uppercase" placeholder="AGRO-XXXX" />
         <button type="submit" className="btn-primary text-sm">Marcar como usado</button>
-        {resultado === 'ok' && <span className="text-sm text-lime">Código {codigo} marcado como usado.</span>}
-        {resultado === 'no' && <span className="text-sm text-danger">No hay un código {codigo} pendiente de uso.</span>}
       </form>
 
       <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
         <form action={createReward} className="card space-y-3 h-fit">
-          <h2 className="font-display font-semibold text-base text-foreground">Nuevo premio</h2>
+          <h2 className="font-display font-semibold text-lg text-foreground">Nuevo premio</h2>
+          <p className="text-xs text-muted">Cargá solo premios confirmados por el aliado.</p>
           <input name="title" required className="input" placeholder="Curso de manejo de pasturas" />
           <select name="kind" className="input" defaultValue="curso">
             <option value="curso">Curso</option>
@@ -64,10 +64,19 @@ export default async function PremiosPage({ searchParams }: Props) {
           <input name="partner_name" className="input" placeholder="Aliado que lo ofrece" />
           <textarea name="description" className="input min-h-[70px]" placeholder="Descripción (opcional)" />
           <div className="grid grid-cols-2 gap-2">
-            <input name="cost" required type="number" min={1} className="input" placeholder="Costo en pts" />
-            <input name="stock" type="number" min={0} className="input" placeholder="Cupos (vacío = sin límite)" />
+            <div>
+              <FieldLabel help="Cuántos puntos cuesta. Como referencia: una encuesta da 10.">Costo</FieldLabel>
+              <input name="cost" required type="number" min={1} className="input" placeholder="200" />
+            </div>
+            <div>
+              <FieldLabel help="Cuántas personas lo pueden canjear. Vacío = sin límite.">Cupos</FieldLabel>
+              <input name="stock" type="number" min={0} className="input" placeholder="20" />
+            </div>
           </div>
-          <input name="valid_until" type="date" className="input" />
+          <div>
+            <FieldLabel help="Opcional. Después de esta fecha deja de aparecer en la app.">Válido hasta</FieldLabel>
+            <input name="valid_until" type="date" className="input" />
+          </div>
           <button type="submit" className="btn-primary text-sm w-full">Crear premio</button>
         </form>
 
@@ -78,7 +87,7 @@ export default async function PremiosPage({ searchParams }: Props) {
               <tbody>
                 {((rewards.data ?? []) as RewardRow[]).map((r) => (
                   <tr key={r.id}>
-                    <td><p className="text-white font-medium">{r.title}</p><p className="text-xs text-muted">{r.kind}{r.partner_name ? ` · ${r.partner_name}` : ''}</p></td>
+                    <td><p className="text-foreground font-medium">{r.title}</p><p className="text-xs text-muted">{r.kind}{r.partner_name ? ` · ${r.partner_name}` : ''}</p></td>
                     <td>{r.cost} pts</td>
                     <td>{r.stock ?? '∞'}</td>
                     <td>
@@ -100,7 +109,7 @@ export default async function PremiosPage({ searchParams }: Props) {
               <tbody>
                 {((redemptions.data ?? []) as unknown as RedemptionRow[]).map((r) => (
                   <tr key={r.id}>
-                    <td className="font-mono text-white">{r.code}</td>
+                    <td className="font-mono text-foreground">{r.code}</td>
                     <td>{r.rewards?.title ?? '—'}</td>
                     <td>{r.status}</td>
                     <td className="text-xs text-muted">{new Date(r.created_at).toLocaleDateString('es-PY')}</td>

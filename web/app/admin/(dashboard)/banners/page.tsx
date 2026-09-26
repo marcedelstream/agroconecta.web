@@ -4,6 +4,7 @@ import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS,
 import { deleteBanner, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
+import { PageHeader, SectionTabs } from '@/components/admin/ui'
 
 async function loadBanners() {
   // Cliente admin: "public can read active ads" en RLS esconde los pausados del anon key,
@@ -36,12 +37,8 @@ export default async function BannersPage() {
 
   return (
     <div className="max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-white">Banners</h1>
-          <p className="text-muted text-sm mt-0.5">Campañas segmentadas por perfil, categoría y departamento.</p>
-        </div>
-      </div>
+      <PageHeader title="Publicidad" help="Los anuncios de la app y la web. Elegís dónde aparecen y a quién se muestran; en Reporte ves cómo les va." />
+      <SectionTabs tabs={[{ href: '/admin/banners', label: 'Banners' }, { href: '/admin/publicidad', label: 'Reporte' }]} current="/admin/banners" />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

@@ -15,6 +15,14 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-09-26: rediseño del panel `/admin`** (pensado para el pasante): siempre en tema claro con la
+> paleta de la app v2 y **Figtree solo en el panel** (`web/app/admin/layout.tsx` + `.admin-root` en
+> `globals.css`; la web pública sigue en Lexend). Menú por tareas con íconos lucide
+> (`web/components/admin/nav-config.ts`), inicio "Hoy" con tareas pendientes, `/admin/guia` con recetas paso
+> a paso, y piezas compartidas en `web/components/admin/ui.tsx` (PageHeader con "¿Para qué sirve?", Help "?",
+> EmptyState, Notice, SectionTabs). Acciones nuevas devuelven `?ok=`/`?error=` (`lib/admin-feedback.ts`) en vez de
+> tirar error. **Pendiente acordado:** rol "Editor" limitado para el pasante, después de probar el rediseño.
+>
 > **2026-09-25: arranca el rediseño v2 (feed vertical)** en la rama `feature/v2-feed-redesign` (tag
 > `v1-diseno-final` congela la v1 en `main`). Handoff y plan en `docs/design_handoff_v2_feed/`
 > (`PLAN-IMPLEMENTACION.md` = estado vivo). Todo detrás de `EXPO_PUBLIC_FEED_V2=true` (`mobile/lib/feature-flags.ts`):

@@ -23,6 +23,21 @@ export interface ProfileCV {
   experience: ExperienceEntry[]
   specialties: string[]
   socials: Socials
+  /** Perfil público web (/u/<slug>): apagado por defecto, lo activa el usuario. */
+  slug: string
+  profilePublic: boolean
+}
+
+export const PUBLIC_PROFILE_BASE = 'https://www.agroconecta.com.py/u/'
+// Mismo formato que el check de la base (supabase/fix-v2-profile.sql).
+const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?$/
+
+export function normalizeSlug(input: string): string {
+  return input.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
+}
+
+export function isValidSlug(slug: string): boolean {
+  return SLUG_PATTERN.test(slug)
 }
 
 export const EMPTY_CV: ProfileCV = {
@@ -34,6 +49,8 @@ export const EMPTY_CV: ProfileCV = {
   experience: [],
   specialties: [],
   socials: {},
+  slug: '',
+  profilePublic: false,
 }
 
 interface CvRow {
@@ -45,9 +62,11 @@ interface CvRow {
   experience: ExperienceEntry[] | null
   specialties: string[] | null
   socials: Socials | null
+  slug: string | null
+  profile_public: boolean | null
 }
 
-const COLUMNS = 'headline,current_org,education,country,bio,experience,specialties,socials'
+const COLUMNS = 'headline,current_org,education,country,bio,experience,specialties,socials,slug,profile_public'
 
 export async function fetchProfileCV(userId: string): Promise<ProfileCV> {
   const { data, error } = await supabase.from('profiles').select(COLUMNS).eq('id', userId).maybeSingle()
@@ -63,11 +82,17 @@ export async function fetchProfileCV(userId: string): Promise<ProfileCV> {
     experience: Array.isArray(r.experience) ? r.experience : [],
     specialties: r.specialties ?? [],
     socials: r.socials ?? {},
+    slug: r.slug ?? '',
+    profilePublic: r.profile_public ?? false,
   }
 }
 
-export async function saveProfileCV(userId: string, cv: ProfileCV): Promise<boolean> {
+export type SaveCvResult = 'ok' | 'slug_taken' | 'slug_invalid' | 'error'
+
+export async function saveProfileCV(userId: string, cv: ProfileCV): Promise<SaveCvResult> {
   const clean = (s: string) => s.trim() || null
+  const slug = normalizeSlug(cv.slug)
+  if (cv.profilePublic && !isValidSlug(slug)) return 'slug_invalid'
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -79,10 +104,14 @@ export async function saveProfileCV(userId: string, cv: ProfileCV): Promise<bool
       experience: cv.experience.filter((e) => e.role.trim() || e.org.trim()),
       specialties: cv.specialties.map((s) => s.trim()).filter(Boolean),
       socials: Object.fromEntries(Object.entries(cv.socials).filter(([, v]) => v && v.trim())),
+      slug: isValidSlug(slug) ? slug : null,
+      profile_public: cv.profilePublic && isValidSlug(slug),
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId)
-  return !error
+  // 23505 = el índice único de slug: esa dirección ya la usa otra persona.
+  if (error?.code === '23505') return 'slug_taken'
+  return error ? 'error' : 'ok'
 }
 
 /** "@usuario" o "usuario" → URL completa de la red. Lo que ya es URL queda igual. */

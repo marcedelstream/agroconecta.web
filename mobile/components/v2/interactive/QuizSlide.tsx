@@ -55,7 +55,7 @@ function QuizSlideBase({ item, height }: { item: FeedQuizItem; height: number })
               {correctCount > 0 ? QUIZ_TEXT.earned(correctCount * item.pointsPerCorrect) : QUIZ_TEXT.none}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.navigate('/(main)/(tabs)/profile' as never)} style={[styles.btn, styles.btnLime]} accessibilityRole="button">
+          <TouchableOpacity onPress={() => router.push('/(main)/canjes' as never)} style={[styles.btn, styles.btnLime]} accessibilityRole="button">
             <Text family="noto-sans" weight="bold" size={16} color={Colors.v2.navy}>{QUIZ_TEXT.redeem}</Text>
           </TouchableOpacity>
         </>

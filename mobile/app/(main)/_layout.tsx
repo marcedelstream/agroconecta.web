@@ -24,6 +24,7 @@ export default function MainLayout() {
       <Stack.Screen name="webview" />
       <Stack.Screen name="perfil-editar" />
       <Stack.Screen name="pautar" />
+      <Stack.Screen name="canjes" />
     </Stack>
   )
 }

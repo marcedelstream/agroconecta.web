@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -17,7 +18,7 @@ import { V2Layout } from '@/constants/spacing'
 import { useApp } from '@/lib/app-context'
 import { MORE_TEXT, PROFILE_TEXT } from '@/lib/feed-v2/labels'
 import { getCategoryLabel, getDepartmentLabel, getProfessionLabel } from '@/lib/mock-data'
-import { EMPTY_CV, fetchProfileCV, type ProfileCV } from '@/lib/profile-cv'
+import { EMPTY_CV, fetchProfileCV, PUBLIC_PROFILE_BASE, type ProfileCV } from '@/lib/profile-cv'
 import { useAccountActions } from '@/lib/use-account-actions'
 
 function Guest() {
@@ -32,8 +33,8 @@ function Guest() {
   )
 }
 
-// Perfil v2 tipo CV profesional (README §3.6). "Compartir perfil" y "Canjear" llegan en la Fase 5
-// (perfil público web y catálogo de premios).
+// Perfil v2 tipo CV profesional (README §3.6). "Compartir perfil" aparece cuando el usuario activa su
+// perfil público (Editar perfil → Perfil público).
 export function ProfileV2Screen() {
   const insets = useSafeAreaInsets()
   const bottomSpace = useFloatingTabBarSpace()
@@ -71,6 +72,16 @@ export function ProfileV2Screen() {
           onMore={() => setMoreOpen(true)}
         />
         <View style={styles.content}>
+          {cv.profilePublic && cv.slug ? (
+            <TouchableOpacity
+              onPress={() => void Share.share({ message: PROFILE_TEXT.shareMessage(user.name, PUBLIC_PROFILE_BASE + cv.slug) })}
+              accessibilityRole="button"
+              style={styles.share}
+            >
+              <Ionicons name="paper-plane-outline" size={18} color={Colors.v2.white} />
+              <Text family="noto-sans" weight="bold" size={16} color={Colors.v2.white}>{PROFILE_TEXT.share}</Text>
+            </TouchableOpacity>
+          ) : null}
           <PointsCard />
           {cvEmpty && (
             <View style={styles.complete}>
@@ -122,6 +133,7 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   primary: { height: 50, paddingHorizontal: 28, borderRadius: 25, backgroundColor: Colors.v2.navy, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   content: { paddingHorizontal: 18, paddingTop: 18, gap: 12 },
+  share: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50, borderRadius: 25, backgroundColor: Colors.v2.navy },
   complete: { backgroundColor: Colors.v2.navy, borderRadius: 20, padding: 18, gap: 8 },
   completeBtn: {
     alignSelf: 'flex-start',

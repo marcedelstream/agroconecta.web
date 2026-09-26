@@ -51,6 +51,7 @@ const ADMIN_NAV_GROUPS = [
       { href: '/admin/en-vivo', label: 'En vivo', icon: '●' },
       { href: '/admin/encuestas', label: 'Encuestas y quiz', icon: '?' },
       { href: '/admin/publicidad', label: 'Reporte de publicidad', icon: '◔' },
+      { href: '/admin/premios', label: 'Premios y canjes', icon: '★' },
     ],
   },
   {

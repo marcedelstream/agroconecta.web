@@ -162,6 +162,8 @@ export const PROFILE_TEXT = {
   socials: 'Redes sociales',
   manageOrgs: 'Gestionar',
   noOrgs: 'Todavía no seguís a ninguna organización.',
+  share: 'Compartir perfil',
+  shareMessage: (name: string, url: string) => `Mirá el perfil de ${name} en Agroconecta: ${url}`,
   followingCount: (n: number) => (n === 1 ? 'Seguís 1 organización.' : `Seguís ${n} organizaciones.`),
   socialLabel: { linkedin: 'LinkedIn', instagram: 'Instagram', facebook: 'Facebook', x: 'X', youtube: 'YouTube', website: 'Sitio web' },
   avatarTitle: 'Foto de perfil',
@@ -225,6 +227,12 @@ export const EDIT_CV_TEXT = {
   expAdd: 'Agregar experiencia',
   expRemove: 'Quitar',
   socialHint: 'Usuario o enlace',
+  sectionPublic: 'PERFIL PÚBLICO',
+  publicToggle: 'Cualquiera con el enlace puede ver mi perfil',
+  slug: 'Tu dirección',
+  slugHint: 'ej.: juan-perez',
+  slugTaken: 'Esa dirección ya está en uso. Probá con otra.',
+  slugInvalid: 'La dirección tiene que tener entre 3 y 40 letras, números o guiones.',
   back: 'Volver',
 } as const
 
@@ -352,6 +360,40 @@ export const LIVE_TEXT = {
   collapse: 'Plegar aviso',
   see: 'Ver',
   showHome: 'Mostrar en Inicio',
+} as const
+
+export const REWARDS_TEXT = {
+  title: 'Canjear puntos',
+  back: 'Volver',
+  balance: 'Tu saldo',
+  nextGoal: (missing: number, title: string) => `Te faltan ${missing.toLocaleString('es-PY')} pts para: ${title}`,
+  allUnlocked: 'Podés canjear todo el catálogo',
+  catalog: 'CURSOS Y EVENTOS',
+  mine: 'MIS CANJES',
+  howTo: 'CÓMO SUMAR PUNTOS',
+  history: 'HISTORIAL',
+  redeem: 'Canjear',
+  missing: (n: number) => `Faltan ${n.toLocaleString('es-PY')}`,
+  outOfStock: 'Sin cupos',
+  confirmTitle: 'Confirmar canje',
+  confirmBody: (title: string, cost: number) => `Vas a usar ${cost.toLocaleString('es-PY')} pts en "${title}".`,
+  confirm: 'Canjear',
+  cancel: 'Cancelar',
+  done: (code: string) => `¡Listo! Tu código es ${code}`,
+  copied: 'Código copiado',
+  copy: 'Copiar código',
+  errors: {
+    unavailable: 'Este premio ya no está disponible.',
+    out_of_stock: 'Se agotaron los cupos de este premio.',
+    insufficient: 'Todavía no te alcanzan los puntos.',
+    network: 'No pudimos hacer el canje. Probá de nuevo.',
+  },
+  status: { emitido: 'Para usar', usado: 'Usado', vencido: 'Vencido', anulado: 'Anulado' },
+  kind: { curso: 'CURSO', evento: 'EVENTO', charla: 'CHARLA' },
+  emptyCatalog: 'Pronto vas a poder canjear tus puntos por cursos y entradas a eventos de nuestros aliados.',
+  emptyMine: 'Todavía no canjeaste nada.',
+  emptyHistory: 'Todavía no tenés movimientos.',
+  ways: ['Respondé la encuesta del día: +10 pts', 'Acertá en los quizzes: +10 pts por respuesta', 'Completá tu perfil profesional'],
 } as const
 
 /** 1284 → "1.284"; 12400 → "12,4 mil" (mismo formato que el prototipo). */

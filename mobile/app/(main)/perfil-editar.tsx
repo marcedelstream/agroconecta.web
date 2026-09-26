@@ -14,7 +14,8 @@ import { useApp } from '@/lib/app-context'
 import { EDIT_CV_TEXT, PROFILE_TEXT } from '@/lib/feed-v2/labels'
 import { showToast } from '@/lib/feed-v2/toast'
 import { goBack } from '@/lib/navigation'
-import { EMPTY_CV, fetchProfileCV, saveProfileCV, SOCIAL_KEYS, type ProfileCV } from '@/lib/profile-cv'
+import { EMPTY_CV, fetchProfileCV, normalizeSlug, PUBLIC_PROFILE_BASE, saveProfileCV, SOCIAL_KEYS, type ProfileCV } from '@/lib/profile-cv'
+import { ReminderSwitch } from '@/components/v2/ReminderSwitch'
 
 const Section = ({ title }: { title: string }) => (
   <Text family="noto-sans" weight="bold" size={12} color={Colors.v2.muted} style={styles.section}>{title}</Text>
@@ -45,10 +46,11 @@ export default function EditCvScreen() {
   async function save() {
     if (!user?.id || !cv || saving) return
     setSaving(true)
-    const ok = await saveProfileCV(user.id, { ...cv, specialties: specialties.split(',') })
+    const result = await saveProfileCV(user.id, { ...cv, specialties: specialties.split(',') })
     setSaving(false)
-    showToast(ok ? EDIT_CV_TEXT.saved : EDIT_CV_TEXT.error)
-    if (ok) goBack()
+    const messages = { ok: EDIT_CV_TEXT.saved, slug_taken: EDIT_CV_TEXT.slugTaken, slug_invalid: EDIT_CV_TEXT.slugInvalid, error: EDIT_CV_TEXT.error }
+    showToast(messages[result])
+    if (result === 'ok') goBack()
   }
 
   return (
@@ -83,6 +85,22 @@ export default function EditCvScreen() {
 
           <Section title={EDIT_CV_TEXT.sectionExp} />
           <ExperienceEditor value={cv.experience} onChange={(experience) => set({ experience })} />
+
+          <Section title={EDIT_CV_TEXT.sectionPublic} />
+          <View style={styles.basics}>
+            <Text family="noto-sans" weight="semibold" size={15} color={Colors.v2.navy} style={styles.flex}>{EDIT_CV_TEXT.publicToggle}</Text>
+            <ReminderSwitch value={cv.profilePublic} onChange={(profilePublic) => set({ profilePublic, slug: cv.slug || normalizeSlug(user.name) })} accessibilityLabel={EDIT_CV_TEXT.publicToggle} />
+          </View>
+          {cv.profilePublic && (
+            <FormField
+              label={`${EDIT_CV_TEXT.slug}: ${PUBLIC_PROFILE_BASE}${normalizeSlug(cv.slug)}`}
+              placeholder={EDIT_CV_TEXT.slugHint}
+              value={cv.slug}
+              onChangeText={(slug) => set({ slug })}
+              autoCapitalize="none"
+              maxLength={40}
+            />
+          )}
 
           <Section title={EDIT_CV_TEXT.sectionSocial} />
           {SOCIAL_KEYS.map((k) => (

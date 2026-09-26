@@ -7,13 +7,12 @@ import { V2Layout } from '@/constants/spacing'
 import { POINTS_TEXT } from '@/lib/feed-v2/labels'
 import { usePoints } from '@/lib/feed-v2/points'
 
-// Píldora de puntos de la cabecera del feed: solo el número ("120 pts"). Lleva al Perfil, donde está
-// la tarjeta de puntos (y más adelante Canjear).
+// Píldora de puntos de la cabecera del feed: solo el número ("120 pts"). Lleva a Canjear.
 export function PointsPill() {
   const { balance } = usePoints()
   return (
     <TouchableOpacity
-      onPress={() => router.navigate('/(main)/(tabs)/profile' as never)}
+      onPress={() => router.push('/(main)/canjes' as never)}
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={POINTS_TEXT.pillA11y(balance)}

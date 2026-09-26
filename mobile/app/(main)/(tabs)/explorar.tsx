@@ -8,6 +8,8 @@ import { ExploreResults } from '@/components/v2/explore/ExploreResults'
 import { PricesShortcut } from '@/components/v2/explore/PricesShortcut'
 import { RubroChips } from '@/components/v2/explore/RubroChips'
 import { TrendingList } from '@/components/v2/explore/TrendingList'
+import { LiveRow } from '@/components/v2/live/LiveRow'
+import { openLive, useLive } from '@/lib/feed-v2/live'
 import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { SearchField } from '@/components/v2/SearchField'
 import { ToastHost } from '@/components/v2/ToastHost'
@@ -30,6 +32,7 @@ export default function ExplorarScreen() {
   const insets = useSafeAreaInsets()
   const bottomSpace = useFloatingTabBarSpace()
   const ex = useExplore()
+  const { live, setDismissed } = useLive()
 
   return (
     <View style={styles.root}>
@@ -57,6 +60,9 @@ export default function ExplorarScreen() {
           />
         ) : (
           <>
+            {live.map((l) => (
+              <LiveRow key={l.key} item={l} onWatch={() => openLive(l)} onShowHome={() => void setDismissed(l, false)} />
+            ))}
             <PricesShortcut />
             <Text family="noto-sans" weight="bold" size={13} color={Colors.v2.muted} style={styles.section}>
               {EXPLORE_TEXT.categories}

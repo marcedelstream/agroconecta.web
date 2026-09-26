@@ -119,6 +119,9 @@ interface AdCampaignRow {
   is_active: boolean
   link_type?: AdCampaign['linkType'] | null
   link_target?: string | null
+  advertiser_name?: string | null
+  body?: string | null
+  cta_label?: string | null
 }
 
 interface LibraryItemRow {
@@ -466,6 +469,9 @@ export async function fetchActiveBanners(placement: AdPlacement = 'home'): Promi
       isActive: typed.is_active,
       linkType: typed.link_type ?? undefined,
       linkTarget: typed.link_target ?? undefined,
+      advertiserName: typed.advertiser_name ?? undefined,
+      body: typed.body ?? undefined,
+      ctaLabel: typed.cta_label ?? undefined,
     }
   })
 }

@@ -316,7 +316,8 @@ export interface MockAd {
 
 export type AdLinkType = 'event' | 'post' | 'url' | 'course';
 
-export type AdPlacement = 'home' | 'article' | 'precios' | 'videos';
+// 'feed' y 'article_inline' son de la v2 (item a pantalla completa y bloque dentro de la noticia).
+export type AdPlacement = 'home' | 'article' | 'precios' | 'videos' | 'feed' | 'article_inline';
 
 export interface AdCampaign {
   id: string;
@@ -331,6 +332,10 @@ export interface AdCampaign {
   isActive: boolean;
   linkType?: AdLinkType;
   linkTarget?: string;
+  /** v2 (supabase/fix-v2-live-ads.sql): anunciante, bajada y texto del botón (máx. 18). */
+  advertiserName?: string;
+  body?: string;
+  ctaLabel?: string;
 }
 
 // Notification preferences

@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadRankingContext, toContentItem } from './context'
 import { deprioritizeSeen, MARKET_CARD_POSITION, rankFeed } from './ranking'
-import { filterCandidates, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
-import { interleaveInteractive, loadInteractive } from './interactive'
-import type { FeedCandidate, FeedContentItem, FeedInteractiveItem, FeedItem, FeedPage } from './types'
+import { filterCandidates, searchRefs, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
+import { interleaveEvery, interleaveInteractive, loadInteractive } from './interactive'
+import { loadSponsored, SPONSORED_EVERY, SPONSORED_FIRST_POSITION } from './sponsored'
+import type { FeedCandidate, FeedContentItem, FeedInteractiveItem, FeedItem, FeedPage, FeedSponsoredItem } from './types'
 
 export const DEFAULT_PAGE_SIZE = 10
 export const MAX_PAGE_SIZE = 20
@@ -58,7 +59,13 @@ export async function buildFeedPage(
     rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf),
     sessionSeen,
   )
-  const merged = interleaveInteractive<FeedCandidate, FeedInteractiveItem>(ranked, interactive)
+  const sponsored = await loadSponsored(admin, userId, ctx.state.signals, asOf).catch(() => [] as FeedSponsoredItem[])
+  const merged = interleaveEvery<FeedCandidate | FeedInteractiveItem, FeedSponsoredItem>(
+    interleaveInteractive<FeedCandidate, FeedInteractiveItem>(ranked, interactive),
+    sponsored,
+    SPONSORED_FIRST_POSITION,
+    SPONSORED_EVERY,
+  )
   const slice = merged.slice(offset, offset + pageSize)
   const items: FeedItem[] = slice.map((e) => ('kind' in e ? e : toContentItem(e, ctx)))
 
@@ -90,4 +97,10 @@ export async function buildExplorePage(admin: SupabaseClient, userId: string, fi
     items: ranked.slice(0, EXPLORE_LIMIT).map((c) => toContentItem(c, ctx)),
     trending: trendingTags(ctx.candidates, asOf),
   }
+}
+
+/** Contenido relacionado a un mensaje de Karai, listo para abrir en la ficha de la app. */
+export async function buildKaraiRefs(admin: SupabaseClient, userId: string, message: string): Promise<FeedContentItem[]> {
+  const ctx = await loadRankingContext(admin, userId, new Date())
+  return searchRefs(ctx.candidates, message).map((c) => toContentItem(c, ctx))
 }

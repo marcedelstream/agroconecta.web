@@ -53,6 +53,14 @@ export function BannerForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Textos para la app v2 (Feed y Dentro de la noticia)</p>
+        <input name="advertiser_name" className="input" placeholder="Anunciante (ej: Semillería El Surco)" />
+        <textarea name="body" className="input min-h-[70px]" placeholder="Bajada corta" maxLength={180} />
+        <input name="cta_label" className="input" placeholder="Texto del botón (máx. 18, ej: Pedí tu cotización)" maxLength={18} />
+        <p className="text-xs text-muted">Siempre se muestra con la etiqueta "Patrocinado". Vacío = "Ver promoción".</p>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Destino del banner (opcional)</label>
         <select name="link_type" className="input" defaultValue="">

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { ExploreFilters, ExplorePage, FeedPage, GuardadosPage } from './types'
+import type { ExploreFilters, ExplorePage, FeedPage, GuardadosPage, LiveItem } from './types'
 
 // Con www a propósito: agroconecta.com.py redirige (308) a www, y en esa redirección el celular
 // descarta el header Authorization → la API respondería 401 (delete-account lo esquiva mandando el
@@ -38,6 +38,11 @@ export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage
 
 export async function fetchGuardados(): Promise<GuardadosPage> {
   return authorizedGet<GuardadosPage>('/api/guardados', new URLSearchParams())
+}
+
+export async function fetchLive(): Promise<LiveItem[]> {
+  const body = await authorizedGet<{ live: LiveItem[] }>('/api/live', new URLSearchParams())
+  return body.live
 }
 
 export async function currentUserId(): Promise<string | null> {

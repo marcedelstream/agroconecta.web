@@ -46,6 +46,14 @@ const ADMIN_NAV_GROUPS = [
     ],
   },
   {
+    label: 'App v2',
+    items: [
+      { href: '/admin/en-vivo', label: 'En vivo', icon: '●' },
+      { href: '/admin/encuestas', label: 'Encuestas y quiz', icon: '?' },
+      { href: '/admin/publicidad', label: 'Reporte de publicidad', icon: '◔' },
+    ],
+  },
+  {
     label: 'Karai',
     items: [
       { href: '/admin/karai', label: 'Uso y leads', icon: '◐' },

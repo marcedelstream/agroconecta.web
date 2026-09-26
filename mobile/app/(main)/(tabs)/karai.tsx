@@ -1,5 +1,127 @@
-import { V2Placeholder } from '@/components/v2/V2Placeholder'
+import { useCallback, useRef, useState } from 'react'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
+import { Ionicons } from '@expo/vector-icons'
+import { Text } from '@/components/ui/Text'
+import { DetailSheet } from '@/components/v2/detail/DetailSheet'
+import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
+import { KaraiIntro } from '@/components/v2/karai/KaraiIntro'
+import { KaraiBubble, TypingBubble } from '@/components/v2/karai/KaraiMessages'
+import { ToastHost } from '@/components/v2/ToastHost'
+import { Colors } from '@/constants/colors'
+import { V2Layout } from '@/constants/spacing'
+import { Fonts } from '@/constants/typography'
+import { KARAI_TEXT } from '@/lib/feed-v2/labels'
+import type { FeedContentItem } from '@/lib/feed-v2/types'
+import { useItemActions, type ItemUpdater } from '@/lib/feed-v2/use-item-actions'
+import { useKarai } from '@/lib/feed-v2/use-karai'
 
+// Karai v2 (README §3.4): chat con la misma IA del web, con tarjetas de contenido de Agroconecta que
+// se abren en la misma ficha del feed.
 export default function KaraiScreen() {
-  return <V2Placeholder icon="sparkles-outline" title="Karai" description="¿Qué necesitás saber del agro?" />
+  const insets = useSafeAreaInsets()
+  const bottomSpace = useFloatingTabBarSpace()
+  const { messages, typing, quota, send, reset } = useKarai()
+  const [input, setInput] = useState('')
+  const [refItem, setRefItem] = useState<FeedContentItem | null>(null)
+  const scroll = useRef<ScrollView>(null)
+
+  const update = useCallback<ItemUpdater>((fn) => setRefItem((i) => (i ? fn(i) : i)), [])
+  const { actions } = useItemActions(update)
+  const openRef = (item: FeedContentItem) => {
+    actions.openDetail(item)
+    setRefItem(item)
+  }
+
+  function submit(text = input) {
+    if (!text.trim() || typing) return
+    setInput('')
+    void send(text)
+  }
+
+  const left = quota ? Math.max(0, quota.limit - quota.used) : null
+  const hasMessages = messages.length > 0
+
+  return (
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar style="dark" />
+      <View style={[styles.head, { paddingTop: insets.top + 16 }]}>
+        <View style={styles.headRow}>
+          <Text family="noto-sans" weight="extrabold" size={17} color={Colors.v2.navy}>{KARAI_TEXT.name}</Text>
+          {left !== null && <Text family="noto-sans" size={13} color={Colors.v2.muted} style={styles.flex}>{KARAI_TEXT.quota(left)}</Text>}
+          {hasMessages && (
+            <TouchableOpacity onPress={reset} accessibilityRole="button" style={styles.newChat}>
+              <Text family="noto-sans" weight="semibold" size={13} color={Colors.v2.navy}>{KARAI_TEXT.newChat}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {!hasMessages && (
+          <Text family="noto-sans" weight="extrabold" size={34} lineHeight={38} color={Colors.v2.navy} style={styles.h1}>{KARAI_TEXT.title}</Text>
+        )}
+      </View>
+
+      <ScrollView
+        ref={scroll}
+        style={styles.flex}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={() => hasMessages && scroll.current?.scrollToEnd({ animated: true })}
+      >
+        {hasMessages ? (
+          <>
+            {messages.map((m) => <KaraiBubble key={m.id} message={m} onOpenRef={openRef} />)}
+            {typing && <TypingBubble />}
+          </>
+        ) : (
+          <KaraiIntro onAsk={submit} />
+        )}
+      </ScrollView>
+
+      <View style={[styles.inputRow, { paddingBottom: bottomSpace + 8 }]}>
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          placeholder={KARAI_TEXT.placeholder}
+          placeholderTextColor={Colors.v2.light.placeholder}
+          style={styles.input}
+          returnKeyType="send"
+          onSubmitEditing={() => submit()}
+          editable={!typing}
+          accessibilityLabel={KARAI_TEXT.placeholder}
+        />
+        <TouchableOpacity onPress={() => submit()} disabled={!input.trim() || typing} accessibilityRole="button" accessibilityLabel={KARAI_TEXT.send} style={[styles.send, (!input.trim() || typing) && styles.sendOff]}>
+          <Ionicons name="arrow-up" size={22} color={Colors.v2.navy} />
+        </TouchableOpacity>
+      </View>
+
+      <ToastHost />
+      <DetailSheet item={refItem} actions={actions} onClose={() => setRefItem(null)} />
+    </KeyboardAvoidingView>
+  )
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.v2.ground },
+  flex: { flex: 1 },
+  head: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },
+  headRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  newChat: { marginLeft: 'auto', height: 36, paddingHorizontal: 14, borderRadius: 18, borderWidth: 1, borderColor: Colors.v2.sheet.border, backgroundColor: Colors.v2.surface, justifyContent: 'center' },
+  h1: { marginTop: 18, letterSpacing: -0.8 },
+  body: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 8 },
+  input: {
+    flex: 1,
+    height: V2Layout.ctaHeight,
+    borderRadius: V2Layout.ctaRadius,
+    borderWidth: 1,
+    borderColor: Colors.v2.sheet.border,
+    backgroundColor: Colors.v2.surface,
+    paddingHorizontal: 20,
+    fontFamily: Fonts.dmSans,
+    fontSize: 16,
+    color: Colors.v2.navy,
+  },
+  send: { width: V2Layout.ctaHeight, height: V2Layout.ctaHeight, borderRadius: V2Layout.ctaRadius, backgroundColor: Colors.v2.lime, alignItems: 'center', justifyContent: 'center' },
+  sendOff: { opacity: 0.4 },
+})

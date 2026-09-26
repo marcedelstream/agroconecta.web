@@ -53,3 +53,33 @@ export function trendingTags(candidates: FeedCandidate[], now: Date): TrendingTa
     .slice(0, TRENDING_COUNT)
     .map(([tag, count]) => ({ tag, count }))
 }
+
+// Palabras que no aportan para buscar contenido relacionado a una pregunta en lenguaje natural.
+const STOPWORDS = new Set(
+  'hola como cual cuales cuando donde quien quienes que para por con sin una uno unos unas los las del desde hasta sobre entre este esta estos estas ese esa esos esas hay tiene tienen tengo quiero puedo saber precio precios esta semana hoy mañana mas muy bien algo alguna algun'.split(' '),
+)
+const MIN_KEYWORD_LENGTH = 4
+const REFS_LIMIT = 3
+
+/**
+ * Contenido de Agroconecta relacionado a un mensaje de Karai (las tarjetas que se pueden abrir dentro
+ * de la respuesta). A diferencia de la búsqueda de Explorar no exige todas las palabras: gana lo que
+ * más palabras clave comparte, con el título pesando el doble.
+ */
+export function searchRefs(candidates: FeedCandidate[], message: string, limit = REFS_LIMIT): FeedCandidate[] {
+  const keywords = [...new Set(normalizeText(message).split(/[^a-z0-9ñ]+/))].filter(
+    (w) => w.length >= MIN_KEYWORD_LENGTH && !STOPWORDS.has(w),
+  )
+  if (keywords.length === 0) return []
+  return candidates
+    .map((c) => {
+      const title = normalizeText(c.title)
+      const rest = normalizeText([c.summary, c.organizationName, ...c.tags].join(' '))
+      const score = keywords.reduce((acc, w) => acc + (title.includes(w) ? 2 : rest.includes(w) ? 1 : 0), 0)
+      return { c, score }
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || b.c.publishedAt.localeCompare(a.c.publishedAt))
+    .slice(0, limit)
+    .map((x) => x.c)
+}

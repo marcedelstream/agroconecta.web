@@ -7,18 +7,21 @@ export const INTERACTIVE_FIRST_POSITION = 4
 export const INTERACTIVE_EVERY = 8
 
 /**
- * Intercala los interactivos en posiciones fijas (4, 12, 20…) de la lista ya ordenada. Posiciones
+ * Intercala `extra` en posiciones fijas (first, first+every, …) de la lista ya ordenada. Posiciones
  * fijas y no por puntaje: así la paginación por offset no se corre entre páginas.
  */
-export function interleaveInteractive<T, I>(items: T[], interactive: I[]): (T | I)[] {
+export function interleaveEvery<T, I>(items: T[], extra: I[], first: number, every: number): (T | I)[] {
   const out: (T | I)[] = []
   let next = 0
   for (const item of items) {
-    const slot = INTERACTIVE_FIRST_POSITION + next * INTERACTIVE_EVERY
-    if (next < interactive.length && out.length === slot) out.push(interactive[next++])
+    if (next < extra.length && out.length === first + next * every) out.push(extra[next++])
     out.push(item)
   }
   return out
+}
+
+export function interleaveInteractive<T, I>(items: T[], interactive: I[]): (T | I)[] {
+  return interleaveEvery(items, interactive, INTERACTIVE_FIRST_POSITION, INTERACTIVE_EVERY)
 }
 
 interface PollRow {

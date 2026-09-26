@@ -12,7 +12,7 @@ export const TYPE_LABEL: Record<FeedContentType, string> = {
 }
 
 /** Tipos que usan el botón de acción: los de contenido + la tarjeta "Tu mercado hoy". */
-export type CtaKind = FeedContentType | 'precios'
+export type CtaKind = FeedContentType | 'precios' | 'patrocinado'
 
 // Texto del botón de acción estandarizado (README §3.1): mismo botón siempre, solo cambia esto.
 export const CTA_LABEL: Record<CtaKind, string> = {
@@ -25,7 +25,11 @@ export const CTA_LABEL: Record<CtaKind, string> = {
   empleo: 'Ver oportunidad',
   remate: 'Ver remate',
   precios: 'Ver todos los precios',
+  patrocinado: 'Ver promoción',
 }
+
+/** El anunciante puede cargar su propio texto (máx. 18 caracteres, lo valida la base). */
+export const CTA_MAX_LENGTH = 18
 
 export const FEED_TEXT = {
   brand: 'Agroconecta',
@@ -301,6 +305,53 @@ export const ONBOARDING_TEXT = {
   consentPoints: 'Quiero participar del programa de puntos de Agroconecta.',
   readTerms: 'Leer términos',
   readPrivacy: 'Leer privacidad',
+} as const
+
+export const KARAI_TEXT = {
+  name: 'Karai',
+  title: '¿Qué necesitás saber del agro?',
+  newChat: 'Nueva consulta',
+  suggestions: ['¿Qué pasó hoy en el agro?', 'Eventos esta semana', 'Mostrame cursos disponibles', 'Noticias sobre ganadería'],
+  placeholder: 'Preguntale a Karai…',
+  send: 'Enviar',
+  typing: 'Karai está escribiendo',
+  campoEyebrow: 'KARAI CAMPO',
+  campoTitle: 'Administrá tu establecimiento con ayuda de inteligencia artificial.',
+  campoCta: 'Conocer KARAI Campo',
+  campoExcerpt: 'Interés en KARAI Campo (desde la app)',
+  campoThanks: '¡Listo! Te avisamos cuando KARAI Campo esté disponible.',
+  quota: (left: number) => (left === 1 ? 'Te queda 1 consulta hoy' : `Te quedan ${left} consultas hoy`),
+  error: 'No pudimos conectar con Karai. Probá de nuevo en un momento.',
+  membersOnlyCta: 'Ver cómo sumarme',
+} as const
+
+export const AD_TEXT = {
+  chip: 'PATROCINADO',
+  defaultCta: 'Ver promoción',
+  why: '¿Por qué lo veo?',
+  whyTitle: 'Publicidad',
+  whyBody: 'Ves este anuncio porque coincide con tu profesión, tu departamento o tus intereses. Los anuncios siempre están marcados como "Patrocinado".',
+  whyOk: 'Entendido',
+  hide: 'No me interesa',
+  hidden: 'No vas a ver más este anuncio',
+  pautar: '¿Querés pautar tu contenido acá?',
+  learnMore: 'Conocer más',
+  leadLabel: 'Publicidad en Agroconecta',
+  leadTitle: 'Pautá en Agroconecta',
+  leadBody: 'Llegá a productores, técnicos y empresas del agro paraguayo con contenido en el feed y dentro de las noticias. Dejanos tu contacto y te escribimos.',
+  back: 'Volver',
+} as const
+
+export const LIVE_TEXT = {
+  chip: 'EN VIVO',
+  now: 'EN VIVO AHORA',
+  watch: 'Ver en vivo',
+  notInterested: 'No me interesa',
+  close: 'Cerrar aviso',
+  expand: 'Ver más del aviso',
+  collapse: 'Plegar aviso',
+  see: 'Ver',
+  showHome: 'Mostrar en Inicio',
 } as const
 
 /** 1284 → "1.284"; 12400 → "12,4 mil" (mismo formato que el prototipo). */

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
-import { CTA_LABEL, type CtaKind } from '@/lib/feed-v2/labels'
+import { CTA_LABEL, CTA_MAX_LENGTH, type CtaKind } from '@/lib/feed-v2/labels'
 
 type Placement =
   /** Fijo abajo, siempre en el mismo lugar (items de contenido). */
@@ -14,13 +14,15 @@ type Placement =
 type Props = Placement & {
   type: CtaKind
   onPress: () => void
+  /** Solo patrocinado: el texto que cargó el anunciante. */
+  customLabel?: string | null
 }
 
 // Botón de acción estandarizado (README §3.1): misma posición, tamaño y estilo siempre; el único
 // componente que decide el texto según el tipo.
 export function ContentCTA(props: Props) {
-  const { type, onPress } = props
-  const label = CTA_LABEL[type]
+  const { type, onPress, customLabel } = props
+  const label = type === 'patrocinado' && customLabel ? customLabel.slice(0, CTA_MAX_LENGTH) : CTA_LABEL[type]
   const position = 'inline' in props ? null : [styles.fixed, { bottom: props.bottom, left: props.side, right: props.side }]
   return (
     <TouchableOpacity

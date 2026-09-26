@@ -112,7 +112,21 @@ export interface FeedQuizItem {
 
 export type FeedInteractiveItem = FeedPollItem | FeedQuizItem
 
-export type FeedItem = FeedContentItem | FeedMarketItem | FeedInteractiveItem
+export interface FeedSponsoredItem {
+  kind: 'sponsored'
+  key: string
+  campaignId: string
+  advertiserName: string
+  title: string
+  body: string
+  imageUrl: string
+  /** Texto del botón que cargó el anunciante (máx. 18); si no hay, la app usa "Ver promoción". */
+  ctaLabel: string | null
+  linkType: string | null
+  linkTarget: string | null
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedInteractiveItem | FeedSponsoredItem
 
 export interface FeedPage {
   items: FeedItem[]

@@ -141,6 +141,10 @@ export const Colors = {
       handle: 'rgba(255,255,255,0.7)',
     },
     toastBg: 'rgba(11,22,32,0.86)',
+    sponsorChipBg: 'rgba(255,255,255,0.92)',
+    liveCard: 'rgba(12,16,14,0.62)',
+    liveCardAndroid: 'rgba(12,16,14,0.9)',
+    liveCardBorder: 'rgba(255,255,255,0.18)',
     // Encuesta y quiz (tarjeta blanca centrada del feed).
     interactive: {
       optionBg: '#F2F4EC',

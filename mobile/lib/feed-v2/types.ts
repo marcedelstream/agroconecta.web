@@ -73,7 +73,31 @@ export interface FeedQuizItem {
   answered: QuizAnswer[]
 }
 
-export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem
+export interface FeedSponsoredItem {
+  kind: 'sponsored'
+  key: string
+  campaignId: string
+  advertiserName: string
+  title: string
+  body: string
+  imageUrl: string
+  ctaLabel: string | null
+  linkType: string | null
+  linkTarget: string | null
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem | FeedSponsoredItem
+
+export interface LiveItem {
+  key: string
+  title: string
+  subtitle: string | null
+  imageUrl: string | null
+  streamUrl: string
+  source: FeedSource | null
+  sourceId: string | null
+  dismissed: boolean
+}
 
 export interface FeedPage {
   items: FeedItem[]

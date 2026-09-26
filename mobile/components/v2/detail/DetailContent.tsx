@@ -2,6 +2,7 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { Image } from 'expo-image'
 import { Text } from '@/components/ui/Text'
 import { HtmlContent } from '@/components/ui/HtmlContent'
+import { InlineAdBlock } from '@/components/v2/detail/InlineAdBlock'
 import { Colors } from '@/constants/colors'
 import { canFollow } from '@/lib/feed-v2/actions'
 import type { FeedDetail } from '@/lib/feed-v2/detail'
@@ -15,10 +16,19 @@ interface Props {
   item: FeedContentItem
   detail: FeedDetail | null
   onToggleFollow: () => void
+  /** Cierra la ficha antes de navegar (clic en la publicidad). */
+  onNavigate: () => void
+}
+
+/** Corta el HTML después del primer párrafo, para meter la publicidad entre el primero y el segundo. */
+function splitFirstParagraph(html: string): [string, string] {
+  const end = html.indexOf('</p>')
+  if (end < 0) return [html, '']
+  return [html.slice(0, end + 4), html.slice(end + 4)]
 }
 
 // Tipo, título, organización con Seguir, fecha/lugar (eventos y remates) y cuerpo.
-export function DetailContent({ item, detail, onToggleFollow }: Props) {
+export function DetailContent({ item, detail, onToggleFollow, onNavigate }: Props) {
   const when = detail?.when
   const place = detail?.place
   return (
@@ -61,13 +71,25 @@ export function DetailContent({ item, detail, onToggleFollow }: Props) {
       {detail === null ? (
         <ActivityIndicator color={V.limeText} style={styles.loading} />
       ) : detail.bodyHtml ? (
-        <HtmlContent html={detail.bodyHtml} />
+        <ArticleBody html={detail.bodyHtml} withAd={item.contentType === 'noticia'} onNavigate={onNavigate} />
       ) : (
         <Text family="noto-sans" size={16} lineHeight={24} color={V.sheet.body}>
           {detail.bodyText}
         </Text>
       )}
     </View>
+  )
+}
+
+function ArticleBody({ html, withAd, onNavigate }: { html: string; withAd: boolean; onNavigate: () => void }) {
+  const [first, rest] = splitFirstParagraph(html)
+  if (!withAd || !rest.trim()) return <HtmlContent html={html} />
+  return (
+    <>
+      <HtmlContent html={first} />
+      <InlineAdBlock onNavigate={onNavigate} />
+      <HtmlContent html={rest} />
+    </>
   )
 }
 

@@ -5,21 +5,23 @@ import { Colors } from '@/constants/colors'
 
 interface Props {
   label: string
-  /** Rojo para EN VIVO; el ámbar de PATROCINADO llega en la Fase 4. */
+  /** Rojo para EN VIVO. */
   dotColor?: string
+  /** PATROCINADO: chip blanco con punto ámbar, para que se distinga siempre del contenido orgánico. */
+  sponsored?: boolean
 }
 
-export function TypeChip({ label, dotColor = Colors.v2.lime }: Props) {
+export function TypeChip({ label, dotColor = Colors.v2.lime, sponsored }: Props) {
   return (
     <GlassSurface
       tint="dark"
-      overlayColor={Colors.v2.glass.bg}
-      androidColor={Colors.v2.feed.glassAndroid}
+      overlayColor={sponsored ? Colors.v2.sponsorChipBg : Colors.v2.glass.bg}
+      androidColor={sponsored ? Colors.v2.sponsorChipBg : Colors.v2.feed.glassAndroid}
       borderColor={Colors.v2.glass.border}
       style={styles.chip}
     >
-      <View style={[styles.dot, { backgroundColor: dotColor }]} />
-      <Text family="noto-sans" weight="bold" size={11} lineHeight={14} color={Colors.v2.white} style={styles.label}>
+      <View style={[styles.dot, { backgroundColor: sponsored ? Colors.v2.sponsor : dotColor }]} />
+      <Text family="noto-sans" weight="bold" size={11} lineHeight={14} color={sponsored ? Colors.v2.navy : Colors.v2.white} style={styles.label}>
         {label}
       </Text>
     </GlassSurface>

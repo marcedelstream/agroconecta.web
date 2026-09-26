@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterCandidates, matchesQuery, trendingTags } from './explore'
+import { filterCandidates, matchesQuery, searchRefs, trendingTags } from './explore'
 import type { FeedCandidate } from './types'
 
 const NOW = new Date('2026-09-25T12:00:00Z')
@@ -59,5 +59,21 @@ describe('Explorar', () => {
     ]
     expect(trendingTags(items, NOW).map((t) => t.tag)).toEqual(['soja', 'ganaderia', 'clima', 'mercados'])
     expect(trendingTags(items, NOW)[0]).toEqual({ tag: 'soja', count: 3 })
+  })
+})
+
+describe('searchRefs (tarjetas de Karai)', () => {
+  it('encuentra por palabras clave de una pregunta natural, priorizando el título', () => {
+    const remate = cand({ title: 'Remate de invernada en Concepción', tags: ['ganaderia'] })
+    const nota = cand({ title: 'Precios estables', summary: 'Hubo buena oferta de invernada en la feria' })
+    const otra = cand({ title: 'Siembra de soja' })
+    const refs = searchRefs([otra, nota, remate], '¿Cuándo hay remates de invernada en Concepción?')
+    expect(refs[0]).toBe(remate)
+    expect(refs).toContain(nota)
+    expect(refs).not.toContain(otra)
+  })
+
+  it('sin palabras clave útiles no devuelve nada', () => {
+    expect(searchRefs([cand({ title: 'Hola' })], 'hola, ¿cómo estás?')).toEqual([])
   })
 })

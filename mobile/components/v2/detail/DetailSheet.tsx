@@ -84,7 +84,7 @@ export function DetailSheet({ item, actions, onClose }: Props) {
               </View>
             </GestureDetector>
             <View style={styles.body}>
-              <DetailContent item={item} detail={detail} onToggleFollow={() => actions.toggleFollow(item)} />
+              <DetailContent item={item} detail={detail} onToggleFollow={() => actions.toggleFollow(item)} onNavigate={onClose} />
               <DetailActions
                 item={item}
                 detail={detail}

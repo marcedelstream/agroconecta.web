@@ -124,6 +124,36 @@ export const Colors = {
       textShadow: 'rgba(0,0,0,0.6)',
       avatarBg: '#0B1620',
       progressTrack: 'rgba(255,255,255,0.25)',
+      // Tarjeta "Tu mercado hoy" sobre fondo oscuro.
+      priceUp: '#A4D233',
+      priceDown: '#FF6B6B',
+      textMuted: 'rgba(255,255,255,0.6)',
+      divider: 'rgba(255,255,255,0.12)',
+    },
+    // Ficha "Ver …" (hoja inferior clara sobre el feed).
+    sheet: {
+      backdrop: 'rgba(4,9,6,0.5)',
+      border: 'rgba(11,22,32,0.14)',
+      borderSoft: 'rgba(11,22,32,0.06)',
+      activeBg: '#E6E8E0',
+      closeBg: 'rgba(11,22,32,0.35)',
+      body: '#3E433B',
+      handle: 'rgba(255,255,255,0.7)',
+    },
+    toastBg: 'rgba(11,22,32,0.86)',
+    // Pantallas claras v2 (Precios, Explorar, Guardados…).
+    light: {
+      segTrack: '#E6E8E0',
+      inputBorder: 'rgba(11,22,32,0.1)',
+      clearBg: '#EEF0EA',
+      cardBorder: 'rgba(11,22,32,0.06)',
+      shadow: '#0B1620',
+      placeholder: '#8A9083',
+      // Variación de precios sobre blanco (contraste AA; el lima no va como texto sobre blanco).
+      upText: '#3F6B12',
+      upBg: '#EEF4DC',
+      downText: '#B42318',
+      downBg: '#FDE7E7',
     },
   },
 } as const

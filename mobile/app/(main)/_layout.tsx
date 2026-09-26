@@ -22,6 +22,7 @@ export default function MainLayout() {
       <Stack.Screen name="library" />
       <Stack.Screen name="book/[id]" />
       <Stack.Screen name="webview" />
+      <Stack.Screen name="perfil-editar" />
     </Stack>
   )
 }

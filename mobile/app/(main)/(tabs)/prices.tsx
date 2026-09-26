@@ -13,6 +13,8 @@ import { fetchMarketPrices } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
 import type { MarketPrice, MarketPriceKind } from '@/lib/types'
 import { Fonts } from '@/constants/typography'
+import { FEED_V2 } from '@/lib/feature-flags'
+import { PricesV2Screen } from '@/components/v2/prices/PricesV2Screen'
 
 const R = Colors.redesign
 // Mismo logo (variante para fondos claros) que usa el widget "Tu mercado hoy" de Inicio —
@@ -36,7 +38,12 @@ function formatDelta(price: MarketPrice) {
   return `${arrow} ${Math.abs(price.changePercent).toLocaleString('es-PY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
 }
 
+// v2 (feed vertical) usa su propia pantalla clara; la v1 queda igual mientras exista el flag.
 export default function PricesScreen() {
+  return FEED_V2 ? <PricesV2Screen /> : <PricesV1Screen />
+}
+
+function PricesV1Screen() {
   const { user } = useApp()
   const [prices, setPrices] = useState<MarketPrice[]>([])
   const [loading, setLoading] = useState(true)

@@ -20,6 +20,8 @@ import { MediaSheet } from '@/components/profile/MediaSheet'
 import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
 import type { LibraryItem } from '@/lib/types'
+import { FEED_V2 } from '@/lib/feature-flags'
+import { ProfileV2Screen } from '@/components/v2/profile/ProfileV2Screen'
 
 const R = Colors.redesign
 
@@ -31,7 +33,12 @@ const SETTINGS: { id: ActiveSheet; icon: IconName; label: string; navigate?: str
   { id: 'media', icon: 'radio-outline', label: 'Cuentas seguidas', navigate: '/(main)/media-subscriptions' },
 ]
 
+// v2: perfil tipo CV profesional; la v1 queda igual mientras exista el flag.
 export default function ProfileScreen() {
+  return FEED_V2 ? <ProfileV2Screen /> : <ProfileV1Screen />
+}
+
+function ProfileV1Screen() {
   const { user, signOut, updateUser, deleteAccount } = useApp()
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null)
   const [logoutModalVisible, setLogoutModalVisible] = useState(false)

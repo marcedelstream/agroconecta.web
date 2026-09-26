@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { FeedPage } from './types'
+import type { ExploreFilters, ExplorePage, FeedPage, GuardadosPage } from './types'
 
 // Con www a propósito: agroconecta.com.py redirige (308) a www, y en esa redirección el celular
 // descarta el header Authorization → la API respondería 401 (delete-account lo esquiva mandando el
@@ -8,20 +8,36 @@ export const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://www
 
 export class FeedAuthError extends Error {}
 
-export async function fetchFeedPage(cursor: string | null, limit = 10): Promise<FeedPage> {
+async function authorizedGet<T>(path: string, params: URLSearchParams): Promise<T> {
   const { data } = await supabase.auth.getSession()
   const token = data.session?.access_token
   if (!token) throw new FeedAuthError('Sin sesión')
-
-  const params = new URLSearchParams({ limit: String(limit) })
-  if (cursor) params.set('cursor', cursor)
-
-  const res = await fetch(`${WEB_BASE_URL}/api/feed?${params.toString()}`, {
+  const res = await fetch(`${WEB_BASE_URL}${path}?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (res.status === 401) throw new FeedAuthError('Sesión inválida')
-  if (!res.ok) throw new Error(`Feed HTTP ${res.status}`)
-  return (await res.json()) as FeedPage
+  if (!res.ok) throw new Error(`${path} HTTP ${res.status}`)
+  return (await res.json()) as T
+}
+
+/** `seen`: claves ya mostradas en la sesión; el servidor las manda al final (ver /api/feed). */
+export async function fetchFeedPage(cursor: string | null, seen: string[], limit = 10): Promise<FeedPage> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (cursor) params.set('cursor', cursor)
+  if (seen.length > 0) params.set('seen', seen.join(','))
+  return authorizedGet<FeedPage>('/api/feed', params)
+}
+
+export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage> {
+  const params = new URLSearchParams()
+  if (filters.query.trim()) params.set('q', filters.query.trim())
+  if (filters.type) params.set('type', filters.type)
+  if (filters.rubro) params.set('rubro', filters.rubro)
+  return authorizedGet<ExplorePage>('/api/explore', params)
+}
+
+export async function fetchGuardados(): Promise<GuardadosPage> {
+  return authorizedGet<GuardadosPage>('/api/guardados', new URLSearchParams())
 }
 
 export async function currentUserId(): Promise<string | null> {

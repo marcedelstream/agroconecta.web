@@ -8,24 +8,13 @@ import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { fetchMarketPrices } from '@/lib/supabase-repositories'
 import type { MarketPrice } from '@/lib/types'
+import { formatPriceDelta, formatPriceValue } from '@/lib/price-format'
 
 const R = Colors.redesign
 // Logo oscuro (variante para fondos claros) — se incluye dentro del área capturada para que
 // quede pegado en el PNG que se comparte. TODO: cuando haya auspiciantes por sección, sumar acá
 // el logo del auspiciante de "Tu mercado hoy" al lado del de Agroconecta.
 const logo = require('@/assets/images/logo-light.png')
-
-function formatValue(price: MarketPrice) {
-  if (price.currency === 'PYG') {
-    return `₲ ${Math.round(price.value).toLocaleString('es-PY')}`
-  }
-  return `$ ${price.value.toLocaleString('es-PY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function formatDelta(price: MarketPrice) {
-  const arrow = price.changePercent >= 0 ? '▲' : '▼'
-  return `${arrow} ${Math.abs(price.changePercent).toLocaleString('es-PY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
-}
 
 export function PriceBoard() {
   const [prices, setPrices] = useState<MarketPrice[]>([])
@@ -93,9 +82,9 @@ export function PriceBoard() {
               <Text family="noto-sans" weight="medium" size={10.5} color={R.mutedForeground} numberOfLines={1}>
                 {price.label}
               </Text>
-              <Text family="noto-sans" weight="bold" size={15} color={R.foreground}>{formatValue(price)}</Text>
+              <Text family="noto-sans" weight="bold" size={15} color={R.foreground}>{formatPriceValue(price)}</Text>
               <Text family="noto-sans" weight="semibold" size={10.5} color={isUp ? R.positive : R.negative}>
-                {formatDelta(price)}
+                {formatPriceDelta(price)}
               </Text>
             </View>
           )

@@ -15,6 +15,18 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 
 > El panel `admin-web/` antiguo quedó como referencia y **no se deploya**. La fuente de verdad para producción web es `web/`.
 >
+> **2026-09-25: arranca el rediseño v2 (feed vertical)** en la rama `feature/v2-feed-redesign` (tag
+> `v1-diseno-final` congela la v1 en `main`). Handoff y plan en `docs/design_handoff_v2_feed/`
+> (`PLAN-IMPLEMENTACION.md` = estado vivo). Todo detrás de `EXPO_PUBLIC_FEED_V2=true` (`mobile/lib/feature-flags.ts`):
+> con el flag apagado la app es la v1 (salvo la tipografía, que pasó a **Figtree** en toda la app).
+> Fase 1 hecha en código: barra flotante de 5 tabs, feed vertical (`components/v2/feed`), ficha "Ver …"
+> (`components/v2/detail`), Explorar, Guardados, Precios v2 y Perfil CV. El orden del feed lo decide
+> **`web/app/api/feed`** (no una RPC: los eventos viven en la base externa de eventosagropy y Postgres no
+> la ve); `/api/explore` y `/api/guardados` reusan esa misma carga (`web/lib/feed/`, con tests vitest).
+> Las rutas `/api/*` del feed ya están publicadas en `main` (se pasan por cherry-pick, solo `web/`).
+> Migraciones nuevas sin correr en prod: `supabase/fix-v2-feed.sql`, `supabase/fix-v2-profile.sql`.
+> Ojo: NativeWind v4 descarta `style={({ pressed }) => …}` en Pressable — usar TouchableOpacity o estilo fijo.
+>
 > **2026-08-18: arranca el ciclo v1.1.0.** La v1.0.0 ya está en revisión en las stores (Play Store/App
 > Store) — de acá en más el trabajo de mobile apunta a v1.1.0, en paralelo a esa revisión. Primer fix del
 > ciclo: `mobile/assets/images/splash.png` tenía una imagen incorrecta (un isologo "V2" ajeno a la marca,

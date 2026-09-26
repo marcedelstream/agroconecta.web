@@ -54,6 +54,42 @@ export interface FeedPage {
   nextCursor: string | null
 }
 
+export interface TrendingTag {
+  tag: string
+  count: number
+}
+
+export interface ExplorePage {
+  items: FeedContentItem[]
+  trending: TrendingTag[]
+}
+
+export interface ExploreFilters {
+  query: string
+  type: FeedContentType | null
+  rubro: string | null
+}
+
+export type ActivityKind = 'viewed' | 'events' | 'products'
+
+export interface ActivitySummary {
+  kind: ActivityKind
+  count: number
+  recent: string[]
+}
+
+export interface ReminderEntry {
+  item: FeedContentItem
+  remindAt: string
+  enabled: boolean
+}
+
+export interface GuardadosPage {
+  saved: FeedContentItem[]
+  reminders: ReminderEntry[]
+  activity: ActivitySummary[]
+}
+
 export type FeedEventType =
   | 'impression'
   | 'dwell'

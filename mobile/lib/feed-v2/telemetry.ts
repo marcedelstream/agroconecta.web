@@ -19,9 +19,24 @@ interface PendingEvent {
 
 const sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 let queue: PendingEvent[] = []
+// Lo visto en esta sesión, al instante (la cola tarda hasta 15 s en llegar al servidor). Lo usa el
+// "tirar para actualizar" para que la recarga no vuelva a empezar por lo mismo.
+const MAX_SESSION_SEEN = 100
+const sessionSeen = new Set<string>()
+
+const VIEW_EVENTS: FeedEventType[] = ['impression', 'dwell', 'skip_fast']
+
+export function getSessionSeenKeys(): string[] {
+  return [...sessionSeen].slice(-MAX_SESSION_SEEN)
+}
 let timer: ReturnType<typeof setTimeout> | null = null
 
 export function trackFeedEvent(source: FeedSource, sourceId: string, type: FeedEventType, dwellMs?: number) {
+  if (VIEW_EVENTS.includes(type)) {
+    const key = `${source}:${sourceId}`
+    sessionSeen.delete(key)
+    sessionSeen.add(key)
+  }
   queue.push({
     session_id: sessionId,
     source,

@@ -1,7 +1,7 @@
 # Agroconecta v2 — Plan de implementación (feed vertical)
 
 > 2026-09-25 · Rama `feature/v2-feed-redesign` (sale de `main` @ `bccc015`, tag `v1-diseno-final`).
-> Estado: **aprobado 2026-09-25**. Bloques 1a (flag, tokens v2, Figtree, barra flotante) 1b (migración + `/api/feed` + ranking con tests) y 1c (feed vertical en mobile) hechos. 1c provisorio: el botón de acción abre las pantallas de detalle v1 hasta que exista la ficha (1d).
+> Estado: **aprobado 2026-09-25**. **Fase 1 completa en código** (1a–1e): falta medir 60 fps en el Redmi Note y correr `fix-v2-feed.sql` + `fix-v2-profile.sql`. Hidratación remota: `hydrateProfileFromSupabase` ya cubría perfil/intereses/suscripciones; el CV se lee siempre de Supabase. Siguiente: Fase 2.
 > Base: `README.md`, `BACKEND-Y-DATOS.md`, `ONBOARDING-V2.md` de este paquete + auditoría del código real.
 
 ---

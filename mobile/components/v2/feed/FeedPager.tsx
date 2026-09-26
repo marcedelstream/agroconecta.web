@@ -1,8 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatList, Platform, RefreshControl, StyleSheet, View, type LayoutChangeEvent, type ViewToken } from 'react-native'
+import {
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type ViewToken,
+} from 'react-native'
 import { useIsFocused } from '@react-navigation/native'
 import { FeedContentSlide } from '@/components/v2/feed/FeedContentSlide'
 import { MarketFeedSlide } from '@/components/v2/feed/MarketFeedSlide'
+import { RefreshingPill } from '@/components/v2/feed/RefreshingPill'
+import { useFeedInsets } from '@/components/v2/feed/layout'
+import { V2Layout } from '@/constants/spacing'
 import { Colors } from '@/constants/colors'
 import { flushFeedEvents, trackFeedEvent } from '@/lib/feed-v2/telemetry'
 import type { FeedItem } from '@/lib/feed-v2/types'
@@ -12,6 +25,11 @@ import { PREFETCH_THRESHOLD, type FeedController } from '@/lib/feed-v2/use-feed'
 const IMPRESSION_MS = 600
 const SKIP_FAST_MS = 1200
 const VIEWABILITY = { itemVisiblePercentThreshold: 80 }
+// Cuánto hay que tirar hacia abajo en el primer item para recargar (solo iOS, ver más abajo).
+const PULL_TO_REFRESH_PX = 70
+// En iOS el RefreshControl nativo le suma un inset arriba al scroll mientras carga y eso descuadra el
+// enganche por páginas; ahí se detecta el tirón a mano. En Android el nativo anda bien.
+const NATIVE_REFRESH = Platform.OS === 'android'
 
 interface Props {
   controller: FeedController
@@ -39,6 +57,23 @@ export function FeedPager({ controller }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const activeView = useRef<ActiveView | null>(null)
   const focused = useIsFocused()
+  const { headerTop } = useFeedInsets()
+  const pillTop = headerTop + V2Layout.minTouch + 12
+
+  // Antes de recargar se cierra la vista del item actual: así cuenta como visto y la recarga
+  // arranca por contenido que todavía no apareció.
+  const refreshFromTop = useCallback(() => {
+    closeView(activeView.current)
+    activeView.current = null
+    void refresh()
+  }, [refresh])
+
+  const onScrollEndDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!NATIVE_REFRESH && !refreshing && e.nativeEvent.contentOffset.y < -PULL_TO_REFRESH_PX) refreshFromTop()
+    },
+    [refreshing, refreshFromTop],
+  )
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const h = Math.round(e.nativeEvent.layout.height)
@@ -100,9 +135,21 @@ export function FeedPager({ controller }: Props) {
           initialNumToRender={2}
           maxToRenderPerBatch={2}
           removeClippedSubviews={Platform.OS === 'android'}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.v2.white} />}
+          onScrollEndDrag={onScrollEndDrag}
+          refreshControl={
+            NATIVE_REFRESH ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refreshFromTop}
+                progressViewOffset={pillTop}
+                colors={[Colors.v2.navy]}
+                progressBackgroundColor={Colors.v2.lime}
+              />
+            ) : undefined
+          }
         />
       )}
+      {refreshing && !NATIVE_REFRESH && <RefreshingPill top={pillTop} />}
     </View>
   )
 }

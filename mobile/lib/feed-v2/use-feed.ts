@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import * as Haptics from 'expo-haptics'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchFeedPage } from './api'
-import { setFollowing, setLiked, setSaved, shareItem } from './actions'
-import { trackFeedEvent } from './telemetry'
-import type { FeedContentItem, FeedItem } from './types'
+import { getSessionSeenKeys } from './telemetry'
+import type { FeedItem } from './types'
+import { useItemActions, type ItemUpdater } from './use-item-actions'
 
 type Status = 'loading' | 'ready' | 'error'
 
@@ -17,12 +16,16 @@ export function useFeed() {
   const cursor = useRef<string | null>(null)
   const hasMore = useRef(true)
   const loadingMore = useRef(false)
+  // Se fija al cargar la primera página y se reusa en las siguientes: el orden del servidor depende
+  // de esta lista, así que tiene que ser la misma en toda la paginación.
+  const seenAtLoad = useRef<string[]>([])
 
   const loadFirst = useCallback(async (isRefresh: boolean) => {
     if (isRefresh) setRefreshing(true)
     else setStatus('loading')
     try {
-      const page = await fetchFeedPage(null)
+      seenAtLoad.current = getSessionSeenKeys()
+      const page = await fetchFeedPage(null, seenAtLoad.current)
       cursor.current = page.nextCursor
       hasMore.current = page.nextCursor !== null
       setItems(page.items)
@@ -43,7 +46,7 @@ export function useFeed() {
     if (loadingMore.current || !hasMore.current || !cursor.current) return
     loadingMore.current = true
     try {
-      const page = await fetchFeedPage(cursor.current)
+      const page = await fetchFeedPage(cursor.current, seenAtLoad.current)
       cursor.current = page.nextCursor
       hasMore.current = page.nextCursor !== null
       setItems((prev) => {
@@ -57,61 +60,20 @@ export function useFeed() {
     }
   }, [])
 
-  const patch = useCallback((key: string, change: Partial<FeedContentItem>) => {
-    setItems((prev) => prev.map((i) => (i.kind === 'content' && i.key === key ? { ...i, ...change } : i)))
-  }, [])
-
-  // Optimista: se pinta ya y se revierte si la escritura en Supabase falla.
-  const toggleLike = useCallback(
-    async (item: FeedContentItem) => {
-      const on = !item.liked
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
-      patch(item.key, { liked: on, likes: item.likes + (on ? 1 : -1) })
-      if (await setLiked(item, on)) {
-        if (on) trackFeedEvent(item.source, item.sourceId, 'like')
-      } else patch(item.key, { liked: item.liked, likes: item.likes })
-    },
-    [patch],
+  const update = useCallback<ItemUpdater>(
+    (fn) => setItems((prev) => prev.map((i) => (i.kind === 'content' ? fn(i) : i))),
+    [],
   )
+  const { actions, detailKey, closeDetail } = useItemActions(update)
 
-  const toggleSave = useCallback(
-    async (item: FeedContentItem) => {
-      const on = !item.saved
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => null)
-      patch(item.key, { saved: on, saves: item.saves + (on ? 1 : -1) })
-      if (await setSaved(item, on)) {
-        if (on) trackFeedEvent(item.source, item.sourceId, 'save')
-      } else patch(item.key, { saved: item.saved, saves: item.saves })
-    },
-    [patch],
-  )
-
-  // Seguir afecta a todos los items de la misma organización, no solo al visible.
-  const toggleFollow = useCallback(async (item: FeedContentItem) => {
-    const on = !item.following
-    const orgId = item.organizationId
-    const apply = (value: boolean) =>
-      setItems((prev) =>
-        prev.map((i) => (i.kind === 'content' && i.organizationId === orgId ? { ...i, following: value } : i)),
-      )
-    Haptics.selectionAsync().catch(() => null)
-    apply(on)
-    if (await setFollowing(item, on)) {
-      if (on) trackFeedEvent(item.source, item.sourceId, 'follow')
-    } else apply(item.following)
-  }, [])
-
-  const share = useCallback(async (item: FeedContentItem) => {
-    if (await shareItem(item)) trackFeedEvent(item.source, item.sourceId, 'share')
-  }, [])
-
-  // Objeto estable: los slides son memo y no tienen que re-renderizarse cuando cambia otro item.
-  const actions = useMemo(() => ({ toggleLike, toggleSave, toggleFollow, share }), [toggleLike, toggleSave, toggleFollow, share])
   const refresh = useCallback(() => loadFirst(true), [loadFirst])
   const retry = useCallback(() => loadFirst(false), [loadFirst])
 
-  return { items, status, refreshing, refresh, retry, loadMore, actions }
+  const found = detailKey ? items.find((i) => i.key === detailKey) : undefined
+  const detailItem = found?.kind === 'content' ? found : null
+
+  return { items, status, refreshing, refresh, retry, loadMore, actions, detailItem, closeDetail }
 }
 
 export type FeedController = ReturnType<typeof useFeed>
-export type FeedActions = FeedController['actions']
+export type { FeedActions } from './use-item-actions'

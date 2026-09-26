@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { authenticateKaraiRequest } from '@/lib/karai/auth'
-import { buildFeedPage, decodeCursor, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@/lib/feed/service'
+import { buildFeedPage, decodeCursor, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, parseSeenParam } from '@/lib/feed/service'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
   const pageSize = Number.isFinite(requested) ? Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(requested))) : DEFAULT_PAGE_SIZE
 
   try {
-    const page = await buildFeedPage(auth.admin, auth.profileId, cursor, pageSize)
+    // `seen`: lo que la app ya mostró en la sesión (lo manda al actualizar y en las páginas siguientes).
+    const page = await buildFeedPage(auth.admin, auth.profileId, cursor, pageSize, parseSeenParam(params.get('seen')))
     return NextResponse.json(page, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
     console.error('GET /api/feed falló:', err)

@@ -3,6 +3,7 @@ import { Modal, View, TextInput, TouchableOpacity, StyleSheet } from 'react-nati
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from './Text'
 import { Colors } from '@/constants/colors'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const CONFIRM_WORD = 'ELIMINAR'
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     borderColor: R.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontFamily: 'NotoSans-Bold',
+    fontFamily: Fonts.dmSansBold,
     fontSize: 14,
     color: R.foreground,
     textAlign: 'center',

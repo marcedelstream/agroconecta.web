@@ -3,6 +3,7 @@ import { View, Animated, StyleSheet, Image } from 'react-native'
 import { router } from 'expo-router'
 import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
+import { HOME_ROUTE } from '@/lib/feature-flags'
 
 export default function SplashScreen() {
   const { authLoading, isLoading, session, user } = useApp()
@@ -22,7 +23,7 @@ export default function SplashScreen() {
       if (session && !user) {
         router.replace('/(onboarding)')
       } else {
-        router.replace('/(main)/(tabs)/home')
+        router.replace(HOME_ROUTE)
       }
     }, 2500)
     return () => clearTimeout(timer)

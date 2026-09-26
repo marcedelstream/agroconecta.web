@@ -12,6 +12,7 @@ import { Spacing } from '@/constants/spacing'
 import { fetchMarketPrices } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
 import type { MarketPrice, MarketPriceKind } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 // Mismo logo (variante para fondos claros) que usa el widget "Tu mercado hoy" de Inicio —
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 14,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
   shareOffscreen: { position: 'absolute', top: -9999, left: 0, width: '100%' },
   shareCard: { backgroundColor: R.surface, borderRadius: 16, marginHorizontal: 20, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12 },
   shareHeader: { alignItems: 'center', marginBottom: 16 },

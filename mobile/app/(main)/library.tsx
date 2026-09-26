@@ -11,6 +11,7 @@ import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { fetchLibraryItems, fetchUserLibrary } from '@/lib/supabase-repositories'
 import { LIBRARY_CATEGORY_LABELS, type LibraryCategory, type LibraryItem } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const AD_EVERY = 2
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 18,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
   centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingTop: 20, paddingBottom: 30 },
   center: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 20 },

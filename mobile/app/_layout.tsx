@@ -8,12 +8,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import {
   useFonts,
-  NotoSans_400Regular,
-  NotoSans_500Medium,
-  NotoSans_600SemiBold,
-  NotoSans_700Bold,
-  NotoSans_800ExtraBold,
-} from '@expo-google-fonts/noto-sans'
+  Figtree_400Regular,
+  Figtree_500Medium,
+  Figtree_600SemiBold,
+  Figtree_700Bold,
+  Figtree_800ExtraBold,
+} from '@expo-google-fonts/figtree'
 import { AppProvider, useApp } from '@/lib/app-context'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
 import { LocalAvatarProvider } from '@/lib/local-avatar-context'
@@ -26,11 +26,11 @@ SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'NotoSans-Regular': NotoSans_400Regular,
-    'NotoSans-Medium': NotoSans_500Medium,
-    'NotoSans-SemiBold': NotoSans_600SemiBold,
-    'NotoSans-Bold': NotoSans_700Bold,
-    'NotoSans-ExtraBold': NotoSans_800ExtraBold,
+    'Figtree-Regular': Figtree_400Regular,
+    'Figtree-Medium': Figtree_500Medium,
+    'Figtree-SemiBold': Figtree_600SemiBold,
+    'Figtree-Bold': Figtree_700Bold,
+    'Figtree-ExtraBold': Figtree_800ExtraBold,
   })
 
   useEffect(() => {

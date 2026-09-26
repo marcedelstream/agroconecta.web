@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { supabase } from '@/lib/supabase'
 import { useApp } from '@/lib/app-context'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 
@@ -139,13 +140,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 9,
   },
-  textInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 14, color: R.foreground },
+  textInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 14, color: R.foreground },
   textArea: {
     borderRadius: 13,
     backgroundColor: R.secondary,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontFamily: 'NotoSans-Regular',
+    fontFamily: Fonts.dmSans,
     fontSize: 14,
     color: R.foreground,
     minHeight: 100,

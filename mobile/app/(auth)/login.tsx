@@ -20,6 +20,7 @@ import { useTheme } from '@/lib/theme-context'
 import { Colors } from '@/constants/colors'
 import { Radius, Spacing } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
+import { HOME_ROUTE } from '@/lib/feature-flags'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 type LoginView = 'options' | 'otp' | 'password'
@@ -76,7 +77,7 @@ export default function LoginScreen() {
       if (prefillName) updateOnboarding({ name: prefillName, step: 1 })
       router.replace('/(onboarding)')
     } else {
-      router.replace('/(main)/(tabs)/home')
+      router.replace(HOME_ROUTE)
     }
   }
 

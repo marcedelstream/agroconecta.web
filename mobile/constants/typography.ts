@@ -1,21 +1,21 @@
-// Una sola familia (Noto Sans, rediseño 2026) para toda la app. Se mantienen las claves
-// poppins*/dmSans* para no tener que tocar los ~30 componentes que usan family="poppins"/"dm-sans".
+// Una sola familia (Figtree, rediseño v2 2026-09) para toda la app. Se mantienen las claves
+// poppins*/dmSans*/notoSans* — mismo truco que con Lexend y Noto Sans — para no tener que tocar los
+// componentes que usan family="poppins"/"dm-sans"/"noto-sans".
 export const Fonts = {
-  poppins: 'NotoSans-Regular',
-  poppinsMedium: 'NotoSans-Medium',
-  poppinsSemiBold: 'NotoSans-SemiBold',
-  poppinsBold: 'NotoSans-Bold',
-  dmSans: 'NotoSans-Regular',
-  dmSansMedium: 'NotoSans-Medium',
-  dmSansSemiBold: 'NotoSans-SemiBold',
-  dmSansBold: 'NotoSans-Bold',
-  notoSans: 'NotoSans-Regular',
-  notoSansMedium: 'NotoSans-Medium',
-  notoSansSemiBold: 'NotoSans-SemiBold',
-  notoSansBold: 'NotoSans-Bold',
-  notoSansExtraBold: 'NotoSans-ExtraBold',
+  poppins: 'Figtree-Regular',
+  poppinsMedium: 'Figtree-Medium',
+  poppinsSemiBold: 'Figtree-SemiBold',
+  poppinsBold: 'Figtree-Bold',
+  dmSans: 'Figtree-Regular',
+  dmSansMedium: 'Figtree-Medium',
+  dmSansSemiBold: 'Figtree-SemiBold',
+  dmSansBold: 'Figtree-Bold',
+  notoSans: 'Figtree-Regular',
+  notoSansMedium: 'Figtree-Medium',
+  notoSansSemiBold: 'Figtree-SemiBold',
+  notoSansBold: 'Figtree-Bold',
+  notoSansExtraBold: 'Figtree-ExtraBold',
 } as const
-
 export const FontSizes = {
   xs: 11,
   sm: 13,

@@ -12,6 +12,7 @@ import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Organization } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const FOLLOWABLE_CATEGORIES = ['media', 'asociacion', 'institucion', 'gremio', 'rematadora']
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     marginTop: 14,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40 },
   list: { padding: 16, gap: 10 },
   item: {

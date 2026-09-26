@@ -22,6 +22,7 @@ import { Fonts } from '@/constants/typography'
 import { professions, newsCategories, departments } from '@/lib/mock-data'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Profession, Department, NewsCategory, Organization } from '@/lib/types'
+import { HOME_ROUTE } from '@/lib/feature-flags'
 
 const TOTAL_STEPS = 6
 
@@ -57,7 +58,7 @@ export default function OnboardingScreen() {
 
   async function handleComplete() {
     await completeOnboarding()
-    router.replace('/(main)/(tabs)/home')
+    router.replace(HOME_ROUTE)
   }
 
   const canProceed = () => {

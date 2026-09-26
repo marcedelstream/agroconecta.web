@@ -7,6 +7,8 @@ import { useColors } from '@/lib/theme-context'
 import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/typography'
+import { FEED_V2 } from '@/lib/feature-flags'
+import { FloatingTabBar, V2_TAB_ROUTES } from '@/components/v2/FloatingTabBar'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
@@ -52,7 +54,35 @@ function PublishTabButton({ accessibilityState }: BottomTabBarButtonProps) {
   )
 }
 
+// Pantallas que existen como archivo en (tabs)/ pero no pertenecen a la barra v1. Expo Router
+// muestra en la barra todo archivo de la carpeta salvo que tenga href: null.
+const V2_ONLY_ROUTES = ['feed', 'explorar', 'karai', 'guardados'] as const
+// En v2 la barra la dibuja FloatingTabBar (filtra por V2_TAB_ROUTES); estas rutas v1 siguen
+// navegables — Precios desde la tarjeta de mercado/Explorar, Noticias desde Explorar, etc.
+const V1_ONLY_ROUTES = ['home', 'publish', 'ecosystem', 'prices', 'noticias'] as const
+
+function V2TabsLayout() {
+  return (
+    <Tabs
+      initialRouteName="feed"
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{ headerShown: false, animation: 'none' }}
+    >
+      {V2_TAB_ROUTES.map((name) => (
+        <Tabs.Screen key={name} name={name} />
+      ))}
+      {V1_ONLY_ROUTES.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ href: null }} />
+      ))}
+    </Tabs>
+  )
+}
+
 export default function TabsLayout() {
+  return FEED_V2 ? <V2TabsLayout /> : <V1TabsLayout />
+}
+
+function V1TabsLayout() {
   const C = useColors()
   const insets = useSafeAreaInsets()
   // Android no reporta un inset de gesture-nav consistente en `paddingBottom` fijo — algunos
@@ -103,6 +133,9 @@ export default function TabsLayout() {
             ),
           }}
         />
+      ))}
+      {V2_ONLY_ROUTES.map((name) => (
+        <Tabs.Screen key={name} name={name} options={{ href: null }} />
       ))}
     </Tabs>
   )

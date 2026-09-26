@@ -11,6 +11,7 @@ import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { fetchAllyDirectory } from '@/lib/supabase-repositories'
 import { ALLY_CATEGORY_LABELS, type AllyCategory, type Organization } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     marginTop: 14,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
   chipsRow: { flexDirection: 'row', gap: 8, marginTop: 12, paddingRight: 16 },
   chip: { borderWidth: 1, borderColor: R.header.chipBorder, borderRadius: 9999, paddingHorizontal: 13, paddingVertical: 7 },
   chipActive: { backgroundColor: Colors.lime, borderColor: Colors.lime },

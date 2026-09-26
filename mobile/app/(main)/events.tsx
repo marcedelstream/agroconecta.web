@@ -10,6 +10,7 @@ import { fetchAllEvents } from '@/lib/supabase-repositories'
 import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import type { AgroEvent } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const SUGGEST_URL = 'https://eventosagropy.com'
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: R.foreground, padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: R.foreground, padding: 0 },
   suggestRow: {
     flexDirection: 'row',
     alignItems: 'center',

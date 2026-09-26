@@ -77,4 +77,53 @@ export const Colors = {
       curso: { bg: '#EDE6FD', text: '#6D28D9', label: 'CURSO' },
     },
   },
+
+  // Rediseño v2 — feed vertical (docs/design_handoff_v2_feed, README §4). Paleta fija, no depende del
+  // toggle de tema. `lime` nunca va como texto sobre blanco: para eso está `limeText` (contraste AA).
+  v2: {
+    lime: '#A4D233',
+    limeText: '#4E6B12',
+    limeTint: '#EEF4DC',
+    limeTintText: '#3F5A0C',
+    navy: '#0B1620',
+    ground: '#F4F5F0',
+    surface: '#FFFFFF',
+    muted: '#5A5F55',
+    live: '#E5484D',
+    sponsor: '#E0A100',
+    white: '#FFFFFF',
+    glass: {
+      bg: 'rgba(255,255,255,0.16)',
+      border: 'rgba(255,255,255,0.24)',
+    },
+    nav: {
+      darkBg: 'rgba(14,20,16,0.34)',
+      darkBorder: 'rgba(255,255,255,0.18)',
+      darkActive: '#FFFFFF',
+      darkIdle: 'rgba(255,255,255,0.7)',
+      lightBg: 'rgba(255,255,255,0.74)',
+      lightBorder: 'rgba(11,22,32,0.08)',
+      lightActive: '#0B1620',
+      lightIdle: '#6B7066',
+      // Android: sin blur real (caro y dispar entre versiones) → fondo translúcido más opaco.
+      darkBgAndroid: 'rgba(14,20,16,0.82)',
+      lightBgAndroid: 'rgba(255,255,255,0.96)',
+      shadow: '#000000',
+    },
+    feed: {
+      // Degradado .shade del prototipo: arriba suave para el logo, abajo casi negro para el texto.
+      shade: ['rgba(4,9,6,0.42)', 'rgba(4,9,6,0)', 'rgba(4,9,6,0)', 'rgba(4,9,6,0.5)', 'rgba(4,9,6,0.9)'],
+      shadeStops: [0, 0.16, 0.44, 0.64, 1],
+      // Sin foto: fondo de marca en vez de un gris vacío.
+      fallback: ['#1D3324', '#0B1620'],
+      glassAndroid: 'rgba(20,28,22,0.55)',
+      heart: '#FF5A5F',
+      tag: '#D4ED8E',
+      textSoft: 'rgba(255,255,255,0.84)',
+      textOrg: 'rgba(255,255,255,0.9)',
+      textShadow: 'rgba(0,0,0,0.6)',
+      avatarBg: '#0B1620',
+      progressTrack: 'rgba(255,255,255,0.25)',
+    },
+  },
 } as const

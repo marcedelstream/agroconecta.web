@@ -16,6 +16,7 @@ import { fetchPublishedPosts, fetchEcosystemListings, fetchLibraryItems } from '
 import { ECOSYSTEM_SECTIONS, normalizeEcosystemSectionOrder, type EcosystemSectionKey } from '@/lib/ecosystem-sections'
 import { useRequireAuth } from '@/lib/require-auth'
 import type { EcosystemListing, LibraryItem, Post } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const PREVIEW_COUNT = 3
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 14,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
   chipsScroller: { marginHorizontal: -20 },
   chipsRow: { flexDirection: 'row', gap: 8, marginTop: 14, paddingHorizontal: 20, paddingRight: 28 },
   chip: { borderWidth: 1, borderColor: R.header.chipBorder, borderRadius: 9999, paddingHorizontal: 13, paddingVertical: 7 },

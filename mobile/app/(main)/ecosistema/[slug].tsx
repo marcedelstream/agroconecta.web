@@ -12,6 +12,7 @@ import { ECOSYSTEM_PLATFORMS } from '@/lib/ecosystem-data'
 import { mockEcosystemListings } from '@/lib/mock-data'
 import { fetchEcosystemListings } from '@/lib/supabase-repositories'
 import type { EcosystemListing } from '@/lib/types'
+import { Fonts } from '@/constants/typography'
 
 const R = Colors.redesign
 const AD_EVERY = 4
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 16,
   },
-  searchInput: { flex: 1, fontFamily: 'NotoSans-Regular', fontSize: 13.5, color: R.foreground, padding: 0 },
+  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: R.foreground, padding: 0 },
   itemGap: { gap: 10 },
   adBanner: {},
   emptyText: { marginTop: 12, textAlign: 'center' },

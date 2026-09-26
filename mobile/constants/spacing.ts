@@ -27,3 +27,21 @@ export const Radius = {
   '2xl': 20,
   full: 9999,
 } as const
+
+// Medidas fijas del rediseño v2 (docs/design_handoff_v2_feed, README §4).
+export const V2Layout = {
+  navHeight: 66,
+  navRadius: 33,
+  navSide: 16,
+  navBottom: 22,
+  navItemWidth: 60,
+  navItemHeight: 56,
+  karaiSize: 58,
+  karaiLift: 12,
+  railButton: 48,
+  ctaHeight: 52,
+  ctaRadius: 26,
+  cardRadius: 20,
+  pollRadius: 28,
+  minTouch: 44,
+} as const

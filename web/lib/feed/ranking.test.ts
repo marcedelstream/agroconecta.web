@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_WEIGHTS,
+  deprioritizeSeen,
   engagementScore,
   eventProximityScore,
   geoMatch,
@@ -142,6 +143,13 @@ describe('rankFeed — reglas de mezcla', () => {
     const ranked = rankFeed([...inside, ...outside], user({ interests: ['ganaderia'] }), new Map(), DEFAULT_WEIGHTS, NOW)
     const firstTen = ranked.slice(0, 10)
     expect(firstTen.filter((c) => c.tags.includes('horticultura')).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('al actualizar, lo ya visto en la sesión pasa al final sin cambiar el orden del resto', () => {
+    const [a, b, c, d] = Array.from({ length: 4 }, () => cand())
+    const result = deprioritizeSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
+    expect(result).toEqual([b.key, d.key, a.key, c.key])
+    expect(deprioritizeSeen([a, b], new Set())).toEqual([a, b])
   })
 
   it('es determinista: mismas entradas, mismo orden (paginación estable)', () => {

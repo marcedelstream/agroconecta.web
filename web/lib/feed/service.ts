@@ -1,9 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@supabase/supabase-js'
-import { loadEventCandidates, loadListingCandidates, loadPostCandidates } from './candidates'
-import { MARKET_CARD_POSITION, rankFeed } from './ranking'
-import { loadEngagement, loadUserFeedState, loadWeights } from './signals'
-import type { FeedItem, FeedPage } from './types'
+import { loadRankingContext, toContentItem } from './context'
+import { deprioritizeSeen, MARKET_CARD_POSITION, rankFeed } from './ranking'
+import { filterCandidates, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
+import type { FeedContentItem, FeedItem, FeedPage } from './types'
 
 export const DEFAULT_PAGE_SIZE = 10
 export const MAX_PAGE_SIZE = 20
@@ -31,13 +30,13 @@ export function decodeCursor(raw: string | null): Cursor | null {
   }
 }
 
-// Base externa de eventosagropy.com (misma que usa lib/karai/events-context.ts). Sin env vars el
-// feed sale sin eventos en vez de romperse.
-function createEventsClient(): SupabaseClient | null {
-  const url = process.env.EVENTOS_SUPABASE_URL
-  const key = process.env.EVENTOS_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  return createClient(url, key, { auth: { persistSession: false } })
+const SEEN_KEY_PATTERN = /^(post|event|listing):[A-Za-z0-9_-]{1,80}$/
+const MAX_SEEN_KEYS = 100
+
+/** Parámetro `seen` de /api/feed: claves "source:id" separadas por coma. Lo inválido se ignora. */
+export function parseSeenParam(raw: string | null): Set<string> {
+  if (!raw) return new Set()
+  return new Set(raw.split(',').filter((k) => SEEN_KEY_PATTERN.test(k)).slice(0, MAX_SEEN_KEYS))
 }
 
 export async function buildFeedPage(
@@ -45,34 +44,18 @@ export async function buildFeedPage(
   userId: string,
   cursor: Cursor | null,
   pageSize: number,
+  sessionSeen: Set<string> = new Set(),
 ): Promise<FeedPage> {
   const asOf = cursor ? new Date(cursor.t) : new Date()
   const offset = cursor?.o ?? 0
 
-  const [posts, listings, events, state, weights, engagement] = await Promise.all([
-    loadPostCandidates(admin, asOf),
-    loadListingCandidates(admin, asOf),
-    loadEventCandidates(createEventsClient(), asOf),
-    loadUserFeedState(admin, userId, asOf),
-    loadWeights(admin),
-    loadEngagement(admin, asOf),
-  ])
-
-  const ranked = rankFeed([...posts, ...listings, ...events], state.signals, engagement, weights, asOf)
+  const ctx = await loadRankingContext(admin, userId, asOf)
+  const ranked = deprioritizeSeen(
+    rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf),
+    sessionSeen,
+  )
   const slice = ranked.slice(offset, offset + pageSize)
-
-  const items: FeedItem[] = slice.map((c) => {
-    const e = engagement.get(c.key)
-    return {
-      ...c,
-      kind: 'content',
-      likes: e?.likes ?? 0,
-      saves: e?.saves ?? 0,
-      liked: state.liked.has(c.key),
-      saved: state.saved.has(c.key),
-      following: c.organizationId !== null && state.signals.followedOrgIds.has(c.organizationId),
-    }
-  })
+  const items: FeedItem[] = slice.map((c) => toContentItem(c, ctx))
 
   if (offset === 0 && items.length >= MARKET_CARD_POSITION) {
     items.splice(MARKET_CARD_POSITION, 0, { kind: 'market', key: 'market' })
@@ -82,5 +65,24 @@ export async function buildFeedPage(
   return {
     items,
     nextCursor: nextOffset < ranked.length ? encodeCursor({ o: nextOffset, t: asOf.toISOString() }) : null,
+  }
+}
+
+const EXPLORE_LIMIT = 40
+
+export interface ExplorePage {
+  items: FeedContentItem[]
+  trending: TrendingTag[]
+}
+
+/** Resultados de Explorar, ordenados con el mismo ranking del feed (lo más relevante para el usuario primero). */
+export async function buildExplorePage(admin: SupabaseClient, userId: string, filters: ExploreFilters): Promise<ExplorePage> {
+  const asOf = new Date()
+  const ctx = await loadRankingContext(admin, userId, asOf)
+  const matches = filterCandidates(ctx.candidates, filters)
+  const ranked = rankFeed(matches, ctx.state.signals, ctx.engagement, ctx.weights, asOf)
+  return {
+    items: ranked.slice(0, EXPLORE_LIMIT).map((c) => toContentItem(c, ctx)),
+    trending: trendingTags(ctx.candidates, asOf),
   }
 }

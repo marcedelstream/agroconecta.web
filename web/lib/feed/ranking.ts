@@ -175,5 +175,15 @@ export function rankFeed(
   return result
 }
 
+/**
+ * Manda al final lo que el usuario ya vio en esta sesión, sin cambiar el orden relativo. Lo usa el
+ * "tirar para actualizar": la telemetría llega en lotes y el ranking todavía no sabe qué se vio,
+ * así que la app manda esas claves y la recarga arranca con contenido nuevo.
+ */
+export function deprioritizeSeen<T extends { key: string }>(ranked: T[], seenKeys: Set<string>): T[] {
+  if (seenKeys.size === 0) return ranked
+  return [...ranked.filter((c) => !seenKeys.has(c.key)), ...ranked.filter((c) => seenKeys.has(c.key))]
+}
+
 /** Posición (0-based) de la tarjeta "Tu mercado hoy" en la primera página. */
 export const MARKET_CARD_POSITION = 2

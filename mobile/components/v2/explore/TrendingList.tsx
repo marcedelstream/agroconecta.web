@@ -15,7 +15,7 @@ export function TrendingList({ trending, onPick }: Props) {
     <View style={styles.card}>
       {trending.map((t, i) => (
         <TouchableOpacity key={t.tag} onPress={() => onPick(t.tag)} activeOpacity={0.7} accessibilityRole="button" style={styles.row}>
-          <Text family="noto-sans" weight="extrabold" size={20} color={Colors.v2.lime} style={styles.rank}>
+          <Text family="noto-sans" weight="extrabold" size={20} color={Colors.v2.limeText} style={styles.rank}>
             {i + 1}
           </Text>
           <View style={styles.texts}>

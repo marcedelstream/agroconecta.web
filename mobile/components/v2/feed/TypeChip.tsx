@@ -1,7 +1,8 @@
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { GlassSurface } from '@/components/v2/GlassSurface'
 import { Colors } from '@/constants/colors'
+import { V2Layout } from '@/constants/spacing'
 
 interface Props {
   label: string
@@ -29,7 +30,14 @@ export function TypeChip({ label, dotColor = Colors.v2.lime, sponsored }: Props)
 }
 
 const styles = StyleSheet.create({
-  chip: { height: 26, borderRadius: 13, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  chip: {
+    height: 26,
+    borderRadius: Platform.OS === 'android' ? V2Layout.android.chipRadius : 13,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   dot: { width: 6, height: 6, borderRadius: 3 },
   label: { letterSpacing: 1 },
 })

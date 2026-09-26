@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { FEED_TEXT } from '@/lib/feed-v2/labels'
+import { V2Layout } from '@/constants/spacing'
 
 const AVATAR = 52
 const BADGE = 22
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: BADGE,
     height: BADGE,
-    borderRadius: BADGE / 2,
+    borderRadius: Platform.OS === 'android' ? V2Layout.android.followRadius : BADGE / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

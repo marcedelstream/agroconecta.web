@@ -1,24 +1,17 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { Text } from '@/components/ui/Text'
 import { GlassSurface } from '@/components/v2/GlassSurface'
+import { MaterialNavBar } from '@/components/v2/MaterialNavBar'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 
-type IconName = React.ComponentProps<typeof Ionicons>['name']
+import { TAB_META, V2_TAB_ROUTES, type V2TabRoute } from '@/components/v2/tabs-config'
 
-export const V2_TAB_ROUTES = ['feed', 'explorar', 'karai', 'guardados', 'profile'] as const
-export type V2TabRoute = (typeof V2_TAB_ROUTES)[number]
-
-const TAB_META: Record<Exclude<V2TabRoute, 'karai'>, { label: string; icon: IconName; activeIcon: IconName }> = {
-  feed: { label: 'Inicio', icon: 'home-outline', activeIcon: 'home' },
-  explorar: { label: 'Explorar', icon: 'compass-outline', activeIcon: 'compass' },
-  guardados: { label: 'Guardados', icon: 'bookmark-outline', activeIcon: 'bookmark' },
-  profile: { label: 'Perfil', icon: 'person-outline', activeIcon: 'person' },
-}
+export { V2_TAB_ROUTES } from '@/components/v2/tabs-config'
 
 const N = Colors.v2.nav
 
@@ -26,10 +19,16 @@ const N = Colors.v2.nav
 // padding inferior de su contenido para que nada quede tapado.
 export function useFloatingTabBarSpace() {
   const insets = useSafeAreaInsets()
+  if (Platform.OS === 'android') return V2Layout.android.navHeight + insets.bottom
   return V2Layout.navHeight + V2Layout.navBottom + insets.bottom
 }
 
-export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
+// iOS: barra flotante de vidrio. Android: barra acoplada de Material You (misma arquitectura).
+export function FloatingTabBar(props: BottomTabBarProps) {
+  return Platform.OS === 'android' ? <MaterialNavBar {...props} /> : <GlassTabBar {...props} />
+}
+
+function GlassTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
   const currentName = state.routes[state.index]?.name
   // En Inicio la barra va sobre la foto del feed; en el resto, sobre fondos claros.

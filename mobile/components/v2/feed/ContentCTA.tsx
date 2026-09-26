@@ -2,7 +2,7 @@ import { StyleSheet, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { V2Layout } from '@/constants/spacing'
+import { CTA_HEIGHT, CTA_RADIUS } from '@/components/v2/feed/layout'
 import { CTA_LABEL, CTA_MAX_LENGTH, type CtaKind } from '@/lib/feed-v2/labels'
 
 type Placement =
@@ -43,8 +43,8 @@ export function ContentCTA(props: Props) {
 const styles = StyleSheet.create({
   fixed: { position: 'absolute' },
   cta: {
-    height: V2Layout.ctaHeight,
-    borderRadius: V2Layout.ctaRadius,
+    height: CTA_HEIGHT,
+    borderRadius: CTA_RADIUS,
     backgroundColor: Colors.v2.lime,
     flexDirection: 'row',
     alignItems: 'center',

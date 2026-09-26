@@ -24,7 +24,7 @@ totalmente independientes — cada uno con su propio `package.json`, `node_modul
 > **`web/app/api/feed`** (no una RPC: los eventos viven en la base externa de eventosagropy y Postgres no
 > la ve); `/api/explore` y `/api/guardados` reusan esa misma carga (`web/lib/feed/`, con tests vitest).
 > Las rutas `/api/*` del feed ya están publicadas en `main` (se pasan por cherry-pick, solo `web/`).
-> Migraciones nuevas sin correr en prod: `supabase/fix-v2-feed.sql`, `supabase/fix-v2-profile.sql`.
+> **Fases 1–6 hechas en código (2026-09-26).** Migraciones v2 sin correr en prod, en este orden: `fix-v2-feed.sql`, `fix-v2-profile.sql`, `fix-v2-points.sql`, `fix-v2-onboarding.sql`, `fix-v2-live-ads.sql`, `fix-v2-rewards.sql`, `fix-v2-metrics.sql`. Admin nuevo en `/admin`: En vivo, Encuestas y quiz, Reporte de publicidad, Premios y canjes, Métricas. Android usa la barra acoplada de Material You (`MaterialNavBar`), iOS la flotante de vidrio.
 > Ojo: NativeWind v4 descarta `style={({ pressed }) => …}` en Pressable — usar TouchableOpacity o estilo fijo.
 >
 > **2026-08-18: arranca el ciclo v1.1.0.** La v1.0.0 ya está en revisión en las stores (Play Store/App

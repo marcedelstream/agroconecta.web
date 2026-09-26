@@ -44,4 +44,18 @@ export const V2Layout = {
   cardRadius: 20,
   pollRadius: 28,
   minTouch: 44,
+  // Variante Android / Material You (prototype/source/Android.dc.html): barra acoplada abajo, no
+  // flotante, con indicador en píldora; botón de acción más alto; chips de radio 8.
+  android: {
+    navHeight: 80,
+    indicatorWidth: 64,
+    indicatorHeight: 32,
+    karaiWidth: 56,
+    karaiHeight: 44,
+    karaiRadius: 16,
+    ctaHeight: 56,
+    ctaRadius: 28,
+    chipRadius: 8,
+    followRadius: 8,
+  },
 } as const

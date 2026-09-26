@@ -28,7 +28,7 @@ export function GlassCircle({ size, onPress, accessibilityLabel, selected, style
       <GlassSurface
         tint="dark"
         overlayColor={Colors.v2.glass.bg}
-        androidColor={Colors.v2.feed.glassAndroid}
+        androidColor={Colors.v2.android.tonal}
         borderColor={Colors.v2.glass.border}
         style={[styles.fill, { width: size, height: size, borderRadius: size / 2 }]}
       >

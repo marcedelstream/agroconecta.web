@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet } from 'react-native'
+import { StyleSheet, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
@@ -17,17 +17,18 @@ interface Props {
 export function ContentCTA({ type, bottom, side, onPress }: Props) {
   const label = CTA_LABEL[type]
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.cta, { bottom, left: side, right: side, transform: [{ scale: pressed ? 0.98 : 1 }] }]}
+      style={[styles.cta, { bottom, left: side, right: side }]}
     >
       <Text family="noto-sans" weight="bold" size={16} lineHeight={20} color={Colors.v2.navy}>
         {label}
       </Text>
       <Ionicons name="arrow-forward" size={18} color={Colors.v2.navy} />
-    </Pressable>
+    </TouchableOpacity>
   )
 }
 

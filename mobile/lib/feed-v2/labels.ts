@@ -28,8 +28,7 @@ export const CTA_LABEL: Record<CtaKind, string> = {
 }
 
 export const FEED_TEXT = {
-  wordmarkAgro: 'agro',
-  wordmarkConecta: 'conecta',
+  brand: 'Agroconecta',
   search: 'Buscar',
   like: 'Me gusta',
   save: 'Guardar',

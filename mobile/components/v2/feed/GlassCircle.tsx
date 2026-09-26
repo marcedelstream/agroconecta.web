@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
+import { StyleSheet, TouchableOpacity, type StyleProp, type ViewStyle } from 'react-native'
 import { GlassSurface } from '@/components/v2/GlassSurface'
 import { Colors } from '@/constants/colors'
 
@@ -12,29 +12,32 @@ interface Props {
 }
 
 // Botón redondo de vidrio sobre la foto (barra lateral, cabecera, play).
+// TouchableOpacity con estilo fijo, no Pressable con style={({ pressed }) => …}: NativeWind v4
+// envuelve Pressable y descarta ese estilo en función (el botón perdía tamaño y posición).
 export function GlassCircle({ size, onPress, accessibilityLabel, selected, style, children }: Props) {
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={selected === undefined ? undefined : { selected }}
       hitSlop={4}
-      style={({ pressed }) => [{ width: size, height: size, opacity: pressed ? 0.8 : 1 }, style]}
+      style={[{ width: size, height: size, borderRadius: size / 2 }, style]}
     >
       <GlassSurface
         tint="dark"
         overlayColor={Colors.v2.glass.bg}
         androidColor={Colors.v2.feed.glassAndroid}
         borderColor={Colors.v2.glass.border}
-        style={[styles.fill, { borderRadius: size / 2 }]}
+        style={[styles.fill, { width: size, height: size, borderRadius: size / 2 }]}
       >
         {children}
       </GlassSurface>
-    </Pressable>
+    </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  fill: { alignItems: 'center', justifyContent: 'center' },
 })

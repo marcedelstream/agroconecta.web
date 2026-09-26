@@ -23,7 +23,7 @@ function FeedContentSlideBase({ item, height, active, actions }: Props) {
   const { ctaBottom, contentBottom, side } = useFeedInsets()
   return (
     <View style={[styles.slide, { height }]}>
-      <FeedBackground item={item} active={active} />
+      <FeedBackground item={item} active={active} height={height} />
       <FeedInfo item={item} bottom={contentBottom} side={side} />
       <ActionRail
         item={item}

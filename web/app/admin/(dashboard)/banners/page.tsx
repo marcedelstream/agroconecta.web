@@ -5,6 +5,7 @@ import { deleteBanner, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 import { PageHeader, SectionTabs } from '@/components/admin/ui'
+import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 async function loadBanners() {
   // Cliente admin: "public can read active ads" en RLS esconde los pausados del anon key,
@@ -46,80 +47,82 @@ export default async function BannersPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
-        <BannerForm />
+      <div className="mb-5 flex justify-end">
+        <CreateDrawer label="Nuevo anuncio" title="Nuevo anuncio" description="Elegí dónde aparece, a quién se muestra y a dónde lleva.">
+            <BannerForm />
+        </CreateDrawer>
+      </div>
 
-        {/* ── Tabla de banners ── */}
-        <div className="card p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="admin-table">
-              <thead>
+      {/* ── Tabla de banners ── */}
+      <div className="card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Imagen</th>
+                <th>Campaña</th>
+                <th>Sección</th>
+                <th>Destino</th>
+                <th>Segmentación</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {banners.length === 0 && (
                 <tr>
-                  <th>Imagen</th>
-                  <th>Campaña</th>
-                  <th>Sección</th>
-                  <th>Destino</th>
-                  <th>Segmentación</th>
-                  <th>Estado</th>
-                  <th></th>
+                  <td colSpan={7} className="text-center py-10 text-muted">
+                    No hay banners cargados.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {banners.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-10 text-muted">
-                      No hay banners cargados.
-                    </td>
-                  </tr>
-                )}
-                {banners.map((banner) => (
-                  <tr key={banner.id}>
-                    <td>
-                      <div className="relative w-32 h-10 rounded-md overflow-hidden bg-secondary">
-                        <Image src={banner.image_url} alt={banner.title} fill className="object-cover" sizes="128px" />
-                      </div>
-                    </td>
-                    <td>
-                      <p className="font-medium">{banner.title}</p>
-                    </td>
-                    <td className="text-xs text-muted">
-                      {(banner.placement?.length ? banner.placement : (['home'] as AdPlacement[])).map((p) => PLACEMENT_LABELS[p]).join(', ')}
-                    </td>
-                    <td className="text-xs text-muted">
-                      {banner.link_type
-                        ? <span>{LINK_TYPE_LABELS[banner.link_type]}: <code>{banner.link_target}</code></span>
-                        : <span>—</span>}
-                    </td>
-                    <td className="text-xs text-muted max-w-sm">
-                      <SegmentText banner={banner} />
-                    </td>
-                    <td>
-                      <span className={`badge text-xs ${banner.is_active ? 'bg-success/15 text-success' : 'bg-muted/15 text-muted'}`}>
-                        {banner.is_active ? 'Activo' : 'Pausado'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <form action={toggleBanner}>
-                          <input type="hidden" name="id" value={banner.id} />
-                          <input type="hidden" name="is_active" value={String(banner.is_active)} />
-                          <button type="submit" className="btn text-xs">
-                            {banner.is_active ? 'Pausar' : 'Activar'}
-                          </button>
-                        </form>
-                        <ConfirmSubmitButton
-                          action={deleteBanner}
-                          fields={{ id: banner.id, image_url: banner.image_url }}
-                          confirmMessage="¿Eliminar este banner?"
-                          className="btn text-xs text-danger border-danger/40 hover:bg-danger/10"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              )}
+              {banners.map((banner) => (
+                <tr key={banner.id}>
+                  <td>
+                    <div className="relative w-32 h-10 rounded-md overflow-hidden bg-secondary">
+                      <Image src={banner.image_url} alt={banner.title} fill className="object-cover" sizes="128px" />
+                    </div>
+                  </td>
+                  <td>
+                    <p className="font-medium">{banner.title}</p>
+                  </td>
+                  <td className="text-xs text-muted">
+                    {(banner.placement?.length ? banner.placement : (['home'] as AdPlacement[])).map((p) => PLACEMENT_LABELS[p]).join(', ')}
+                  </td>
+                  <td className="text-xs text-muted">
+                    {banner.link_type
+                      ? <span>{LINK_TYPE_LABELS[banner.link_type]}: <code>{banner.link_target}</code></span>
+                      : <span>—</span>}
+                  </td>
+                  <td className="text-xs text-muted max-w-sm">
+                    <SegmentText banner={banner} />
+                  </td>
+                  <td>
+                    <span className={`badge text-xs ${banner.is_active ? 'bg-success/15 text-success' : 'bg-muted/15 text-muted'}`}>
+                      {banner.is_active ? 'Activo' : 'Pausado'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <form action={toggleBanner}>
+                        <input type="hidden" name="id" value={banner.id} />
+                        <input type="hidden" name="is_active" value={String(banner.is_active)} />
+                        <button type="submit" className="btn text-xs">
+                          {banner.is_active ? 'Pausar' : 'Activar'}
+                        </button>
+                      </form>
+                      <ConfirmSubmitButton
+                        action={deleteBanner}
+                        fields={{ id: banner.id, image_url: banner.image_url }}
+                        confirmMessage="¿Eliminar este banner?"
+                        className="btn text-xs text-danger border-danger/40 hover:bg-danger/10"
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

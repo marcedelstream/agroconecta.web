@@ -5,6 +5,7 @@ import { ALLY_PLAN_LABELS, type OrganizationRow } from '@/lib/types'
 import { OrganizationForm } from './OrganizationForm'
 import { createOrganization } from './actions'
 import { PageHeader } from '@/components/admin/ui'
+import { CreateDrawer } from '@/components/admin/CreateDrawer'
 
 const STATUS_ORDER: Record<string, number> = { overdue: 0, trial: 1, active: 2, paused: 3 }
 
@@ -68,90 +69,92 @@ export default async function OrganizacionesPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
-        <div>
-          <h2 className="font-display font-semibold text-base text-foreground mb-3">
-            Nueva organización
-          </h2>
-          <OrganizationForm action={createOrganization} submitLabel="Crear organización" />
-        </div>
+      <div className="mb-5 flex justify-end">
+        <CreateDrawer label="Nueva organización" title="Nueva organización">
+            <div>
+              <h2 className="font-display font-semibold text-base text-foreground mb-3">
+                Nueva organización
+              </h2>
+              <OrganizationForm action={createOrganization} submitLabel="Crear organización" />
+            </div>
+        </CreateDrawer>
+      </div>
 
-        <div className="card p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="admin-table">
-              <thead>
+      <div className="card p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Logo</th>
+                <th>Cuenta</th>
+                <th>Tipo</th>
+                <th>Plan</th>
+                <th>Aliado</th>
+                <th>Estado</th>
+                <th>Verificada</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {orgs.length === 0 && (
                 <tr>
-                  <th>Logo</th>
-                  <th>Cuenta</th>
-                  <th>Tipo</th>
-                  <th>Plan</th>
-                  <th>Aliado</th>
-                  <th>Estado</th>
-                  <th>Verificada</th>
-                  <th></th>
+                  <td colSpan={8} className="text-center py-10 text-muted">
+                    No hay organizaciones cargadas.
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {orgs.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="text-center py-10 text-muted">
-                      No hay organizaciones cargadas.
-                    </td>
-                  </tr>
-                )}
-                {orgs.map((org) => (
-                  <tr key={org.id}>
-                    <td>
-                      {org.logo_url ? (
-                        <Image src={org.logo_url} alt={org.name} width={40} height={40} className="rounded-lg w-10 h-10 object-cover" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-secondary border border-bdr flex items-center justify-center text-muted text-xs">
-                          {org.name.charAt(0)}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <p className="font-medium">{org.name}</p>
-                      <p className="text-muted text-xs">{org.slug}</p>
-                    </td>
-                    <td className="text-muted text-sm capitalize">{org.type}</td>
-                    <td className="text-sm">{org.plan_name}</td>
-                    <td className="text-xs">
-                      {org.ally_plan ? (
-                        <span className="badge text-xs bg-lime/15 text-lime">
-                          {ALLY_PLAN_LABELS[org.ally_plan]}{org.ally_founder ? ' · Fundador' : ''}
-                        </span>
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge text-xs ${STATUS_STYLE[org.commercial_status] ?? 'bg-secondary text-muted'}`}
-                        title={org.billing_notes ?? undefined}
-                      >
-                        {STATUS_LABELS[org.commercial_status] ?? org.commercial_status}
+              )}
+              {orgs.map((org) => (
+                <tr key={org.id}>
+                  <td>
+                    {org.logo_url ? (
+                      <Image src={org.logo_url} alt={org.name} width={40} height={40} className="rounded-lg w-10 h-10 object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-secondary border border-bdr flex items-center justify-center text-muted text-xs">
+                        {org.name.charAt(0)}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <p className="font-medium">{org.name}</p>
+                    <p className="text-muted text-xs">{org.slug}</p>
+                  </td>
+                  <td className="text-muted text-sm capitalize">{org.type}</td>
+                  <td className="text-sm">{org.plan_name}</td>
+                  <td className="text-xs">
+                    {org.ally_plan ? (
+                      <span className="badge text-xs bg-lime/15 text-lime">
+                        {ALLY_PLAN_LABELS[org.ally_plan]}{org.ally_founder ? ' · Fundador' : ''}
                       </span>
-                      {org.billing_notes && (
-                        <p className="text-muted text-xs mt-1 max-w-[220px] truncate" title={org.billing_notes}>
-                          {org.billing_notes}
-                        </p>
-                      )}
-                    </td>
-                    <td className="text-center">{org.is_verified ? '✓' : '—'}</td>
-                    <td>
-                      <Link
-                        href={`/admin/organizaciones/${org.id}`}
-                        className="btn text-xs"
-                      >
-                        Editar
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td>
+                    <span
+                      className={`badge text-xs ${STATUS_STYLE[org.commercial_status] ?? 'bg-secondary text-muted'}`}
+                      title={org.billing_notes ?? undefined}
+                    >
+                      {STATUS_LABELS[org.commercial_status] ?? org.commercial_status}
+                    </span>
+                    {org.billing_notes && (
+                      <p className="text-muted text-xs mt-1 max-w-[220px] truncate" title={org.billing_notes}>
+                        {org.billing_notes}
+                      </p>
+                    )}
+                  </td>
+                  <td className="text-center">{org.is_verified ? '✓' : '—'}</td>
+                  <td>
+                    <Link
+                      href={`/admin/organizaciones/${org.id}`}
+                      className="btn text-xs"
+                    >
+                      Editar
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

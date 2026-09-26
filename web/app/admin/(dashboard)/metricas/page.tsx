@@ -59,7 +59,7 @@ export default async function MetricasPage() {
         <Stat label="Mensajes a Karai por usuario activo" value={fmt(karaiActive ? (s?.karai_messages ?? 0) / karaiActive : 0)} />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="card p-0 overflow-hidden">
           <table className="admin-table">
             <thead><tr><th>CTR del botón de acción</th><th>Impresiones</th><th>Aperturas</th><th>CTR</th></tr></thead>

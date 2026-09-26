@@ -212,3 +212,12 @@
 .admin-root .input { background-color: rgb(255 255 255); }
 .admin-root .admin-table th { background-color: rgb(248 249 245); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
 .admin-root .card { border-radius: 16px; }
+
+/* Formulario dentro del panel lateral de alta (CreateDrawer): sin marco de tarjeta y con más aire
+   entre campos, para que se lea de arriba a abajo. */
+.admin-drawer-body > form,
+.admin-drawer-body > div > form,
+.admin-drawer-body .card { background: transparent; border: 0; padding: 0; box-shadow: none; }
+.admin-drawer-body form { display: flex; flex-direction: column; gap: 1.1rem; }
+.admin-drawer-body form > h2:first-child { display: none; }
+.admin-drawer-body .btn-primary[type="submit"] { width: 100%; padding-top: .85rem; padding-bottom: .85rem; font-size: 15px; }

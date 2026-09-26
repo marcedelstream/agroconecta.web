@@ -6,7 +6,7 @@ export default function OrganizacionesLoading() {
         <div className="h-4 w-24 rounded bg-secondary" />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="card h-96" />
         <div className="card p-0 overflow-hidden">
           <div className="divide-y divide-bdr">

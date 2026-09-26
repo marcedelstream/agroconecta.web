@@ -1,106 +1,128 @@
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase-server'
-import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type PostRow, type EditorialStatus, type NewsCategory } from '@/lib/types'
+import { ArrowRight, CheckCircle2, Plus } from 'lucide-react'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { PageHeader, SectionTitle } from '@/components/admin/ui'
 
-async function loadDashboard() {
-  const supabase = await createSupabaseServer()
+export const dynamic = 'force-dynamic'
 
-  const [posts, orgs, banners] = await Promise.all([
-    supabase
-      .from('posts')
-      .select('id,title,category,content_type,editorial_status,is_important,published_at,organizations(name)')
-      .order('created_at', { ascending: false })
-      .limit(15),
-    supabase.from('organizations').select('id', { count: 'exact', head: true }),
-    supabase.from('ad_campaigns').select('id', { count: 'exact', head: true }),
-  ])
+interface Task {
+  count: number
+  title: string
+  text: string
+  href: string
+  cta: string
+}
 
-  return {
-    posts: (posts.data ?? []) as unknown as PostRow[],
-    orgCount: orgs.count ?? 0,
-    bannerCount: banners.count ?? 0,
+interface Summary {
+  active_users: number | null
+  poll_votes: number | null
+  quiz_answers: number | null
+  karai_messages: number | null
+}
+
+// Cada conteo es best-effort: si una tabla no existe (migración sin correr) cuenta 0 y la tarea no aparece.
+async function count(query: PromiseLike<{ count: number | null }>): Promise<number> {
+  try {
+    return (await query).count ?? 0
+  } catch {
+    return 0
   }
 }
 
-export default async function AdminDashboard() {
-  const { posts, orgCount, bannerCount } = await loadDashboard()
-  const pending = posts.filter((p) => p.editorial_status === 'pending_review')
-  const published = posts.filter((p) => p.editorial_status === 'published')
+async function loadHome() {
+  const db = createSupabaseAdmin()
+  const now = new Date()
+  const inAWeek = new Date(now.getTime() + 7 * 86_400_000).toISOString()
+  const head = { count: 'exact' as const, head: true }
 
-  const stats = [
-    { label: 'En revisión', value: pending.length, color: 'text-warning', href: '/admin/publicaciones?status=pending_review' },
-    { label: 'Publicados', value: published.length, color: 'text-success', href: '/admin/publicaciones?status=published' },
-    { label: 'Organizaciones', value: orgCount, color: 'text-info', href: '/admin/organizaciones' },
-    { label: 'Banners', value: bannerCount, color: 'text-lime', href: '/admin/banners' },
-  ]
+  const [pending, leads, karaiLeads, codes, ending, live, polls, quizzes, summary] = await Promise.all([
+    count(db.from('posts').select('id', head).eq('editorial_status', 'pending_review')),
+    count(db.from('service_leads').select('id', head).eq('status', 'pendiente')),
+    count(db.from('karai_leads').select('id', head).eq('status', 'new')),
+    count(db.from('reward_redemptions').select('id', head).eq('status', 'emitido')),
+    count(db.from('ad_campaigns').select('id', head).eq('is_active', true).gte('ends_at', now.toISOString()).lte('ends_at', inAWeek)),
+    count(db.from('live_sessions').select('id', head).eq('is_live', true)),
+    count(db.from('polls').select('id', head).eq('is_active', true)),
+    count(db.from('quizzes').select('id', head).eq('is_active', true)),
+    db.from('v2_metric_summary').select('active_users,poll_votes,quiz_answers,karai_messages').maybeSingle(),
+  ])
+
+  const tasks: Task[] = [
+    { count: pending, title: 'Publicaciones para revisar', text: 'Notas que mandaron las organizaciones y esperan tu aprobación.', href: '/admin/publicaciones?status=pending_review', cta: 'Revisar' },
+    { count: leads, title: 'Consultas sin responder', text: 'Personas que pidieron que las contactemos.', href: '/admin/consultas', cta: 'Ver consultas' },
+    { count: karaiLeads, title: 'Oportunidades de Karai', text: 'Conversaciones de Karai donde alguien mostró interés comercial.', href: '/admin/karai', cta: 'Ver leads' },
+    { count: live, title: 'Transmisiones prendidas', text: 'Se están mostrando ahora arriba del feed. Acordate de apagarlas al terminar.', href: '/admin/en-vivo', cta: 'Ver en vivo' },
+    { count: ending, title: 'Publicidad que vence esta semana', text: 'Avisale al anunciante si quiere renovar.', href: '/admin/banners', cta: 'Ver campañas' },
+    { count: codes, title: 'Códigos de canje sin usar', text: 'Premios canjeados que el aliado todavía no validó.', href: '/admin/premios', cta: 'Ver códigos' },
+  ].filter((t) => t.count > 0)
+
+  // Sin encuesta ni quiz activos, el feed no tiene contenido para sumar puntos.
+  if (polls + quizzes === 0) {
+    tasks.push({ count: 0, title: 'No hay encuestas ni quiz activos', text: 'Cargá uno: es lo que hace que la gente sume puntos.', href: '/admin/encuestas', cta: 'Crear encuesta' })
+  }
+
+  return { tasks, summary: summary.data as Summary | null }
+}
+
+const fmt = (n: number | null | undefined) => Number(n ?? 0).toLocaleString('es-PY')
+
+export default async function AdminHome() {
+  const { tasks, summary } = await loadHome()
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-white">Dashboard</h1>
-          <p className="text-muted text-sm mt-0.5">
-            Panel editorial y comercial de Agroconecta
-          </p>
-        </div>
-        <Link href="/admin/publicaciones/nueva" className="btn-primary text-sm">
-          + Nueva publicación
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {stats.map(({ label, value, color, href }) => (
-          <Link key={label} href={href} className="card hover:border-bdr/60 transition-colors">
-            <p className="text-muted text-xs">{label}</p>
-            <p className={`font-display font-bold text-3xl mt-1 ${color}`}>{value}</p>
+    <div className="max-w-5xl">
+      <PageHeader
+        title="Hoy"
+        help="Acá ves lo que hay para hacer. Cada tarjeta te lleva directo a la pantalla donde se resuelve."
+        actions={
+          <Link href="/admin/publicaciones/nueva" className="btn-primary text-sm gap-2">
+            <Plus size={16} aria-hidden /> Nueva publicación
           </Link>
+        }
+      />
+
+      <SectionTitle>Para hacer</SectionTitle>
+      {tasks.length === 0 ? (
+        <div className="card flex items-center gap-3 mb-8">
+          <CheckCircle2 className="text-success shrink-0" aria-hidden />
+          <p className="text-foreground">Todo al día. No hay nada pendiente por ahora.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          {tasks.map((t) => (
+            <Link key={t.title} href={t.href} className="card flex flex-col gap-2 hover:border-lime transition-colors">
+              <div className="flex items-center gap-3">
+                {t.count > 0 && (
+                  <span className="min-w-9 h-9 px-2 rounded-full bg-lime/25 text-foreground font-bold flex items-center justify-center">{t.count}</span>
+                )}
+                <p className="font-display font-semibold text-foreground">{t.title}</p>
+              </div>
+              <p className="text-sm text-muted">{t.text}</p>
+              <span className="text-sm font-semibold text-lime inline-flex items-center gap-1 mt-1">
+                {t.cta} <ArrowRight size={14} aria-hidden />
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <SectionTitle help="Últimos 30 días. El detalle está en Métricas.">Cómo viene la app</SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Usuarios activos', value: summary?.active_users },
+          { label: 'Votos en encuestas', value: summary?.poll_votes },
+          { label: 'Respuestas de quiz', value: summary?.quiz_answers },
+          { label: 'Mensajes a Karai', value: summary?.karai_messages },
+        ].map((s) => (
+          <div key={s.label} className="card">
+            <p className="text-xs text-muted">{s.label}</p>
+            <p className="font-display font-bold text-3xl text-foreground mt-1">{fmt(s.value)}</p>
+          </div>
         ))}
       </div>
-
-      <div className="card p-0 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-bdr">
-          <h2 className="font-display font-semibold text-white">Publicaciones recientes</h2>
-          <Link href="/admin/publicaciones" className="text-sm text-lime hover:text-lime-dark transition-colors">
-            Ver todas →
-          </Link>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Cuenta</th>
-                <th>Categoría</th>
-                <th>Estado</th>
-                <th>Imp.</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => {
-                const org = Array.isArray(post.organizations) ? post.organizations[0] : post.organizations
-                const statusColor = STATUS_COLORS[post.editorial_status as EditorialStatus] ?? '#6B7280'
-                return (
-                  <tr key={post.id}>
-                    <td>
-                      <Link href={`/admin/publicaciones/${post.id}`} className="hover:text-lime transition-colors font-medium line-clamp-1">
-                        {post.title}
-                      </Link>
-                    </td>
-                    <td className="text-muted text-sm">{org?.name ?? '—'}</td>
-                    <td className="text-sm text-muted">{CATEGORY_LABELS[post.category as NewsCategory] ?? post.category}</td>
-                    <td>
-                      <span className="badge text-xs" style={{ backgroundColor: `${statusColor}20`, color: statusColor }}>
-                        {STATUS_LABELS[post.editorial_status as EditorialStatus] ?? post.editorial_status}
-                      </span>
-                    </td>
-                    <td className="text-center">{post.is_important ? '⚑' : '—'}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Link href="/admin/metricas" className="text-sm font-semibold text-lime inline-flex items-center gap-1 mt-4">
+        Ver todas las métricas <ArrowRight size={14} aria-hidden />
+      </Link>
     </div>
   )
 }

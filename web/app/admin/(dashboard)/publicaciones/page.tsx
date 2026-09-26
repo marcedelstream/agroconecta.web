@@ -3,6 +3,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type PostRow, type EditorialStatus, type NewsCategory } from '@/lib/types'
 import { approvePost, rejectPost, deletePost } from './actions'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
+import { PageHeader } from '@/components/admin/ui'
 
 async function loadPosts(status?: string) {
   // Server-side (anon key + RLS) solo puede leer posts publicados — sin esto, los
@@ -30,15 +31,11 @@ export default async function PublicacionesPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display font-bold text-2xl text-white">Publicaciones</h1>
-          <p className="text-muted text-sm mt-0.5">{posts.length} entradas</p>
-        </div>
-        <Link href="/admin/publicaciones/nueva" className="btn-primary text-sm">
-          + Nueva
-        </Link>
-      </div>
+      <PageHeader
+        title="Publicaciones"
+        help="Las notas, videos y remates que se ven en la app y la web. Acá aprobás lo que mandan las organizaciones o cargás lo tuyo."
+        actions={<Link href="/admin/publicaciones/nueva" className="btn-primary text-sm">+ Nueva publicación</Link>}
+      />
 
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
         {[

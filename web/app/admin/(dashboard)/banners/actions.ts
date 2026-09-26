@@ -59,6 +59,15 @@ async function uploadBannerImage(formData: FormData): Promise<string> {
   return data.publicUrl
 }
 
+function optionalV2Fields(formData: FormData) {
+  const fields: Record<string, string> = {}
+  for (const key of ['advertiser_name', 'body', 'cta_label'] as const) {
+    const value = String(formData.get(key) ?? '').trim()
+    if (value) fields[key] = key === 'cta_label' ? value.slice(0, 18) : value
+  }
+  return fields
+}
+
 export async function createBanner(
   _prev: BannerActionState,
   formData: FormData,
@@ -94,6 +103,8 @@ export async function createBanner(
     is_active: formData.get('is_active') === 'on',
     link_type: linkType && linkTarget ? linkType : null,
     link_target: linkType && linkTarget ? linkTarget : null,
+    // Solo si se completaron: las columnas existen recién después de fix-v2-live-ads.sql.
+    ...optionalV2Fields(formData),
   })
 
   if (error) return { error: error.message }

@@ -1,6 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { EventScheduleItemRow, PostRow } from '@/lib/types'
 import { addScheduleItem, deleteScheduleItem, tagPostToEvent, saveEventMedia } from './actions'
+import { PageHeader } from '@/components/admin/ui'
 
 interface EventMediaRow {
   event_slug: string
@@ -69,13 +70,7 @@ export default async function EventosPage({
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl text-white">Cobertura de eventos</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Programa y noticias asociadas para el hub de un evento. Los datos base del evento (título, fecha, lugar)
-          vienen de eventosagropy.com — acá solo se agrega el extra que se ve dentro de la app.
-        </p>
-      </div>
+      <PageHeader title="Eventos" help="Sumá el programa y las noticias al hub de cada evento en la app. La fecha y el lugar vienen de eventosagropy.com." />
 
       <form action="/admin/eventos" className="card flex flex-wrap items-end gap-3 mb-6">
         <div className="flex-1 min-w-[240px]">
@@ -93,7 +88,7 @@ export default async function EventosPage({
       {knownSlugs.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {knownSlugs.map((s) => (
-            <a key={s} href={`/admin/eventos?slug=${encodeURIComponent(s)}`} className="badge text-xs bg-secondary text-muted hover:text-white">
+            <a key={s} href={`/admin/eventos?slug=${encodeURIComponent(s)}`} className="badge text-xs bg-secondary text-muted hover:text-foreground">
               {s}
             </a>
           ))}

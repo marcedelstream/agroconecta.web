@@ -150,13 +150,17 @@ export const LINK_TYPE_LABELS: Record<AdLinkType, string> = {
   course: 'Curso (por id)',
 }
 
-export type AdPlacement = 'home' | 'article' | 'precios' | 'videos'
+// 'feed' y 'article_inline' son de la app v2 (feed vertical): item a pantalla completa y bloque
+// dentro de la noticia. Requieren supabase/fix-v2-live-ads.sql.
+export type AdPlacement = 'home' | 'article' | 'precios' | 'videos' | 'feed' | 'article_inline'
 
 export const PLACEMENT_LABELS: Record<AdPlacement, string> = {
   home: 'Inicio',
   article: 'Noticia',
   precios: 'Precios',
   videos: 'Videos',
+  feed: 'App v2 · Feed',
+  article_inline: 'App v2 · Dentro de la noticia',
 }
 
 export interface AdCampaignRow {

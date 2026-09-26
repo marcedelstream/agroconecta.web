@@ -89,7 +89,7 @@ export default async function OrgDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div>
           <h2 className="font-display font-semibold text-base text-foreground mb-3">
             Editar organización

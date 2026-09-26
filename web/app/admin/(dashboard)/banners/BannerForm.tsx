@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS, type AdPlacement, type Department, type NewsCategory } from '@/lib/types'
 import { createBanner, type BannerActionState } from './actions'
+import { Help } from '@/components/admin/ui'
 
 const initialState: BannerActionState = { error: null }
 
@@ -11,7 +12,7 @@ export function BannerForm() {
 
   return (
     <form action={formAction} encType="multipart/form-data" className="card space-y-4 h-fit">
-      <h2 className="font-display font-semibold text-base text-foreground">Nuevo banner</h2>
+      <h2 className="font-display font-semibold text-lg text-foreground">Nuevo anuncio</h2>
 
       {state.error && (
         <div className="rounded-lg bg-danger/10 border border-danger/30 px-4 py-3 text-sm text-danger">
@@ -42,7 +43,7 @@ export function BannerForm() {
       </div>
 
       <div>
-        <p className="text-sm font-medium text-foreground mb-2">¿Dónde se muestra?</p>
+        <p className="text-sm font-semibold text-foreground mb-2">¿Dónde se muestra?<Help text="Podés marcar varios. 'App v2 · Feed' sale a pantalla completa entre las publicaciones; 'Dentro de la noticia' sale en el medio de una nota." /></p>
         <div className="grid grid-cols-2 gap-2">
           {(Object.entries(PLACEMENT_LABELS) as [AdPlacement, string][]).map(([value, label]) => (
             <label key={value} className="flex items-center gap-2 text-xs text-muted">
@@ -53,8 +54,16 @@ export function BannerForm() {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-foreground">Textos para la app<Help text="Solo se usan en 'App v2 · Feed' y 'Dentro de la noticia'. El botón tiene máximo 18 letras." /></p>
+        <input name="advertiser_name" className="input" placeholder="Anunciante (ej: Semillería El Surco)" />
+        <textarea name="body" className="input min-h-[70px]" placeholder="Bajada corta" maxLength={180} />
+        <input name="cta_label" className="input" placeholder="Texto del botón (máx. 18, ej: Pedí tu cotización)" maxLength={18} />
+        <p className="text-xs text-muted">Siempre se muestra con la etiqueta "Patrocinado". Vacío = "Ver promoción".</p>
+      </div>
+
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Destino del banner (opcional)</label>
+        <label className="block text-sm font-semibold text-foreground mb-1.5">¿A dónde lleva al tocarlo?<Help text="Opcional. Sin destino, el anuncio es solo una imagen." /></label>
         <select name="link_type" className="input" defaultValue="">
           <option value="">Sin destino — solo visual</option>
           {(Object.entries(LINK_TYPE_LABELS) as [string, string][]).map(([value, label]) => (
@@ -73,7 +82,7 @@ export function BannerForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Profesiones (opcional)</label>
+        <label className="block text-sm font-semibold text-foreground mb-1.5">¿A quién se muestra?<Help text="Si dejás todo vacío, lo ve todo el mundo. Si marcás algo, solo lo ven quienes coinciden." /></label>
         <input name="target_professions" className="input" placeholder="productor, veterinario" />
         <p className="text-xs text-muted mt-1">Separadas por coma. Vacío = todas.</p>
       </div>

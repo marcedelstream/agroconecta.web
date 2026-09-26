@@ -30,7 +30,7 @@ export function NotificationsForm() {
           required
           maxLength={100}
           placeholder="Ej: Remate ganadero este sábado"
-          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors"
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors"
         />
       </div>
 
@@ -44,7 +44,7 @@ export function NotificationsForm() {
           rows={3}
           maxLength={250}
           placeholder="Texto que verá el usuario en la notificación..."
-          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors resize-none"
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors resize-none"
         />
       </div>
 
@@ -55,7 +55,7 @@ export function NotificationsForm() {
         <input
           name="article_id"
           placeholder="UUID de la publicación"
-          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-white placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors font-mono"
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-lime/60 transition-colors font-mono"
         />
       </div>
 
@@ -66,7 +66,7 @@ export function NotificationsForm() {
         <select
           name="category"
           defaultValue=""
-          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-white focus:outline-none focus:border-lime/60 transition-colors"
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-lime/60 transition-colors"
         >
           <option value="">Todos los dispositivos (sin filtrar)</option>
           <option value="breakingNews">Noticias de último momento</option>

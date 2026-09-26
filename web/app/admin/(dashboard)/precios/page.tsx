@@ -1,6 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { createMarketPrice, deleteMarketPrice, updateMarketPrice } from './actions'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
+import { PageHeader } from '@/components/admin/ui'
 
 interface MarketPriceRow {
   id: string
@@ -36,12 +37,7 @@ export default async function PreciosPage() {
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-6">
-        <h1 className="font-display font-bold text-2xl text-white">Precios</h1>
-        <p className="text-muted text-sm mt-0.5">
-          Precios ganaderos (PYG) y de commodities internacionales (USD) que se ven en la app y la web pública.
-        </p>
-      </div>
+      <PageHeader title="Precios" help="Los precios de ganado (en guaraníes) e internacionales (en dólares) que ven la app y la web." />
 
       {error && (
         <div className="card mb-6 border-danger/40 text-danger text-sm">

@@ -83,7 +83,50 @@ export interface FeedMarketItem {
   key: 'market'
 }
 
-export type FeedItem = FeedContentItem | FeedMarketItem
+export interface FeedPollItem {
+  kind: 'poll'
+  key: string
+  id: string
+  question: string
+  points: number
+  options: { id: string; label: string }[]
+}
+
+export interface QuizAnswer {
+  questionId: string
+  chosenIndex: number
+  correct: boolean
+  /** Solo viaja para preguntas ya respondidas. */
+  correctIndex: number
+}
+
+export interface FeedQuizItem {
+  kind: 'quiz'
+  key: string
+  id: string
+  title: string
+  pointsPerCorrect: number
+  questions: { id: string; question: string; options: string[] }[]
+  answered: QuizAnswer[]
+}
+
+export type FeedInteractiveItem = FeedPollItem | FeedQuizItem
+
+export interface FeedSponsoredItem {
+  kind: 'sponsored'
+  key: string
+  campaignId: string
+  advertiserName: string
+  title: string
+  body: string
+  imageUrl: string
+  /** Texto del botón que cargó el anunciante (máx. 18); si no hay, la app usa "Ver promoción". */
+  ctaLabel: string | null
+  linkType: string | null
+  linkTarget: string | null
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedInteractiveItem | FeedSponsoredItem
 
 export interface FeedPage {
   items: FeedItem[]

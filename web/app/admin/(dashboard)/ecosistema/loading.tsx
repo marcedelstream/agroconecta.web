@@ -10,7 +10,7 @@ export default function EcosistemaLoading() {
         {[0, 1, 2, 3].map((i) => <div key={i} className="h-8 w-20 rounded-xl bg-secondary" />)}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <div className="card h-96" />
         <div className="card p-0 overflow-hidden">
           <div className="divide-y divide-bdr">

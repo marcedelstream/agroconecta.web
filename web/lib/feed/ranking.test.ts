@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  chronologicalEvents,
   DEFAULT_WEIGHTS,
   deprioritizeSeen,
   engagementScore,
@@ -150,6 +151,15 @@ describe('rankFeed — reglas de mezcla', () => {
     const result = deprioritizeSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
     expect(result).toEqual([b.key, d.key, a.key, c.key])
     expect(deprioritizeSeen([a, b], new Set())).toEqual([a, b])
+  })
+
+  it('los eventos ocupan sus lugares en orden cronológico, sin mover el resto', () => {
+    const nota = cand()
+    const dic = cand({ contentType: 'evento', startsAt: hoursAgo(-24 * 60) })
+    const hoy = cand({ contentType: 'evento', startsAt: hoursAgo(-5) })
+    const otra = cand()
+    const out = chronologicalEvents([dic, nota, hoy, otra]).map((c) => c.key)
+    expect(out).toEqual([hoy.key, nota.key, dic.key, otra.key])
   })
 
   it('es determinista: mismas entradas, mismo orden (paginación estable)', () => {

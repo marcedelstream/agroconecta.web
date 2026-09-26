@@ -1,8 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadRankingContext, toContentItem } from './context'
-import { deprioritizeSeen, MARKET_CARD_POSITION, rankFeed } from './ranking'
-import { filterCandidates, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
-import type { FeedContentItem, FeedItem, FeedPage } from './types'
+import { chronologicalEvents, deprioritizeSeen, MARKET_CARD_POSITION, rankFeed, sortByStart } from './ranking'
+import { filterCandidates, searchRefs, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
+import { interleaveEvery, interleaveInteractive, loadInteractive } from './interactive'
+import { loadSponsored, SPONSORED_EVERY, SPONSORED_FIRST_POSITION } from './sponsored'
+import type { FeedCandidate, FeedContentItem, FeedInteractiveItem, FeedItem, FeedPage, FeedSponsoredItem } from './types'
 
 export const DEFAULT_PAGE_SIZE = 10
 export const MAX_PAGE_SIZE = 20
@@ -49,13 +51,23 @@ export async function buildFeedPage(
   const asOf = cursor ? new Date(cursor.t) : new Date()
   const offset = cursor?.o ?? 0
 
-  const ctx = await loadRankingContext(admin, userId, asOf)
+  const [ctx, interactive] = await Promise.all([
+    loadRankingContext(admin, userId, asOf),
+    loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]),
+  ])
   const ranked = deprioritizeSeen(
-    rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf),
+    chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)),
     sessionSeen,
   )
-  const slice = ranked.slice(offset, offset + pageSize)
-  const items: FeedItem[] = slice.map((c) => toContentItem(c, ctx))
+  const sponsored = await loadSponsored(admin, userId, ctx.state.signals, asOf).catch(() => [] as FeedSponsoredItem[])
+  const merged = interleaveEvery<FeedCandidate | FeedInteractiveItem, FeedSponsoredItem>(
+    interleaveInteractive<FeedCandidate, FeedInteractiveItem>(ranked, interactive),
+    sponsored,
+    SPONSORED_FIRST_POSITION,
+    SPONSORED_EVERY,
+  )
+  const slice = merged.slice(offset, offset + pageSize)
+  const items: FeedItem[] = slice.map((e) => ('kind' in e ? e : toContentItem(e, ctx)))
 
   if (offset === 0 && items.length >= MARKET_CARD_POSITION) {
     items.splice(MARKET_CARD_POSITION, 0, { kind: 'market', key: 'market' })
@@ -64,7 +76,7 @@ export async function buildFeedPage(
   const nextOffset = offset + slice.length
   return {
     items,
-    nextCursor: nextOffset < ranked.length ? encodeCursor({ o: nextOffset, t: asOf.toISOString() }) : null,
+    nextCursor: nextOffset < merged.length ? encodeCursor({ o: nextOffset, t: asOf.toISOString() }) : null,
   }
 }
 
@@ -80,9 +92,17 @@ export async function buildExplorePage(admin: SupabaseClient, userId: string, fi
   const asOf = new Date()
   const ctx = await loadRankingContext(admin, userId, asOf)
   const matches = filterCandidates(ctx.candidates, filters)
-  const ranked = rankFeed(matches, ctx.state.signals, ctx.engagement, ctx.weights, asOf)
+  // Eventos y remates se buscan por fecha: en esas categorías la lista es estrictamente cronológica.
+  const byDate = filters.type === 'evento' || filters.type === 'remate'
+  const ranked = byDate ? sortByStart(matches) : chronologicalEvents(rankFeed(matches, ctx.state.signals, ctx.engagement, ctx.weights, asOf))
   return {
     items: ranked.slice(0, EXPLORE_LIMIT).map((c) => toContentItem(c, ctx)),
     trending: trendingTags(ctx.candidates, asOf),
   }
+}
+
+/** Contenido relacionado a un mensaje de Karai, listo para abrir en la ficha de la app. */
+export async function buildKaraiRefs(admin: SupabaseClient, userId: string, message: string): Promise<FeedContentItem[]> {
+  const ctx = await loadRankingContext(admin, userId, new Date())
+  return searchRefs(ctx.candidates, message).map((c) => toContentItem(c, ctx))
 }

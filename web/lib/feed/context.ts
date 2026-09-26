@@ -9,7 +9,7 @@ import type { FeedCandidate, FeedContentItem, FeedEngagement, FeedWeights } from
 
 // Base externa de eventosagropy.com (misma que usa lib/karai/events-context.ts). Sin env vars se
 // sigue sin eventos en vez de romperse.
-function createEventsClient(): SupabaseClient | null {
+export function createEventsClient(): SupabaseClient | null {
   const url = process.env.EVENTOS_SUPABASE_URL
   const key = process.env.EVENTOS_SUPABASE_ANON_KEY
   if (!url || !key) return null
@@ -35,7 +35,8 @@ export async function loadRankingContext(admin: SupabaseClient, userId: string, 
   return { candidates: [...posts, ...listings, ...events], state, weights, engagement }
 }
 
-export function toContentItem(c: FeedCandidate, ctx: RankingContext): FeedContentItem {
+/** Solo necesita el estado del usuario y los contadores (Guardados no carga el resto del contexto). */
+export function toContentItem(c: FeedCandidate, ctx: Pick<RankingContext, 'state' | 'engagement'>): FeedContentItem {
   const e = ctx.engagement.get(c.key)
   return {
     ...c,

@@ -141,6 +141,18 @@ export const Colors = {
       handle: 'rgba(255,255,255,0.7)',
     },
     toastBg: 'rgba(11,22,32,0.86)',
+    // Encuesta y quiz (tarjeta blanca centrada del feed).
+    interactive: {
+      optionBg: '#F2F4EC',
+      optionBorder: 'rgba(11,22,32,0.08)',
+      bar: 'rgba(164,210,51,0.5)',
+      okBg: '#EEF6D6',
+      okBorder: '#6E9A1E',
+      badBg: '#FDECEA',
+      badBorder: '#C2410C',
+      badText: '#B42318',
+      cardShadow: '#000000',
+    },
     // Pantallas claras v2 (Precios, Explorar, Guardados…).
     light: {
       segTrack: '#E6E8E0',

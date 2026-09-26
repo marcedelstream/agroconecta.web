@@ -1,7 +1,7 @@
 # Agroconecta v2 — Plan de implementación (feed vertical)
 
 > 2026-09-25 · Rama `feature/v2-feed-redesign` (sale de `main` @ `bccc015`, tag `v1-diseno-final`).
-> Estado: **aprobado 2026-09-25**. **Fase 1 completa en código** (1a–1e): falta medir 60 fps en el Redmi Note y correr `fix-v2-feed.sql` + `fix-v2-profile.sql`. Hidratación remota: `hydrateProfileFromSupabase` ya cubría perfil/intereses/suscripciones; el CV se lee siempre de Supabase. Siguiente: Fase 2.
+> Estado: **aprobado 2026-09-25**. **Fase 1 completa en código** (1a–1e): falta medir 60 fps en el Redmi Note y correr `fix-v2-feed.sql` + `fix-v2-profile.sql`. Hidratación remota: `hydrateProfileFromSupabase` ya cubría perfil/intereses/suscripciones; el CV se lee siempre de Supabase. **Fase 2 completa en código**: onboarding v2 (11 pasos, facetas + consentimientos + bienvenida), encuestas y quiz en el feed (servidor decide respuestas y puntos: `fix-v2-points.sql`, `fix-v2-onboarding.sql`), píldora y tarjeta de puntos. D3 resuelto con valores configurables en `points_config` (bienvenida 50, sin tope, sin vencimiento). Carga de encuestas/quiz por SQL (`seed-v2-encuesta-quiz-ejemplo.sql`) hasta el admin. Siguiente: Fase 3 (Karai).
 > Base: `README.md`, `BACKEND-Y-DATOS.md`, `ONBOARDING-V2.md` de este paquete + auditoría del código real.
 
 ---

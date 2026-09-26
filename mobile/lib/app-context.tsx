@@ -133,12 +133,17 @@ async function hydrateProfileFromSupabase(authId: string): Promise<UserProfile |
   }
 }
 
+export type OnboardingOverrides = Partial<Omit<OnboardingState, 'step' | 'isComplete'>> & {
+  notificationPrefs?: NotificationPreferences
+}
+
 interface AppContextType {
   onboarding: OnboardingState
   updateOnboarding: (updates: Partial<OnboardingState>) => void
   nextStep: () => void
   prevStep: () => void
-  completeOnboarding: () => void
+  /** `overrides`: datos finales del onboarding v2, que junta todo en su propio estado y lo pasa acá. */
+  completeOnboarding: (overrides?: OnboardingOverrides) => Promise<void>
   resetOnboarding: () => void
   updateUser: (updates: Partial<UserProfile>) => Promise<void>
   resolveProfileForCurrentSession: () => Promise<boolean>
@@ -240,18 +245,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setOnboarding((prev) => ({ ...prev, step: Math.max(0, prev.step - 1) }))
   }, [])
 
-  const completeOnboarding = useCallback(async () => {
+  const completeOnboarding = useCallback(async (overrides?: OnboardingOverrides) => {
+    const data = { ...onboarding, ...overrides }
     const newUser: UserProfile = {
       id: session?.user.id ?? Math.random().toString(36).slice(2),
-      name: onboarding.name,
-      email: session?.user.email ?? onboarding.email,
-      phone: onboarding.phone,
-      profession: onboarding.profession!,
-      department: onboarding.department!,
-      preferences: onboarding.preferences,
-      organizationSubscriptions: onboarding.organizationSubscriptions,
-      mediaPreferences: onboarding.organizationSubscriptions,
-      notificationPrefs: {
+      name: data.name,
+      email: session?.user.email ?? data.email,
+      phone: data.phone,
+      profession: data.profession!,
+      department: data.department!,
+      preferences: data.preferences,
+      organizationSubscriptions: data.organizationSubscriptions,
+      mediaPreferences: data.organizationSubscriptions,
+      notificationPrefs: overrides?.notificationPrefs ?? {
         breakingNews: true,
         priceAlerts: true,
         weatherAlerts: true,

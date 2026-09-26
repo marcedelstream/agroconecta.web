@@ -13,6 +13,8 @@ import {
 import { useIsFocused } from '@react-navigation/native'
 import { FeedContentSlide } from '@/components/v2/feed/FeedContentSlide'
 import { MarketFeedSlide } from '@/components/v2/feed/MarketFeedSlide'
+import { PollSlide } from '@/components/v2/interactive/PollSlide'
+import { QuizSlide } from '@/components/v2/interactive/QuizSlide'
 import { RefreshingPill } from '@/components/v2/feed/RefreshingPill'
 import { useFeedInsets } from '@/components/v2/feed/layout'
 import { V2Layout } from '@/constants/spacing'
@@ -104,12 +106,18 @@ export function FeedPager({ controller }: Props) {
   }, [activeIndex, items.length, loadMore])
 
   const renderItem = useCallback(
-    ({ item, index }: { item: FeedItem; index: number }) =>
-      item.kind === 'market' ? (
-        <MarketFeedSlide height={height} />
-      ) : (
-        <FeedContentSlide item={item} height={height} active={focused && index === activeIndex} actions={actions} />
-      ),
+    ({ item, index }: { item: FeedItem; index: number }) => {
+      switch (item.kind) {
+        case 'market':
+          return <MarketFeedSlide height={height} />
+        case 'poll':
+          return <PollSlide item={item} height={height} />
+        case 'quiz':
+          return <QuizSlide item={item} height={height} />
+        default:
+          return <FeedContentSlide item={item} height={height} active={focused && index === activeIndex} actions={actions} />
+      }
+    },
     [height, activeIndex, focused, actions],
   )
 

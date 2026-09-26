@@ -224,6 +224,85 @@ export const EDIT_CV_TEXT = {
   back: 'Volver',
 } as const
 
+export const POINTS_TEXT = {
+  pts: (n: number) => `${n.toLocaleString('es-PY')} pts`,
+  earned: (n: number) => `+${n} pts ganados`,
+  plus: (n: number) => `+${n} pts`,
+  pillA11y: (n: number) => `Mis puntos: ${n}`,
+  cardTitle: 'Puntos Agroconecta',
+  cardBody: 'Encuestas y quizzes suman puntos',
+  redeem: 'Canjear',
+  toastEarned: (n: number) => `¡Listo! +${n} puntos`,
+  notVerified: 'Verificá tu email para sumar puntos',
+} as const
+
+export const POLL_TEXT = {
+  label: 'ENCUESTA',
+  tapToVote: 'Tocá una opción para votar',
+  votes: (n: number) => `${n.toLocaleString('es-PY')} votos · Gracias por participar`,
+  error: 'No pudimos registrar tu voto. Probá de nuevo.',
+} as const
+
+export const QUIZ_TEXT = {
+  label: 'QUIZ AGRO',
+  step: (i: number, total: number) => `${i} DE ${total}`,
+  complete: 'COMPLETO',
+  perCorrect: (n: number) => `+${n} pts por acierto`,
+  correct: 'Correcta',
+  yours: 'Tu respuesta',
+  next: 'Siguiente pregunta',
+  result: 'Ver resultado',
+  score: (ok: number, total: number) => `${ok} de ${total} correctas`,
+  earned: (pts: number) => `Sumaste ${pts} puntos a tu perfil`,
+  none: 'Esta vez no sumaste, ¡mañana hay otro quiz!',
+  toastWrong: 'Casi. Te marcamos la correcta',
+  redeem: 'Ver qué puedo canjear',
+  error: 'No pudimos registrar tu respuesta. Probá de nuevo.',
+} as const
+
+export const ONBOARDING_TEXT = {
+  next: 'Siguiente',
+  skip: 'Saltar',
+  back: 'Volver',
+  finish: 'Empezar',
+  finishing: 'Preparando tu feed…',
+  welcomeTitle: 'Bienvenido a Agroconecta',
+  welcomeBody: 'El feed del agro paraguayo, hecho a tu medida.',
+  welcomeItems: [
+    { icon: 'phone-portrait-outline', title: 'Un contenido por pantalla', body: 'Deslizá hacia arriba: noticias, remates, cursos y más.' },
+    { icon: 'sparkles-outline', title: 'Karai te responde', body: 'Preguntale lo que necesites saber del agro.' },
+    { icon: 'star-outline', title: 'Sumá puntos', body: 'Respondé encuestas y quizzes y canjealos por cursos y eventos.' },
+  ],
+  nameTitle: '¿Cómo te llamás?',
+  nameLabel: 'Nombre y apellido',
+  rubrosTitle: '¿En qué rubros estás?',
+  rubrosBody: 'Elegí uno o más. Así tu feed arranca con lo que te importa.',
+  productionTitle: '¿Qué producís o te interesa?',
+  productionBody: 'Opcional. Nos ayuda a mostrarte lo más relevante.',
+  professionTitle: '¿A qué te dedicás?',
+  scaleTitle: '¿Cómo te describís mejor?',
+  scaleBody: 'Opcional.',
+  departmentTitle: '¿En qué departamento estás?',
+  departmentBody: 'Para mostrarte eventos y noticias cercanas.',
+  goalsTitle: '¿Para qué usás Agroconecta?',
+  goalsBody: 'Elegí todo lo que aplique.',
+  orgsTitle: 'Seguí a quienes te interesan',
+  orgsBody: 'Te recomendamos seguir al menos 3 organizaciones o medios.',
+  notifTitle: 'Enterate a tiempo',
+  notifBody: 'Te avisamos cuando empieza un remate que seguís, sale una noticia importante o cambian los precios.',
+  notifCta: 'Activar notificaciones',
+  notifOn: 'Notificaciones activadas',
+  notifCategories: { breakingNews: 'Noticias importantes', priceAlerts: 'Alertas de precios', weatherAlerts: 'Alertas de clima', institutionalUpdates: 'Novedades institucionales' },
+  phoneTitle: 'Tu WhatsApp',
+  phoneBody: 'Opcional. Más adelante vas a poder recibir alertas y hablar con Karai por WhatsApp.',
+  phoneLabel: 'Número de WhatsApp',
+  consentTitle: 'Último paso',
+  consentTerms: 'Acepto los términos y condiciones y la política de privacidad.',
+  consentPoints: 'Quiero participar del programa de puntos de Agroconecta.',
+  readTerms: 'Leer términos',
+  readPrivacy: 'Leer privacidad',
+} as const
+
 /** 1284 → "1.284"; 12400 → "12,4 mil" (mismo formato que el prototipo). */
 export function formatCount(n: number): string {
   if (n >= 10_000) return `${(n / 1000).toFixed(1).replace('.', ',')} mil`

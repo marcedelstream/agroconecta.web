@@ -47,7 +47,33 @@ export interface FeedMarketItem {
   key: 'market'
 }
 
-export type FeedItem = FeedContentItem | FeedMarketItem
+export interface FeedPollItem {
+  kind: 'poll'
+  key: string
+  id: string
+  question: string
+  points: number
+  options: { id: string; label: string }[]
+}
+
+export interface QuizAnswer {
+  questionId: string
+  chosenIndex: number
+  correct: boolean
+  correctIndex: number
+}
+
+export interface FeedQuizItem {
+  kind: 'quiz'
+  key: string
+  id: string
+  title: string
+  pointsPerCorrect: number
+  questions: { id: string; question: string; options: string[] }[]
+  answered: QuizAnswer[]
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem
 
 export interface FeedPage {
   items: FeedItem[]

@@ -7,6 +7,7 @@ import { useFeedInsets } from '@/components/v2/feed/layout'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { FEED_TEXT } from '@/lib/feed-v2/labels'
+import { PointsPill } from '@/components/v2/PointsPill'
 
 // Cabecera fija sobre el feed. En el prototipo se repite dentro de cada item, pero es idéntica en
 // todos: dibujarla una sola vez encima del pager ahorra trabajo en cada deslizamiento.
@@ -15,24 +16,27 @@ const logo = require('@/assets/images/logo-dark.png')
 const LOGO_HEIGHT = 30
 const LOGO_RATIO = 590 / 127
 
-// La píldora de puntos ("120 pts") se suma en la Fase 2, cuando existan los puntos.
 export function FeedHeader() {
   const { headerTop, side } = useFeedInsets()
   return (
     <View style={[styles.row, { top: headerTop, left: side, right: side }]} pointerEvents="box-none">
       <Image source={logo} style={styles.logo} contentFit="contain" accessibilityLabel={FEED_TEXT.brand} />
-      <GlassCircle
-        size={V2Layout.minTouch}
-        onPress={() => router.navigate('/(main)/(tabs)/explorar' as never)}
-        accessibilityLabel={FEED_TEXT.search}
-      >
-        <Ionicons name="search" size={20} color={Colors.v2.white} />
-      </GlassCircle>
+      <View style={styles.actions}>
+        <PointsPill />
+        <GlassCircle
+          size={V2Layout.minTouch}
+          onPress={() => router.navigate('/(main)/(tabs)/explorar' as never)}
+          accessibilityLabel={FEED_TEXT.search}
+        >
+          <Ionicons name="search" size={20} color={Colors.v2.white} />
+        </GlassCircle>
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   row: { position: 'absolute', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   logo: { height: LOGO_HEIGHT, width: LOGO_HEIGHT * LOGO_RATIO },
 })

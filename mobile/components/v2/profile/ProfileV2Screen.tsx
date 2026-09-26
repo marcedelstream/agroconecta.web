@@ -11,6 +11,7 @@ import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { CvSections } from '@/components/v2/profile/CvSections'
 import { ProfileHeader } from '@/components/v2/profile/ProfileHeader'
 import { ProfileMoreSheet } from '@/components/v2/profile/ProfileMoreSheet'
+import { PointsCard } from '@/components/v2/profile/PointsCard'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { useApp } from '@/lib/app-context'
@@ -31,8 +32,8 @@ function Guest() {
   )
 }
 
-// Perfil v2 tipo CV profesional (README §3.6). La tarjeta de puntos y "Compartir perfil" llegan en
-// las Fases 2 y 5 (puntos y perfil público web).
+// Perfil v2 tipo CV profesional (README §3.6). "Compartir perfil" y "Canjear" llegan en la Fase 5
+// (perfil público web y catálogo de premios).
 export function ProfileV2Screen() {
   const insets = useSafeAreaInsets()
   const bottomSpace = useFloatingTabBarSpace()
@@ -70,6 +71,7 @@ export function ProfileV2Screen() {
           onMore={() => setMoreOpen(true)}
         />
         <View style={styles.content}>
+          <PointsCard />
           {cvEmpty && (
             <View style={styles.complete}>
               <Text family="noto-sans" weight="bold" size={17} color={Colors.v2.white}>{PROFILE_TEXT.completeCv}</Text>

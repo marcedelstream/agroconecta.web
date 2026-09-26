@@ -22,11 +22,17 @@ import { Fonts } from '@/constants/typography'
 import { professions, newsCategories, departments } from '@/lib/mock-data'
 import { fetchOrganizations } from '@/lib/supabase-repositories'
 import type { Profession, Department, NewsCategory, Organization } from '@/lib/types'
-import { HOME_ROUTE } from '@/lib/feature-flags'
+import { FEED_V2, HOME_ROUTE } from '@/lib/feature-flags'
+import { OnboardingV2 } from '@/components/v2/onboarding/OnboardingV2'
 
 const TOTAL_STEPS = 6
 
+// v2: onboarding nuevo (docs/design_handoff_v2_feed/ONBOARDING-V2.md); la v1 queda igual con el flag apagado.
 export default function OnboardingScreen() {
+  return FEED_V2 ? <OnboardingV2 /> : <OnboardingV1 />
+}
+
+function OnboardingV1() {
   const { onboarding, updateOnboarding, nextStep, prevStep, completeOnboarding } = useApp()
   const [localName, setLocalName] = useState(onboarding.name)
   const [localPhone, setLocalPhone] = useState(onboarding.phone)

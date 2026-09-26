@@ -10,6 +10,9 @@ import { FEED_TEXT, formatCount } from '@/lib/feed-v2/labels'
 import type { FeedContentItem } from '@/lib/feed-v2/types'
 
 const F = Colors.v2.feed
+// Ancho fijo: si la columna se ajustara al texto, pasar de "Guardar" a "Guardado" (o de 9 a 10
+// me gusta) la ensancharía y todos los botones se correrían.
+const RAIL_WIDTH = 68
 
 interface Props {
   item: FeedContentItem
@@ -33,7 +36,7 @@ function RailButton({ label, a11y, selected, onPress, children }: {
       <GlassCircle size={V2Layout.railButton} onPress={onPress} accessibilityLabel={a11y} selected={selected}>
         {children}
       </GlassCircle>
-      <Text family="noto-sans" weight="semibold" size={12} lineHeight={15} color={Colors.v2.white} style={styles.count}>
+      <Text family="noto-sans" weight="semibold" size={12} lineHeight={15} color={Colors.v2.white} numberOfLines={1} style={styles.count}>
         {label}
       </Text>
     </View>
@@ -66,7 +69,13 @@ export function ActionRail({ item, bottom, onLike, onSave, onShare, onFollow, on
 }
 
 const styles = StyleSheet.create({
-  rail: { position: 'absolute', right: 12, alignItems: 'center', gap: 16 },
-  btn: { alignItems: 'center', gap: 4 },
-  count: { textShadowColor: F.textShadow, textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } },
+  rail: { position: 'absolute', right: 2, width: RAIL_WIDTH, alignItems: 'center', gap: 16 },
+  btn: { width: RAIL_WIDTH, alignItems: 'center', gap: 4 },
+  count: {
+    width: RAIL_WIDTH,
+    textAlign: 'center',
+    textShadowColor: F.textShadow,
+    textShadowRadius: 3,
+    textShadowOffset: { width: 0, height: 1 },
+  },
 })

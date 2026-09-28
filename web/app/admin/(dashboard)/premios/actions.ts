@@ -53,8 +53,24 @@ export async function markRedemptionUsed(formData: FormData) {
     .update({ status: 'usado', used_at: new Date().toISOString() })
     .eq('code', code)
     .eq('status', 'emitido')
+    .gt('expires_at', new Date().toISOString())
     .select('id')
   revalidatePath(PATH)
   if (data && data.length > 0) backWithOk(PATH, `Código ${code} validado: quedó marcado como usado.`)
-  backWithError(PATH, `No hay un código ${code} pendiente de uso. No lo aceptes.`)
+  backWithError(PATH, `El código ${code} no existe, ya se usó o venció (duran 60 días). No lo aceptes.`)
+}
+
+// Reglamento de puntos: si alguien hace trampa (ej. varias cuentas) se anulan sus puntos; la cuenta sigue.
+export async function voidUserPoints(formData: FormData) {
+  await requireAdmin()
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const reason = String(formData.get('reason') ?? '').trim()
+  if (!email) backWithError(PATH, 'Escribí el correo de la cuenta.')
+  const db = createSupabaseAdmin()
+  const { data: profile } = await db.from('profiles').select('id').ilike('email', email).maybeSingle()
+  if (!profile) backWithError(PATH, `No encontramos una cuenta con el correo ${email}.`)
+  const { data: voided, error } = await db.rpc('void_user_points', { p_user: (profile as { id: string }).id, p_reason: reason })
+  if (error) backWithError(PATH, `No se pudo anular: ${error.message}`)
+  revalidatePath(PATH)
+  backWithOk(PATH, Number(voided) > 0 ? `Anulamos ${voided} puntos de ${email}.` : `${email} no tenía puntos para anular.`)
 }

@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 const UPDATED = '26 de septiembre de 2026'
 
 const soporte = <Link href="/soporte" className="text-lime hover:underline">la página de Soporte</Link>
+const reglamento = <Link href="/reglamento-puntos" className="text-lime hover:underline">Reglamento de puntos</Link>
 
 // Refleja lo que hace la app v2 (feed personalizado, puntos, Karai, publicidad segmentada, perfil
 // público). Si se agrega una función que use datos nuevos, actualizar acá antes de publicarla.
@@ -57,7 +58,7 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
       <>
         Los puntos que sumás y lo que canjeás quedan registrados en tu cuenta. Cuando canjeás un premio, compartimos con
         el aliado que lo ofrece solo lo necesario para que lo puedas usar (el código de canje). Las reglas del programa
-        se publican en el Reglamento de puntos.
+        están en el {reglamento}.
       </>
     ),
   },

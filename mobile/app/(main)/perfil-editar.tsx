@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
-import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
+import { BasicsSheet } from '@/components/v2/profile/BasicsSheet'
 import { FormField } from '@/components/v2/form/FormField'
 import { ExperienceEditor } from '@/components/v2/profile/ExperienceEditor'
 import { ToastHost } from '@/components/v2/ToastHost'
@@ -122,7 +122,7 @@ export default function EditCvScreen() {
       )}
 
       {basicsOpen && user && (
-        <EditProfileSheet
+        <BasicsSheet
           name={user.name}
           department={user.department}
           profession={user.profession}

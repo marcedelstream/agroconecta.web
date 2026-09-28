@@ -1,28 +1,36 @@
 import { useEffect, useState } from 'react'
-import { View, ScrollView, Image, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native'
-import { PdfReader } from '@/components/ui/PdfReader'
-import { useLocalSearchParams, router } from 'expo-router'
-import { goBack } from '@/lib/navigation'
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
+import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
+import { PdfReader } from '@/components/ui/PdfReader'
+import { V2ScreenHeader } from '@/components/v2/V2ScreenHeader'
+import { ToastHost } from '@/components/v2/ToastHost'
 import { Colors } from '@/constants/colors'
-import { Radius, Spacing } from '@/constants/spacing'
-import { useColors } from '@/lib/theme-context'
+import { V2Layout } from '@/constants/spacing'
 import { useApp } from '@/lib/app-context'
+import { requireSession } from '@/lib/feed-v2/guest'
+import { BOOK_TEXT as T } from '@/lib/feed-v2/labels'
+import { showToast } from '@/lib/feed-v2/toast'
+import { goBack } from '@/lib/navigation'
 import {
-  fetchLibraryItemById,
-  fetchLibraryFileSignedUrl,
-  fetchUserLibrary,
   addToUserLibrary,
-  removeFromUserLibrary,
+  fetchLibraryFileSignedUrl,
+  fetchLibraryItemById,
+  fetchUserLibrary,
   markLibraryItemOpened,
+  removeFromUserLibrary,
 } from '@/lib/supabase-repositories'
 import { LIBRARY_CATEGORY_LABELS, type LibraryItem } from '@/lib/types'
 
+const V = Colors.v2
+
+// Ficha de un título de la biblioteca (v2): tapa, datos, "Leer" y guardar en Mis colecciones.
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const C = useColors()
   const insets = useSafeAreaInsets()
   const { user } = useApp()
 
@@ -45,17 +53,19 @@ export default function BookDetailScreen() {
     if (!user?.id || !id) return
     fetchUserLibrary(user.id)
       .then((entries) => setSaved(entries.some((e) => e.itemId === id)))
-      .catch(() => {})
+      .catch(() => null)
   }, [user?.id, id])
 
   async function toggleSaved() {
-    if (!user?.id || !id) return
-    if (saved) {
-      await removeFromUserLibrary(user.id, id)
-      setSaved(false)
-    } else {
-      await addToUserLibrary(user.id, id)
-      setSaved(true)
+    if (!(await requireSession()) || !user?.id || !id) return
+    const on = !saved
+    setSaved(on)
+    try {
+      if (on) await addToUserLibrary(user.id, id)
+      else await removeFromUserLibrary(user.id, id)
+      showToast(on ? T.saved : T.removed)
+    } catch {
+      setSaved(!on)
     }
   }
 
@@ -67,147 +77,97 @@ export default function BookDetailScreen() {
     setReaderLoading(false)
     if (url) {
       setReading(true)
-      if (user?.id) markLibraryItemOpened(user.id, item.id).catch(() => {})
+      if (user?.id) markLibraryItemOpened(user.id, item.id).catch(() => null)
+    } else {
+      showToast(T.openError)
     }
   }
 
-  if (loading) {
+  if (reading && signedUrl && item) {
     return (
-      <View style={[styles.center, { backgroundColor: C.background }]}>
-        <ActivityIndicator color={Colors.lime} />
-      </View>
-    )
-  }
-
-  if (!item) {
-    return (
-      <View style={[styles.center, { backgroundColor: C.background }]}>
-        <Ionicons name="alert-circle-outline" size={40} color={C.muted} />
-        <Text variant="body" style={{ color: C.muted, marginTop: Spacing[3] }}>Título no encontrado.</Text>
-        <TouchableOpacity onPress={() => goBack()} style={{ marginTop: Spacing[4] }}>
-          <Text variant="body" style={{ color: Colors.lime }}>Volver</Text>
-        </TouchableOpacity>
-      </View>
-    )
-  }
-
-  if (reading && signedUrl) {
-    return (
-      <View style={[styles.root, { backgroundColor: '#000' }]}>
-        <View style={[styles.readerBar, { paddingTop: insets.top + Spacing[2] }]}>
-          <TouchableOpacity onPress={() => setReading(false)} style={styles.readerClose} hitSlop={12}>
-            <Ionicons name="close" size={24} color="#fff" />
+      <View style={styles.reader}>
+        <StatusBar style="light" />
+        <View style={[styles.readerBar, { paddingTop: insets.top + 8 }]}>
+          <TouchableOpacity onPress={() => setReading(false)} accessibilityRole="button" accessibilityLabel={T.close} style={styles.readerClose}>
+            <Ionicons name="close" size={22} color={V.white} />
           </TouchableOpacity>
-          <Text variant="caption" weight="semibold" numberOfLines={1} style={{ color: '#fff', flex: 1 }}>
-            {item.title}
-          </Text>
+          <Text family="noto-sans" weight="semibold" size={14} numberOfLines={1} color={V.white} style={styles.flex}>{item.title}</Text>
         </View>
-        <PdfReader
-          source={{ uri: signedUrl, cache: true }}
-          style={styles.pdf}
-          trustAllCerts={false}
-          onError={() => setReading(false)}
-        />
+        <PdfReader source={{ uri: signedUrl, cache: true }} style={styles.pdf} trustAllCerts={false} onError={() => setReading(false)} />
       </View>
     )
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: C.background }]}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Spacing[8] }]}>
-        <View style={[styles.topBar, { paddingTop: insets.top + Spacing[2] }]}>
-          <TouchableOpacity onPress={() => goBack()} style={styles.backBtn} hitSlop={12}>
-            <Ionicons name="arrow-back" size={22} color={C.foreground} />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.root}>
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} showsVerticalScrollIndicator={false}>
+        <V2ScreenHeader title="" />
+        {loading ? (
+          <ActivityIndicator color={V.limeText} style={styles.loading} />
+        ) : !item ? (
+          <View style={styles.missing}>
+            <Ionicons name="book-outline" size={44} color={V.muted} />
+            <Text family="noto-sans" size={16} color={V.muted}>{T.notFound}</Text>
+            <TouchableOpacity onPress={() => goBack()} accessibilityRole="button">
+              <Text family="noto-sans" weight="bold" size={16} color={V.limeText}>{T.back}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.body}>
+            <View style={styles.coverWrap}>
+              <Image source={item.coverImageUrl} style={styles.cover} contentFit="cover" />
+            </View>
+            <Text family="noto-sans" weight="bold" size={12} color={V.limeText} style={styles.eyebrow}>
+              {LIBRARY_CATEGORY_LABELS[item.category].toUpperCase()}
+            </Text>
+            <Text family="noto-sans" weight="extrabold" size={26} lineHeight={31} color={V.navy} style={styles.center}>{item.title}</Text>
+            {item.author ? <Text family="noto-sans" size={16} color={V.muted} style={styles.center}>{item.author}</Text> : null}
+            {item.pageCount ? <Text family="noto-sans" size={14} color={V.muted}>{T.pages(item.pageCount)}</Text> : null}
 
-        <View style={styles.heroRow}>
-          <Image source={{ uri: item.coverImageUrl }} style={[styles.cover, { backgroundColor: C.secondary }]} resizeMode="cover" />
-          <View style={styles.heroInfo}>
-            <Text variant="label" style={{ color: Colors.lime, letterSpacing: 0.6 }}>
-              {LIBRARY_CATEGORY_LABELS[item.category]}
-            </Text>
-            <Text variant="title" weight="bold" family="poppins" style={{ color: C.foreground, lineHeight: 26 }}>
-              {item.title}
-            </Text>
-            {item.author && <Text variant="body" style={{ color: C.muted }}>{item.author}</Text>}
-            {item.pageCount ? (
-              <Text variant="caption" style={{ color: C.muted }}>{item.pageCount} páginas</Text>
+            <View style={styles.actions}>
+              <TouchableOpacity onPress={openReader} disabled={readerLoading} accessibilityRole="button" style={styles.read}>
+                <Ionicons name="book-outline" size={19} color={V.white} />
+                <Text family="noto-sans" weight="bold" size={16} color={V.white}>{readerLoading ? T.opening : T.read}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={toggleSaved}
+                accessibilityRole="button"
+                accessibilityLabel={saved ? T.removeA11y : T.saveA11y}
+                style={[styles.save, saved && styles.saveOn]}
+              >
+                <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={22} color={saved ? V.limeText : V.navy} />
+              </TouchableOpacity>
+            </View>
+
+            {item.description ? (
+              <Text family="noto-sans" size={16} lineHeight={24} color={V.sheet.body} style={styles.description}>{item.description}</Text>
             ) : null}
           </View>
-        </View>
-
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.readBtn, { backgroundColor: Colors.lime }]}
-            onPress={openReader}
-            activeOpacity={0.85}
-            disabled={readerLoading}
-          >
-            <Ionicons name="book-outline" size={18} color="#0A0A13" />
-            <Text variant="body" weight="bold" style={{ color: '#0A0A13' }}>
-              {readerLoading ? 'Abriendo...' : 'Leer'}
-            </Text>
-          </TouchableOpacity>
-          {user && (
-            <TouchableOpacity
-              style={[styles.saveBtn, { borderColor: saved ? Colors.lime : C.border, backgroundColor: saved ? `${Colors.lime}18` : 'transparent' }]}
-              onPress={toggleSaved}
-              activeOpacity={0.85}
-            >
-              <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={20} color={saved ? Colors.lime : C.muted} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <Text variant="body" style={{ color: C.muted, lineHeight: 22, marginTop: Spacing[5] }}>
-          {item.description}
-        </Text>
+        )}
       </ScrollView>
+      <ToastHost />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { padding: Spacing[5] },
-  topBar: { marginBottom: Spacing[3] },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroRow: { flexDirection: 'row', gap: Spacing[4] },
-  cover: { width: 110, height: 154, borderRadius: Radius.md },
-  heroInfo: { flex: 1, gap: Spacing[1], justifyContent: 'center' },
-  actionsRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing[3], marginTop: Spacing[5] },
-  readBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing[2],
-    borderRadius: Radius.base,
-    paddingVertical: Spacing[3.5],
-  },
-  saveBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: Radius.base,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  readerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[3],
-    paddingHorizontal: Spacing[4],
-    paddingBottom: Spacing[3],
-  },
-  readerClose: { padding: Spacing[1] },
+  root: { flex: 1, backgroundColor: V.ground },
+  flex: { flex: 1 },
+  center: { textAlign: 'center' },
+  loading: { marginTop: 60 },
+  missing: { alignItems: 'center', gap: 12, marginTop: 60 },
+  body: { alignItems: 'center', paddingHorizontal: 22, gap: 8 },
+  coverWrap: { borderRadius: 16, backgroundColor: V.surface, shadowColor: V.navy, shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 6, marginBottom: 14 },
+  cover: { width: 160, height: 224, borderRadius: 16 },
+  eyebrow: { letterSpacing: 1.2 },
+  actions: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 16 },
+  read: { flex: 1, height: V2Layout.ctaHeight, borderRadius: V2Layout.ctaRadius, backgroundColor: V.navy, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  save: { width: V2Layout.ctaHeight, height: V2Layout.ctaHeight, borderRadius: V2Layout.ctaHeight / 2, borderWidth: 1, borderColor: V.sheet.border, backgroundColor: V.surface, alignItems: 'center', justifyContent: 'center' },
+  saveOn: { backgroundColor: V.limeTint, borderColor: V.limeText },
+  description: { alignSelf: 'stretch', marginTop: 18 },
+  reader: { flex: 1, backgroundColor: V.navy },
+  readerBar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12 },
+  readerClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: V.glass.bg, alignItems: 'center', justifyContent: 'center' },
   pdf: { flex: 1, width: '100%' },
 })

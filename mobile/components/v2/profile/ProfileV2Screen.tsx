@@ -8,7 +8,7 @@ import { StatusBar } from 'expo-status-bar'
 import { Text } from '@/components/ui/Text'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal'
-import { NotificationsSheet } from '@/components/profile/NotificationsSheet'
+import { NotificationsSheetV2 } from '@/components/v2/profile/NotificationsSheetV2'
 import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { CvSections } from '@/components/v2/profile/CvSections'
 import { ProfileHeader } from '@/components/v2/profile/ProfileHeader'
@@ -116,7 +116,7 @@ export function ProfileV2Screen() {
         onLogout={account.openLogout}
         onDelete={account.openDelete}
       />
-      {notificationsOpen && <NotificationsSheet onClose={() => setNotificationsOpen(false)} />}
+      {notificationsOpen && <NotificationsSheetV2 onClose={() => setNotificationsOpen(false)} />}
       <ConfirmModal
         visible={account.logoutVisible}
         icon="log-out-outline"

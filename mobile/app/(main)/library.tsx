@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
+import { View, ScrollView, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native'
 import { router } from 'expo-router'
-import { goBack } from '@/lib/navigation'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
+import { SearchField } from '@/components/v2/SearchField'
+import { V2ScreenHeader } from '@/components/v2/V2ScreenHeader'
+import { LIBRARY_TEXT as T } from '@/lib/feed-v2/labels'
 import { Text } from '@/components/ui/Text'
 import { BookCard } from '@/components/library/BookCard'
 import { AdBanner } from '@/components/ui/AdBanner'
@@ -11,9 +13,8 @@ import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { fetchLibraryItems, fetchUserLibrary } from '@/lib/supabase-repositories'
 import { LIBRARY_CATEGORY_LABELS, type LibraryCategory, type LibraryItem } from '@/lib/types'
-import { Fonts } from '@/constants/typography'
 
-const R = Colors.redesign
+const V = Colors.v2
 const AD_EVERY = 2
 
 export default function LibraryScreen() {
@@ -80,47 +81,26 @@ export default function LibraryScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: R.surface }]}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Biblioteca</Text>
-          <View style={{ width: 20 }} />
-        </View>
-
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={17} color={R.header.placeholder} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Buscar título o autor..."
-            placeholderTextColor={R.header.placeholder}
-            style={styles.searchInput}
-            autoCorrect={false}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={16} color={R.header.placeholder} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </SafeAreaView>
+    <View style={styles.root}>
+      <StatusBar style="dark" />
+      <V2ScreenHeader title={T.title} subtitle={T.subtitle} />
+      <View style={styles.search}>
+        <SearchField value={search} onChangeText={setSearch} placeholder={T.search} clearLabel={T.clear} />
+      </View>
 
       {loading ? (
         <View style={styles.centerFill}>
-          <ActivityIndicator color={Colors.lime} />
+          <ActivityIndicator color={V.limeText} />
         </View>
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.lime} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={V.limeText} />}
         >
           <View style={styles.section}>
-            <Text family="noto-sans" weight="bold" size={17} color={R.foreground} style={styles.sectionTitle}>
-              Mis colecciones
+            <Text family="noto-sans" weight="bold" size={13} color={V.muted} style={styles.sectionTitle}>
+              {T.collections}
             </Text>
             {saved.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -128,8 +108,8 @@ export default function LibraryScreen() {
               </ScrollView>
             ) : (
               <View style={styles.emptyCollections}>
-                <Ionicons name="book-outline" size={20} color={Colors.lime} />
-                <Text family="noto-sans" size={13} color={R.mutedForeground}>Conocé la biblioteca del agro</Text>
+                <Ionicons name="bookmark-outline" size={20} color={V.limeText} />
+                <Text family="noto-sans" size={14} lineHeight={20} color={V.muted} style={styles.flex}>{T.emptyCollections}</Text>
               </View>
             )}
           </View>
@@ -137,8 +117,8 @@ export default function LibraryScreen() {
           {groups.map((group, i) => (
             <View key={group.value}>
               <View style={styles.section}>
-                <Text family="noto-sans" weight="bold" size={17} color={R.foreground} style={styles.sectionTitle}>
-                  {group.label}
+                <Text family="noto-sans" weight="bold" size={13} color={V.muted} style={styles.sectionTitle}>
+                  {group.label.toUpperCase()}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
                   {group.items.map((item) => <BookCard key={item.id} item={item} onPress={() => goToBook(item.id)} />)}
@@ -154,9 +134,9 @@ export default function LibraryScreen() {
 
           {filtered.length === 0 && (
             <View style={styles.center}>
-              <Ionicons name="book-outline" size={44} color={R.mutedForeground} />
-              <Text family="noto-sans" size={14} color={R.mutedForeground} style={styles.emptyText}>
-                {items.length === 0 ? 'Todavía no hay títulos cargados.' : `Sin resultados para "${search}"`}
+              <Ionicons name="book-outline" size={44} color={V.muted} />
+              <Text family="noto-sans" size={15} color={V.muted} style={styles.emptyText}>
+                {items.length === 0 ? T.empty : T.noResults(search)}
               </Text>
             </View>
           )}
@@ -167,42 +147,24 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    backgroundColor: R.header.chip,
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginBottom: 18,
-  },
-  searchInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 13.5, color: '#FFFFFF', padding: 0 },
+  root: { flex: 1, backgroundColor: V.ground },
+  flex: { flex: 1 },
+  search: { paddingHorizontal: 18, paddingBottom: 8 },
   centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { paddingTop: 20, paddingBottom: 30 },
+  content: { paddingTop: 12, paddingBottom: 40 },
   center: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 20 },
   emptyText: { marginTop: 12, textAlign: 'center' },
   section: { marginBottom: 24 },
-  sectionTitle: { paddingHorizontal: 20, marginBottom: 12 },
-  row: { paddingHorizontal: 20, gap: 14 },
+  sectionTitle: { paddingHorizontal: 18, marginBottom: 12, letterSpacing: 1 },
+  row: { paddingHorizontal: 18, gap: 14 },
   emptyCollections: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginHorizontal: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: R.secondary,
+    marginHorizontal: 18,
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: V.surface,
   },
-  adWrap: { paddingHorizontal: 20, marginBottom: 24 },
+  adWrap: { paddingHorizontal: 18, marginBottom: 24 },
 })

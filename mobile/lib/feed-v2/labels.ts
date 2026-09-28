@@ -445,3 +445,71 @@ export const CONTACT_TEXT = {
     more: 'Más opciones',
   },
 } as const
+
+export const BASICS_TEXT = {
+  title: 'Tus datos',
+  name: 'NOMBRE',
+  namePlaceholder: 'Tu nombre',
+  profession: 'PROFESIÓN',
+  department: 'DEPARTAMENTO',
+  save: 'Guardar cambios',
+} as const
+
+export const NOTIF_TEXT = {
+  title: 'Notificaciones',
+  subtitle: 'Elegí qué avisos querés recibir en este teléfono.',
+  rows: {
+    breakingNews: { label: 'Último momento', hint: 'Noticias importantes del agro' },
+    priceAlerts: { label: 'Precios', hint: 'Cambios en el mercado' },
+    weatherAlerts: { label: 'Clima', hint: 'Alertas que afectan al campo' },
+    institutionalUpdates: { label: 'Avisos institucionales', hint: 'Gremios y organizaciones que seguís' },
+  },
+  reminders: 'Los recordatorios de eventos y remates llegan siempre que los actives en cada uno.',
+} as const
+
+export const FOLLOWING_TEXT = {
+  title: 'Cuentas seguidas',
+  count: (n: number) => (n === 0 ? 'Seguí medios y gremios para ver más de ellos en tu feed.' : `Seguís ${n} cuenta${n === 1 ? '' : 's'}. Lo que publican aparece más en tu feed.`),
+  search: 'Buscar medio u organización',
+  clear: 'Borrar búsqueda',
+  empty: 'No encontramos cuentas con ese nombre.',
+  follow: 'Seguir',
+  following: 'Siguiendo',
+  category: { media: 'Medio', asociacion: 'Asociación', institucion: 'Institución', gremio: 'Gremio', rematadora: 'Rematadora' },
+} as const
+
+export const LIBRARY_TEXT = {
+  title: 'Biblioteca',
+  subtitle: 'Libros, guías y manuales del agro para leer y guardar.',
+  search: 'Buscar título o autor',
+  clear: 'Borrar búsqueda',
+  collections: 'MIS COLECCIONES',
+  emptyCollections: 'Guardá libros para tenerlos siempre a mano.',
+  empty: 'Todavía no hay títulos cargados.',
+  noResults: (q: string) => `Sin resultados para "${q}"`,
+} as const
+
+export const BOOK_TEXT = {
+  read: 'Leer',
+  opening: 'Abriendo…',
+  openError: 'No pudimos abrir el archivo. Probá de nuevo.',
+  saved: 'Guardado en Mis colecciones',
+  removed: 'Quitado de Mis colecciones',
+  saveA11y: 'Guardar en Mis colecciones',
+  removeA11y: 'Quitar de Mis colecciones',
+  pages: (n: number) => `${n} páginas`,
+  notFound: 'No encontramos este título.',
+  back: 'Volver',
+  close: 'Cerrar lector',
+} as const
+
+export const ALLIES_TEXT = {
+  title: 'Aliados',
+  subtitle: 'Empresas e instituciones que hacen posible Agroconecta.',
+  search: 'Buscar aliado',
+  clear: 'Borrar búsqueda',
+  all: 'Todos',
+  none: 'Todavía no hay aliados.',
+  noResults: (q: string) => (q ? `Sin resultados para "${q}"` : 'No hay aliados en esta categoría.'),
+  whatsapp: (name: string) => `Escribir a ${name} por WhatsApp`,
+} as const

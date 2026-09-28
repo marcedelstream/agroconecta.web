@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
-import { ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { showToast } from '@/lib/feed-v2/toast'
+import { Platform, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -56,6 +57,17 @@ export function ProfileV2Screen() {
   const edit = () => router.push('/(main)/perfil-editar' as never)
   const headline = [cv.headline, cv.currentOrg].filter(Boolean).join(' — ') || getProfessionLabel(user.profession)
   const subline = [cv.education, getDepartmentLabel(user.department), cv.country].filter(Boolean).join(' · ')
+  // Sin perfil público todavía no hay link que mandar: se lleva a Editar perfil para activarlo.
+  const shareProfile = () => {
+    if (!cv.profilePublic || !cv.slug) {
+      showToast(PROFILE_TEXT.shareNeedsPublic)
+      edit()
+      return
+    }
+    const url = PUBLIC_PROFILE_BASE + cv.slug
+    // En iOS el url va aparte para que salga como link (vista previa, Copiar); Android solo usa message.
+    void Share.share(Platform.OS === 'ios' ? { message: PROFILE_TEXT.shareMessage(user.name, ''), url } : { message: PROFILE_TEXT.shareMessage(user.name, url) })
+  }
   const cvEmpty = !cv.headline && !cv.bio && cv.experience.length === 0 && cv.specialties.length === 0
 
   return (
@@ -72,9 +84,9 @@ export function ProfileV2Screen() {
           onMore={() => setMoreOpen(true)}
         />
         <View style={styles.content}>
-          {cv.profilePublic && cv.slug ? (
+          {user ? (
             <TouchableOpacity
-              onPress={() => void Share.share({ message: PROFILE_TEXT.shareMessage(user.name, PUBLIC_PROFILE_BASE + cv.slug) })}
+              onPress={shareProfile}
               accessibilityRole="button"
               style={styles.share}
             >

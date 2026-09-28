@@ -77,7 +77,14 @@ export function DetailSheet({ item, actions, onClose }: Props) {
           <Pressable style={styles.fill} onPress={close} accessibilityLabel={DETAIL_TEXT.close} />
         </Animated.View>
         <Animated.View style={[styles.sheet, { top: insets.top + TOP_GAP }, sheetStyle]} accessibilityViewIsModal>
-          <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} showsVerticalScrollIndicator={false}>
+          {/* Sin rebote: al tirar la cabecera hacia abajo el contenido rebotaba dentro de la hoja y dejaba un
+              hueco arriba, en vez de bajar la ficha entera. */}
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
+          >
             <GestureDetector gesture={drag}>
               <View>
                 <DetailHero item={item} onClose={close} />

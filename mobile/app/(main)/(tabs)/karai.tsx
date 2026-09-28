@@ -18,6 +18,7 @@ import { KARAI_TEXT } from '@/lib/feed-v2/labels'
 import type { FeedContentItem } from '@/lib/feed-v2/types'
 import { useItemActions, type ItemUpdater } from '@/lib/feed-v2/use-item-actions'
 import { useKarai } from '@/lib/feed-v2/use-karai'
+import { useKeyboardVisible } from '@/lib/use-keyboard-visible'
 
 // Karai v2 (README §3.4): chat con la misma IA del web, con tarjetas de contenido de Agroconecta que
 // se abren en la misma ficha del feed.
@@ -29,6 +30,9 @@ export default function KaraiScreen() {
   const [refItem, setRefItem] = useState<FeedContentItem | null>(null)
   const scroll = useRef<ScrollView>(null)
   const { session } = useApp()
+  // Con el teclado abierto la barra de tabs queda tapada: el lugar reservado para ella dejaba la caja de
+  // texto flotando lejos del teclado.
+  const keyboardOpen = useKeyboardVisible()
 
   const update = useCallback<ItemUpdater>((fn) => setRefItem((i) => (i ? fn(i) : i)), [])
   const { actions } = useItemActions(update)
@@ -83,7 +87,7 @@ export default function KaraiScreen() {
         )}
       </ScrollView>
 
-      {session && <View style={[styles.inputRow, { paddingBottom: bottomSpace + 8 }]}>
+      {session && <View style={[styles.inputRow, { paddingBottom: keyboardOpen ? 8 : bottomSpace + 8 }]}>
         <TextInput
           value={input}
           onChangeText={setInput}

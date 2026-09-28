@@ -33,7 +33,7 @@ export default function SplashScreen() {
     <View style={styles.container}>
       <Animated.View style={{ opacity, transform: [{ scale }] }}>
         <Image
-          source={require('@/assets/images/logo.png')}
+          source={require('@/assets/images/logo-light.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -78,14 +78,15 @@ function LoadingDots() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    // Igual al splash nativo (app.json) para que no haya salto de color ni de tamaño.
+    backgroundColor: Colors.light.background,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 48,
   },
   logo: {
     width: 200,
-    height: 60,
+    height: 43,
   },
   dotsRow: {
     position: 'absolute',

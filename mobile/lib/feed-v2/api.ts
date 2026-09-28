@@ -36,6 +36,11 @@ export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage
   return authorizedGet<ExplorePage>('/api/explore', params, true)
 }
 
+/** Todo el contenido de Explorar de una vez, para filtrar en el teléfono (ver use-explore.ts). */
+export async function fetchExploreCatalog(): Promise<ExplorePage> {
+  return authorizedGet<ExplorePage>('/api/explore', new URLSearchParams({ all: '1' }), true)
+}
+
 export async function fetchGuardados(): Promise<GuardadosPage> {
   return authorizedGet<GuardadosPage>('/api/guardados', new URLSearchParams())
 }

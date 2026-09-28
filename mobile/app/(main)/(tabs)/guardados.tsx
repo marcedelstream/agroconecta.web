@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import { Text } from '@/components/ui/Text'
 import { DetailSheet } from '@/components/v2/detail/DetailSheet'
-import { ActivityList, RemindersList, SavedList } from '@/components/v2/guardados/GuardadosLists'
+import { RemindersList, SavedList } from '@/components/v2/guardados/GuardadosLists'
 import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { SegmentedControl } from '@/components/v2/SegmentedControl'
 import { ToastHost } from '@/components/v2/ToastHost'
@@ -14,15 +14,14 @@ import { Colors } from '@/constants/colors'
 import { GUARDADOS_TEXT } from '@/lib/feed-v2/labels'
 import { useGuardados } from '@/lib/feed-v2/use-guardados'
 
-type Segment = 'saved' | 'reminders' | 'activity'
+type Segment = 'saved' | 'reminders'
 
 const SEGMENTS: { value: Segment; label: string }[] = [
   { value: 'saved', label: GUARDADOS_TEXT.tabSaved },
   { value: 'reminders', label: GUARDADOS_TEXT.tabReminders },
-  { value: 'activity', label: GUARDADOS_TEXT.tabActivity },
 ]
 
-// Guardados v2 (README §3.5): Guardados · Recordatorios · Actividad.
+// Guardados v2 (README §3.5): Guardados · Recordatorios. Actividad se sacó a pedido de Marce (2026-09-28).
 export default function GuardadosScreen() {
   const insets = useSafeAreaInsets()
   const bottomSpace = useFloatingTabBarSpace()
@@ -42,10 +41,7 @@ export default function GuardadosScreen() {
       )
     }
     if (segment === 'saved') return <SavedList items={g.page.saved} onOpen={g.actions.openDetail} />
-    if (segment === 'reminders') {
-      return <RemindersList entries={g.page.reminders} onOpen={g.actions.openDetail} onToggle={g.toggleReminder} />
-    }
-    return <ActivityList activity={g.page.activity} />
+    return <RemindersList entries={g.page.reminders} onOpen={g.actions.openDetail} onToggle={g.toggleReminder} />
   }
 
   return (

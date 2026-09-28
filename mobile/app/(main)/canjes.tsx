@@ -4,6 +4,7 @@ import { useFocusEffect } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
 import * as Haptics from 'expo-haptics'
+import * as WebBrowser from 'expo-web-browser'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { BalanceHeader, HistoryList, RedemptionRow, RewardCard } from '@/components/v2/rewards/RewardsParts'
@@ -11,7 +12,7 @@ import { ToastHost } from '@/components/v2/ToastHost'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { REWARDS_TEXT } from '@/lib/feed-v2/labels'
-import { usePoints } from '@/lib/feed-v2/points'
+import { POINTS_RULES_URL, usePoints } from '@/lib/feed-v2/points'
 import { fetchMyRedemptions, fetchRewards, redeemReward, type Redemption, type Reward } from '@/lib/feed-v2/rewards'
 import { showToast } from '@/lib/feed-v2/toast'
 import { goBack } from '@/lib/navigation'
@@ -86,6 +87,11 @@ export default function CanjesScreen() {
             </View>
           ))}
         </View>
+
+        <Text family="noto-sans" size={13} lineHeight={18} color={Colors.v2.muted}>{REWARDS_TEXT.rulesNote}</Text>
+        <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync(POINTS_RULES_URL)} accessibilityRole="link">
+          <Text family="noto-sans" weight="bold" size={14} color={Colors.v2.limeText}>{REWARDS_TEXT.rules}</Text>
+        </TouchableOpacity>
 
         <Section title={REWARDS_TEXT.history} />
         {history.length === 0 ? <Empty text={REWARDS_TEXT.emptyHistory} /> : <HistoryList history={history} />}

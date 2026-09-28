@@ -61,7 +61,11 @@ export function RedemptionRow({ r }: { r: Redemption }) {
     <View style={styles.card}>
       <View style={styles.flex}>
         <Text family="noto-sans" weight="bold" size={15} color={Colors.v2.navy}>{r.rewardTitle}</Text>
-        <Text family="noto-sans" size={12} color={Colors.v2.muted}>{REWARDS_TEXT.status[r.status]}</Text>
+        <Text family="noto-sans" size={12} color={Colors.v2.muted}>
+          {r.status === 'emitido' && r.expiresAt
+            ? `${REWARDS_TEXT.status.emitido} · ${REWARDS_TEXT.expires(new Date(r.expiresAt).toLocaleDateString('es-PY'))}`
+            : REWARDS_TEXT.status[r.status]}
+        </Text>
       </View>
       <TouchableOpacity onPress={copy} accessibilityRole="button" accessibilityLabel={REWARDS_TEXT.copy} style={styles.code}>
         <Text family="noto-sans" weight="extrabold" size={15} color={Colors.v2.navy} style={styles.mono}>{r.code}</Text>

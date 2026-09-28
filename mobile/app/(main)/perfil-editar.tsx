@@ -14,6 +14,7 @@ import { useApp } from '@/lib/app-context'
 import { EDIT_CV_TEXT, PROFILE_TEXT } from '@/lib/feed-v2/labels'
 import { showToast } from '@/lib/feed-v2/toast'
 import { goBack } from '@/lib/navigation'
+import { claimProfilePoints } from '@/lib/feed-v2/points'
 import { EMPTY_CV, fetchProfileCV, normalizeSlug, PUBLIC_PROFILE_BASE, saveProfileCV, SOCIAL_KEYS, type ProfileCV } from '@/lib/profile-cv'
 import { ReminderSwitch } from '@/components/v2/ReminderSwitch'
 
@@ -47,9 +48,11 @@ export default function EditCvScreen() {
     if (!user?.id || !cv || saving) return
     setSaving(true)
     const result = await saveProfileCV(user.id, { ...cv, specialties: specialties.split(',') })
+    // El servidor decide si el perfil quedó completo; suma una sola vez.
+    const awarded = result === 'ok' ? await claimProfilePoints() : 0
     setSaving(false)
     const messages = { ok: EDIT_CV_TEXT.saved, slug_taken: EDIT_CV_TEXT.slugTaken, slug_invalid: EDIT_CV_TEXT.slugInvalid, error: EDIT_CV_TEXT.error }
-    showToast(messages[result])
+    showToast(awarded > 0 ? EDIT_CV_TEXT.savedWithPoints(awarded) : messages[result])
     if (result === 'ok') goBack()
   }
 

@@ -67,6 +67,17 @@ export async function answerQuiz(questionId: string, choice: number): Promise<Qu
   return data as QuizAnswerResult
 }
 
+export const POINTS_RULES_URL = 'https://www.agroconecta.com.py/reglamento-puntos'
+
+/** Suma una sola vez al completar el perfil profesional; el servidor verifica que esté completo. */
+export async function claimProfilePoints(): Promise<number> {
+  const { data, error } = await supabase.rpc('claim_profile_points')
+  if (error) return 0
+  const awarded = Number(data ?? 0)
+  if (awarded > 0) notifyPointsChanged()
+  return awarded
+}
+
 /** Puntos de bienvenida configurados (para mostrarlos en la tarjeta de invitado). */
 export async function fetchWelcomePoints(): Promise<number | null> {
   const { data } = await supabase.from('points_config').select('value').eq('key', 'welcome').maybeSingle()

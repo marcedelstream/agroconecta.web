@@ -6,38 +6,59 @@ import { Text } from '@/components/ui/Text'
 import { useColors } from '@/lib/theme-context'
 import { Spacing } from '@/constants/spacing'
 
+// Copia de https://www.agroconecta.com.py/politica (web/app/politica/page.tsx): mantener las dos iguales.
 const SECTIONS: { title: string; body: string }[] = [
   {
-    title: '1. Qué datos recolectamos',
-    body: 'Recolectamos los datos que nos proporcionás al registrarte: nombre, correo electrónico, teléfono, profesión y departamento. También guardamos tus preferencias de contenido y las organizaciones que decidís seguir.',
+    title: "1. Qué datos recolectamos",
+    body: "Los que nos das: nombre, correo, teléfono (opcional), profesión y departamento; tus rubros, lo que producís, para qué usás la app y tu escala; las organizaciones que seguís; y, si lo completás, tu perfil profesional (cargo, formación, experiencia, especialidades y redes). El departamento lo elegís vos: no usamos la ubicación GPS.\n\nLo que hacés en la app: qué contenido ves y por cuánto tiempo, tus me gusta, guardados, recordatorios, respuestas a encuestas y quiz, tus puntos y canjes, las publicidades que ves o tocás y tus mensajes con Karai. También guardamos el identificador de notificaciones de tu teléfono si las activás. La foto de perfil queda solo en tu teléfono.",
   },
   {
-    title: '2. Para qué usamos tus datos',
-    body: 'Usamos tu información para personalizar el feed de noticias y precios que ves, enviarte notificaciones relevantes (si las activaste) y mejorar la experiencia general de la app.',
+    title: "2. Para qué los usamos",
+    body: "Para ordenar tu feed con lo que más te interesa, recomendarte eventos y contenido cercano, sumar y canjear tus puntos, responderte con Karai, mostrarte publicidad acorde a tu profesión, departamento e intereses, enviarte las notificaciones que activaste y entender, de forma agregada, cómo se usa la app para mejorarla.",
   },
   {
-    title: '3. Con quién compartimos tus datos',
-    body: 'No vendemos tus datos personales a terceros. Solo se comparten con proveedores de servicios necesarios para el funcionamiento de la app (por ejemplo, el envío de notificaciones push o el procesamiento de formularios de contacto).',
+    title: "3. Publicidad",
+    body: "Los anuncios siempre están marcados como \"Patrocinado\" y podés ver por qué te aparecen. Se eligen con los datos que declaraste en tu perfil; no seguimos lo que hacés en otras apps o sitios. A los anunciantes les mostramos solo resultados agregados, nunca tus datos personales.",
   },
   {
-    title: '4. Almacenamiento y seguridad',
-    body: 'Tus datos se almacenan en infraestructura de Supabase con controles de acceso basados en tu identidad de usuario. Trabajamos para mantener medidas de seguridad razonables acordes al tamaño del proyecto.',
+    title: "4. Karai",
+    body: "Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje para poder contactarte.",
   },
   {
-    title: '5. Tus derechos',
-    body: 'Podés acceder, corregir o eliminar tus datos personales en cualquier momento desde la sección de Perfil de la app, o solicitándolo a través de los canales de contacto disponibles.',
+    title: "5. Perfil público",
+    body: "Tu perfil profesional es privado. Solo se puede ver con un link si activás \"Perfil público\" y elegís tu dirección. En ese caso se muestran tu nombre, cargo, formación, experiencia, especialidades y redes; nunca tu correo ni tu teléfono. Lo podés desactivar cuando quieras.",
   },
   {
-    title: '6. Notificaciones',
-    body: 'Las notificaciones push son opcionales. Podés activarlas o desactivarlas en cualquier momento desde los ajustes de tu dispositivo o desde tu perfil dentro de la app.',
+    title: "6. Puntos y canjes",
+    body: "Los puntos que sumás y lo que canjeás quedan registrados en tu cuenta. Al canjear un premio, al aliado le llega solo lo necesario para que lo uses (el código de canje). Las reglas están en el Reglamento de puntos: agroconecta.com.py/reglamento-puntos.",
   },
   {
-    title: '7. Cambios a esta política',
-    body: 'Esta Política de Privacidad puede actualizarse para reflejar cambios en la app o en la normativa aplicable. Te recomendamos revisarla periódicamente.',
+    title: "7. Con quién compartimos tus datos",
+    body: "No vendemos tus datos personales. Solo los procesan los proveedores que la app necesita: base de datos (Supabase), web (Vercel), notificaciones (Expo), inicio de sesión (Google y Apple), correos (Resend) y el proveedor de inteligencia artificial de Karai.",
   },
   {
-    title: '8. Contacto',
-    body: 'Si tenés preguntas sobre el tratamiento de tus datos personales, escribinos a través de los canales de contacto disponibles dentro de la app.',
+    title: "8. Almacenamiento y seguridad",
+    body: "Tus datos se guardan en Supabase con controles de acceso: cada persona solo puede ver y modificar lo suyo, y lo que tiene valor (puntos, canjes, respuestas del quiz) lo decide el servidor, no la app.",
+  },
+  {
+    title: "9. Tus derechos",
+    body: "Podés ver y corregir tus datos desde tu perfil, y pedirnos una copia o la corrección de cualquier dato desde agroconecta.com.py/soporte.",
+  },
+  {
+    title: "10. Eliminación de cuenta",
+    body: "Podés eliminar tu cuenta desde Perfil → Más → Eliminar cuenta. Se borran tu perfil, intereses, organizaciones seguidas, guardados, recordatorios, actividad, puntos, canjes y conversaciones con Karai, y no se puede deshacer. Los registros de publicidad quedan solo como números anónimos.",
+  },
+  {
+    title: "11. Notificaciones",
+    body: "Son opcionales. Te avisamos de noticias importantes, precios o recordatorios que activaste, solo en las categorías que elegiste. Las podés desactivar desde tu perfil o desde los ajustes del teléfono.",
+  },
+  {
+    title: "12. Cambios a esta política",
+    body: "Podemos actualizar esta política cuando la app cambie. Si el cambio es importante, te lo vamos a avisar en la app.",
+  },
+  {
+    title: "13. Contacto",
+    body: "Si tenés preguntas sobre tus datos personales, escribinos desde agroconecta.com.py/soporte.",
   },
 ]
 

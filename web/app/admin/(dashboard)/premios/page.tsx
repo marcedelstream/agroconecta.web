@@ -1,5 +1,5 @@
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
-import { createReward, toggleReward } from './actions'
+import { createReward, toggleReward, voidUserPoints } from './actions'
 import { ValidateCodeForm } from './ValidateCodeForm'
 import { FieldLabel, Notice, PageHeader } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
@@ -22,6 +22,7 @@ interface RedemptionRow {
   code: string
   status: string
   created_at: string
+  expires_at: string | null
   rewards: { title: string } | null
 }
 
@@ -36,7 +37,7 @@ export default async function PremiosPage({ searchParams }: Props) {
   const db = createSupabaseAdmin()
   const [rewards, redemptions] = await Promise.all([
     db.from('rewards').select('id,kind,title,partner_name,cost,stock,is_active').order('created_at', { ascending: false }),
-    db.from('reward_redemptions').select('id,code,status,created_at,rewards(title)').order('created_at', { ascending: false }).limit(100),
+    db.from('reward_redemptions').select('id,code,status,created_at,expires_at,rewards(title)').order('created_at', { ascending: false }).limit(100),
   ])
   const error = rewards.error ?? redemptions.error
 
@@ -49,7 +50,20 @@ export default async function PremiosPage({ searchParams }: Props) {
 
       <ValidateCodeForm />
 
-      <div className="mb-5 flex justify-end">
+      <div className="mb-5 flex justify-end gap-2">
+        <CreateDrawer label="Anular puntos" title="Anular puntos de una cuenta" description="Solo si hizo trampa (por ejemplo, varias cuentas). Deja su saldo en 0; la cuenta sigue funcionando. No se puede deshacer.">
+          <form action={voidUserPoints} className="card space-y-3 h-fit">
+            <div>
+              <FieldLabel help="El correo con el que la persona inició sesión en la app.">Correo de la cuenta</FieldLabel>
+              <input name="email" type="email" required className="input" placeholder="nombre@correo.com" />
+            </div>
+            <div>
+              <FieldLabel help="Aparece en el historial de puntos de la persona.">Motivo</FieldLabel>
+              <input name="reason" className="input" placeholder="Varias cuentas de la misma persona" />
+            </div>
+            <button type="submit" className="btn-primary text-sm w-full">Anular sus puntos</button>
+          </form>
+        </CreateDrawer>
         <CreateDrawer label="Nuevo premio" title="Nuevo premio" description="Cargá solo premios confirmados por el aliado.">
             <form action={createReward} className="card space-y-3 h-fit">
               <p className="text-xs text-muted">Cargá solo premios confirmados por el aliado.</p>
@@ -105,7 +119,7 @@ export default async function PremiosPage({ searchParams }: Props) {
 
         <div className="card p-0 overflow-hidden">
           <table className="admin-table">
-            <thead><tr><th>Código</th><th>Premio</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <thead><tr><th>Código</th><th>Premio</th><th>Estado</th><th>Canjeado</th><th>Vence</th></tr></thead>
             <tbody>
               {((redemptions.data ?? []) as unknown as RedemptionRow[]).map((r) => (
                 <tr key={r.id}>
@@ -113,6 +127,7 @@ export default async function PremiosPage({ searchParams }: Props) {
                   <td>{r.rewards?.title ?? '—'}</td>
                   <td>{r.status}</td>
                   <td className="text-xs text-muted">{new Date(r.created_at).toLocaleDateString('es-PY')}</td>
+                  <td className="text-xs text-muted">{r.expires_at ? new Date(r.expires_at).toLocaleDateString('es-PY') : '—'}</td>
                 </tr>
               ))}
             </tbody>

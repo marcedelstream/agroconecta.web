@@ -207,6 +207,7 @@ export const EDIT_CV_TEXT = {
   save: 'Guardar',
   saving: 'Guardando…',
   saved: 'Perfil actualizado',
+  savedWithPoints: (pts: number) => `Perfil completo: sumaste ${pts} pts`,
   error: 'No pudimos guardar tu perfil. Probá de nuevo.',
   basics: 'Nombre, profesión y departamento',
   sectionPro: 'PERFIL PROFESIONAL',
@@ -314,9 +315,10 @@ export const ONBOARDING_TEXT = {
   phoneLabel: 'Número de WhatsApp',
   consentTitle: 'Último paso',
   consentTerms: 'Acepto los términos y condiciones y la política de privacidad.',
-  consentPoints: 'Quiero participar del programa de puntos de Agroconecta.',
+  consentPoints: 'Quiero participar del programa de puntos. Soy mayor de 18 años, vivo en Paraguay y acepto su reglamento.',
   readTerms: 'Leer términos',
   readPrivacy: 'Leer privacidad',
+  readRules: 'Leer reglamento',
 } as const
 
 export const KARAI_TEXT = {
@@ -395,11 +397,14 @@ export const REWARDS_TEXT = {
     network: 'No pudimos hacer el canje. Probá de nuevo.',
   },
   status: { emitido: 'Para usar', usado: 'Usado', vencido: 'Vencido', anulado: 'Anulado' },
+  expires: (date: string) => `Vence el ${date}`,
+  rules: 'Ver reglamento de puntos',
+  rulesNote: 'Los puntos vencen si pasan 12 meses sin que sumes ni canjees, y cada código vale 60 días.',
   kind: { curso: 'CURSO', evento: 'EVENTO', charla: 'CHARLA' },
   emptyCatalog: 'Pronto vas a poder canjear tus puntos por cursos y entradas a eventos de nuestros aliados.',
   emptyMine: 'Todavía no canjeaste nada.',
   emptyHistory: 'Todavía no tenés movimientos.',
-  ways: ['Respondé la encuesta del día: +10 pts', 'Acertá en los quizzes: +10 pts por respuesta', 'Completá tu perfil profesional'],
+  ways: ['Respondé la encuesta del día: +10 pts', 'Acertá en los quizzes: +10 pts por respuesta', 'Completá tu perfil profesional: +30 pts'],
 } as const
 
 /** 1284 → "1.284"; 12400 → "12,4 mil" (mismo formato que el prototipo). */

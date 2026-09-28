@@ -20,6 +20,7 @@ export interface Redemption {
   code: string
   status: 'emitido' | 'usado' | 'vencido' | 'anulado'
   createdAt: string
+  expiresAt: string | null
   rewardTitle: string
 }
 
@@ -40,6 +41,7 @@ interface RedemptionRow {
   code: string
   status: Redemption['status']
   created_at: string
+  expires_at: string | null
   rewards: { title: string } | null
 }
 
@@ -53,13 +55,14 @@ export async function fetchRewards(): Promise<Reward[]> {
 }
 
 export async function fetchMyRedemptions(): Promise<Redemption[]> {
-  const { data, error } = await supabase.from('reward_redemptions').select('id,code,status,created_at,rewards(title)').order('created_at', { ascending: false })
+  const { data, error } = await supabase.from('reward_redemptions').select('id,code,status,created_at,expires_at,rewards(title)').order('created_at', { ascending: false })
   if (error) return []
   return ((data ?? []) as unknown as RedemptionRow[]).map((r) => ({
     id: r.id,
     code: r.code,
     status: r.status,
     createdAt: r.created_at,
+    expiresAt: r.expires_at,
     rewardTitle: r.rewards?.title ?? '',
   }))
 }

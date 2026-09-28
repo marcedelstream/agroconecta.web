@@ -1,3 +1,5 @@
+import * as WebBrowser from 'expo-web-browser'
+import { POINTS_RULES_URL } from '@/lib/feed-v2/points'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { router } from 'expo-router'
@@ -121,6 +123,7 @@ export function ConsentPicker({ terms, points, onTerms, onPoints }: { terms: boo
       <View style={styles.links}>
         <TouchableOpacity onPress={() => router.push('/legal/terms' as never)} accessibilityRole="link"><Text family="noto-sans" weight="bold" size={14} color={Colors.v2.limeText}>{T.readTerms}</Text></TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/legal/privacy' as never)} accessibilityRole="link"><Text family="noto-sans" weight="bold" size={14} color={Colors.v2.limeText}>{T.readPrivacy}</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync(POINTS_RULES_URL)} accessibilityRole="link"><Text family="noto-sans" weight="bold" size={14} color={Colors.v2.limeText}>{T.readRules}</Text></TouchableOpacity>
       </View>
     </View>
   )

@@ -101,6 +101,20 @@ export async function buildExplorePage(admin: SupabaseClient, userId: string | n
   }
 }
 
+// Catálogo entero de Explorar, ya ordenado como el feed: la app filtra por tipo, rubro y búsqueda en el
+// teléfono, al instante, en vez de pedirle al servidor (y esperarlo) en cada toque.
+const CATALOG_LIMIT = 400
+
+export async function buildExploreCatalog(admin: SupabaseClient, userId: string | null): Promise<ExplorePage> {
+  const asOf = new Date()
+  const ctx = await loadRankingContext(admin, userId, asOf)
+  const ranked = chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf))
+  return {
+    items: ranked.slice(0, CATALOG_LIMIT).map((c) => toContentItem(c, ctx)),
+    trending: trendingTags(ctx.candidates, asOf),
+  }
+}
+
 /** Contenido relacionado a un mensaje de Karai, listo para abrir en la ficha de la app. */
 export async function buildKaraiRefs(admin: SupabaseClient, userId: string, message: string): Promise<FeedContentItem[]> {
   const ctx = await loadRankingContext(admin, userId, new Date())

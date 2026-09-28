@@ -65,7 +65,7 @@ export async function loadEventCandidates(events: SupabaseClient | null, asOf: D
     .from('events')
     .select(EVENT_COLUMNS)
     .eq('is_approved', true)
-    .gte('date', today)
+    .or(`date.gte.${today},end_date.gte.${today}`)
     .order('date', { ascending: true })
     .limit(EVENTS_LIMIT)
 

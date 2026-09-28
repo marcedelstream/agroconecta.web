@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { authenticateOptional } from '@/lib/feed/guest-auth'
 import { EXPLORE_RUBROS, EXPLORE_TYPES } from '@/lib/feed/explore'
-import { buildExplorePage } from '@/lib/feed/service'
+import { buildExploreCatalog, buildExplorePage } from '@/lib/feed/service'
 import type { FeedContentType } from '@/lib/feed/types'
 
 export const dynamic = 'force-dynamic'
@@ -22,7 +22,10 @@ export async function GET(request: Request) {
   const query = (params.get('q') ?? '').slice(0, MAX_QUERY_LENGTH)
 
   try {
-    const page = await buildExplorePage(auth.admin, auth.userId, { query, type, rubro })
+    // ?all=1: la app nueva baja todo una vez y filtra sola. Sin eso, las versiones viejas siguen igual.
+    const page = params.get('all') === '1'
+      ? await buildExploreCatalog(auth.admin, auth.userId)
+      : await buildExplorePage(auth.admin, auth.userId, { query, type, rubro })
     return NextResponse.json(page, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
     console.error('GET /api/explore falló:', err)

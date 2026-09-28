@@ -1,242 +1,179 @@
 import { useState } from 'react'
-import { View, ScrollView, TouchableOpacity, TextInput, Linking, StyleSheet } from 'react-native'
-import { goBack } from '@/lib/navigation'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { useApp } from '@/lib/app-context'
-import { supabase } from '@/lib/supabase'
-import { SOCIAL_LINKS, WHATSAPP_NUMBER, WHATSAPP_URL } from '@/lib/social-links'
+import { V2Layout } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
+import { useApp } from '@/lib/app-context'
+import { sendContactLead } from '@/lib/contact-lead'
+import { CONTACT_TEXT as T } from '@/lib/feed-v2/labels'
+import { goBack } from '@/lib/navigation'
+import { SOCIAL_LINKS, WHATSAPP_URL } from '@/lib/social-links'
 
-const R = Colors.redesign
-const SERVICE_TYPE = 'oportunidad_comercial'
-const SERVICE_LABEL = 'Oportunidad comercial'
-
+// Contacto v2: WhatsApp como camino principal (es lo más rápido para el público del agro), y si no, un
+// formulario corto que llega al panel (Consultas) con el motivo elegido.
 export default function ContactoScreen() {
+  const insets = useSafeAreaInsets()
   const { user } = useApp()
-
-  const [phone, setPhone] = useState('')
+  const [reason, setReason] = useState<string>(T.reasons[0])
+  const [phone, setPhone] = useState(user?.phone ?? '')
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 
-  async function handleSubmit() {
-    if (!phone.trim()) return
-    setLoading(true)
-    try {
-      await supabase.from('service_leads').insert({
-        user_id: user?.id ?? null,
-        service_type: SERVICE_TYPE,
-        phone: phone.trim(),
-        additional_info: message.trim(),
-        created_at: new Date().toISOString(),
-      })
-    } catch {
-      // Silently fail
-    }
-    try {
-      await fetch('https://agroconecta.com.py/api/service-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceLabel: SERVICE_LABEL, phone: phone.trim(), additionalInfo: message.trim() }),
-      })
-    } catch {
-      // El registro en Supabase ya se guardó; el email es un aviso adicional, no bloquea el flujo
-    }
-    setLoading(false)
+  async function submit() {
+    if (!phone.trim() || sending) return
+    setSending(true)
+    await sendContactLead({ userId: user?.id ?? null, phone, reason, message })
+    setSending(false)
     setSent(true)
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: R.surface }]}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: R.header.bg }}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => goBack()} hitSlop={12}>
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text family="noto-sans" weight="semibold" size={13} color={R.header.mutedText}>Contacto</Text>
-          <View style={{ width: 20 }} />
-        </View>
-      </SafeAreaView>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar style="dark" />
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <TouchableOpacity onPress={() => goBack()} accessibilityRole="button" accessibilityLabel={T.back} style={styles.back}>
+          <Ionicons name="chevron-back" size={20} color={Colors.v2.navy} />
+        </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {sent ? (
-          <View style={styles.successBox}>
-            <Ionicons name="checkmark-circle" size={52} color={Colors.lime} />
-            <Text family="noto-sans" weight="bold" size={19} color={R.foreground} style={{ textAlign: 'center' }}>
-              ¡Mensaje enviado!
-            </Text>
-            <Text family="noto-sans" size={13.5} color={R.mutedForeground} style={{ textAlign: 'center' }}>
-              Nos comunicaremos a la brevedad al número proporcionado.
-            </Text>
-            <TouchableOpacity
-              style={[styles.submitBtn, { marginTop: 8 }]}
-              onPress={() => { setSent(false); setPhone(''); setMessage('') }}
-              activeOpacity={0.85}
-            >
-              <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">Enviar otro mensaje</Text>
-            </TouchableOpacity>
+        <Text family="noto-sans" weight="bold" size={12} color={Colors.v2.limeText} style={styles.eyebrow}>{T.eyebrow}</Text>
+        <Text family="noto-sans" weight="extrabold" size={30} lineHeight={34} color={Colors.v2.navy} style={styles.h1}>{T.title}</Text>
+        <Text family="noto-sans" size={16} lineHeight={23} color={Colors.v2.muted}>{T.body}</Text>
+
+        <TouchableOpacity onPress={() => Linking.openURL(WHATSAPP_URL).catch(() => null)} accessibilityRole="link" style={styles.whatsapp}>
+          <Ionicons name="logo-whatsapp" size={24} color={Colors.v2.white} />
+          <View style={styles.flex}>
+            <Text family="noto-sans" weight="extrabold" size={17} color={Colors.v2.white}>{T.whatsapp}</Text>
+            <Text family="noto-sans" size={13} color={Colors.v2.white}>{T.whatsappHint}</Text>
           </View>
-        ) : (
-          <>
-            <Text family="noto-sans" weight="bold" size={10.5} color={R.limeSoftText} style={styles.eyebrow}>CONTACTO</Text>
-            <Text family="noto-sans" weight="extrabold" size={20} lineHeight={27} color={R.foreground} style={{ marginTop: 4 }}>
-              ¿Tenés una oportunidad comercial o una sugerencia?
-            </Text>
-            <Text family="noto-sans" size={13.5} lineHeight={21} color={R.mutedForeground} style={{ marginTop: 8 }}>
-              Contanos qué tenés en mente — una propuesta, una idea o algo que creas que puede sumar
-              al ecosistema. Te respondemos por el número que nos dejes.
-            </Text>
+          <Ionicons name="arrow-forward" size={20} color={Colors.v2.white} />
+        </TouchableOpacity>
 
-            <View style={styles.formFields}>
-              <View style={styles.field}>
-                <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
-                  NÚMERO DE TELÉFONO *
-                </Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="call-outline" size={18} color={R.mutedForeground} />
-                  <TextInput
-                    style={styles.textInput}
-                    value={phone}
-                    onChangeText={setPhone}
-                    placeholder="+595 9xx xxx xxx"
-                    placeholderTextColor={R.mutedForeground}
-                    keyboardType="phone-pad"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.field}>
-                <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
-                  MENSAJE
-                </Text>
-                <TextInput
-                  style={styles.textArea}
-                  value={message}
-                  onChangeText={setMessage}
-                  placeholder="Contanos tu idea u oportunidad..."
-                  placeholderTextColor={R.mutedForeground}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[styles.submitBtn, !phone.trim() && styles.submitBtnDisabled]}
-                onPress={handleSubmit}
-                disabled={loading || !phone.trim()}
-                activeOpacity={0.85}
-              >
-                <Text family="noto-sans" weight="bold" size={13.5} color="#0A0A13">
-                  {loading ? 'Enviando...' : 'Enviar mensaje'}
-                </Text>
+        <View style={styles.card}>
+          {sent ? (
+            <View style={styles.sent}>
+              <Ionicons name="checkmark-circle" size={48} color={Colors.v2.limeText} />
+              <Text family="noto-sans" weight="extrabold" size={19} color={Colors.v2.navy} style={styles.center}>{T.sentTitle}</Text>
+              <Text family="noto-sans" size={15} lineHeight={21} color={Colors.v2.muted} style={styles.center}>{T.sentBody}</Text>
+              <TouchableOpacity onPress={() => { setSent(false); setMessage('') }} accessibilityRole="button">
+                <Text family="noto-sans" weight="bold" size={15} color={Colors.v2.limeText}>{T.again}</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-
-        <View style={styles.divider} />
-
-        <View style={styles.socialSection}>
-          <Text family="noto-sans" weight="semibold" size={11} color={R.mutedForeground} style={styles.fieldLabel}>
-            SEGUINOS
-          </Text>
-          <View style={styles.socialRow}>
-            {SOCIAL_LINKS.map((social) => (
+          ) : (
+            <>
+              <Text family="noto-sans" weight="extrabold" size={17} color={Colors.v2.navy}>{T.formTitle}</Text>
+              <View style={styles.chips}>
+                {T.reasons.map((r) => {
+                  const on = r === reason
+                  return (
+                    <TouchableOpacity
+                      key={r}
+                      onPress={() => setReason(r)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: on }}
+                      style={[styles.chip, on && styles.chipOn]}
+                    >
+                      <Text family="noto-sans" weight="semibold" size={14} color={on ? Colors.v2.limeTintText : Colors.v2.navy}>{r}</Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+              <TextInput
+                value={phone}
+                onChangeText={setPhone}
+                placeholder={T.phoneHint}
+                placeholderTextColor={Colors.v2.light.placeholder}
+                keyboardType="phone-pad"
+                accessibilityLabel={T.phone}
+                style={styles.input}
+              />
+              <TextInput
+                value={message}
+                onChangeText={setMessage}
+                placeholder={T.messageHint}
+                placeholderTextColor={Colors.v2.light.placeholder}
+                multiline
+                textAlignVertical="top"
+                accessibilityLabel={T.message}
+                style={[styles.input, styles.textarea]}
+              />
               <TouchableOpacity
-                key={social.id}
-                style={styles.socialBtn}
-                onPress={() => Linking.openURL(social.url).catch(() => {})}
-                hitSlop={4}
+                onPress={submit}
+                disabled={!phone.trim() || sending}
+                accessibilityRole="button"
+                style={[styles.send, (!phone.trim() || sending) && styles.off]}
               >
-                <Ionicons name={social.icon} size={19} color={R.foreground} />
+                <Text family="noto-sans" weight="bold" size={16} color={Colors.v2.white}>{sending ? T.sending : T.send}</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            </>
+          )}
+        </View>
 
-          <TouchableOpacity
-            style={styles.whatsappBtn}
-            onPress={() => Linking.openURL(WHATSAPP_URL).catch(() => {})}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="logo-whatsapp" size={19} color={R.positive} />
-            <Text family="noto-sans" weight="semibold" size={13.5} color={R.foreground}>{WHATSAPP_NUMBER}</Text>
-          </TouchableOpacity>
+        <Text family="noto-sans" weight="bold" size={12} color={Colors.v2.muted} style={styles.eyebrow}>{T.follow}</Text>
+        <View style={styles.socials}>
+          {SOCIAL_LINKS.map((s) => (
+            <TouchableOpacity
+              key={s.id}
+              onPress={() => Linking.openURL(s.url).catch(() => null)}
+              accessibilityRole="link"
+              accessibilityLabel={s.label}
+              style={styles.social}
+            >
+              <Ionicons name={s.icon} size={20} color={Colors.v2.navy} />
+            </TouchableOpacity>
+          ))}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  content: { padding: 20, paddingBottom: 40 },
-  eyebrow: { letterSpacing: 0.6 },
-  formFields: { gap: 16, marginTop: 16 },
-  field: { gap: 6 },
-  fieldLabel: { letterSpacing: 0.6 },
-  inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 13,
-    backgroundColor: R.secondary,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 9,
-  },
-  textInput: { flex: 1, fontFamily: Fonts.dmSans, fontSize: 14, color: R.foreground },
-  textArea: {
-    borderRadius: 13,
-    backgroundColor: R.secondary,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: Fonts.dmSans,
-    fontSize: 14,
-    color: R.foreground,
-    minHeight: 100,
-  },
-  submitBtn: {
-    backgroundColor: Colors.lime,
-    borderRadius: 13,
-    alignItems: 'center',
-    paddingVertical: 15,
-    marginTop: 6,
-  },
-  submitBtnDisabled: { opacity: 0.5 },
-  successBox: { alignItems: 'center', gap: 12, paddingVertical: 40 },
-  divider: { height: 1, backgroundColor: R.divider, marginTop: 28 },
-  socialSection: { gap: 12, marginTop: 20 },
-  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  socialBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+  root: { flex: 1, backgroundColor: Colors.v2.ground },
+  content: { paddingHorizontal: 20, gap: 14 },
+  flex: { flex: 1 },
+  center: { textAlign: 'center' },
+  back: {
+    width: V2Layout.minTouch,
+    height: V2Layout.minTouch,
+    borderRadius: V2Layout.minTouch / 2,
     borderWidth: 1,
-    borderColor: R.border,
-    backgroundColor: R.secondary,
+    borderColor: Colors.v2.light.inputBorder,
+    backgroundColor: Colors.v2.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
-  whatsappBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  eyebrow: { letterSpacing: 1, marginTop: 6 },
+  h1: { letterSpacing: -0.6 },
+  whatsapp: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: Colors.v2.whatsapp, borderRadius: 22, padding: 18, marginTop: 6 },
+  card: { backgroundColor: Colors.v2.surface, borderRadius: 24, padding: 18, gap: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { height: 40, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: Colors.v2.light.inputBorder, justifyContent: 'center' },
+  chipOn: { backgroundColor: Colors.v2.limeTint, borderColor: Colors.v2.limeText },
+  input: {
+    minHeight: V2Layout.ctaHeight,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: R.border,
-    borderRadius: 13,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    alignSelf: 'flex-start',
+    borderColor: Colors.v2.light.inputBorder,
+    backgroundColor: Colors.v2.ground,
+    paddingHorizontal: 16,
+    fontFamily: Fonts.dmSans,
+    fontSize: 16,
+    color: Colors.v2.navy,
   },
+  textarea: { minHeight: 96, paddingTop: 14 },
+  send: { height: V2Layout.ctaHeight, borderRadius: V2Layout.ctaRadius, backgroundColor: Colors.v2.navy, alignItems: 'center', justifyContent: 'center' },
+  off: { opacity: 0.4 },
+  sent: { alignItems: 'center', gap: 8, paddingVertical: 8 },
+  socials: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  social: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.v2.surface, alignItems: 'center', justifyContent: 'center' },
 })

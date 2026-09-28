@@ -91,6 +91,7 @@ export const Colors = {
     muted: '#5A5F55',
     live: '#E5484D',
     sponsor: '#E0A100',
+    whatsapp: '#1FA855',
     white: '#FFFFFF',
     glass: {
       bg: 'rgba(255,255,255,0.16)',

@@ -1,4 +1,4 @@
-import { Share } from 'react-native'
+import { Platform, Share } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { currentUserId, WEB_BASE_URL } from './api'
 import type { FeedContentItem, FeedSource } from './types'
@@ -35,15 +35,17 @@ export async function setFollowing(item: FeedContentItem, on: boolean): Promise<
   return !error
 }
 
+// Página web de cada publicación (web/app/p/…): muestra lo principal e invita a abrirla o bajar la app.
 function shareUrl(item: FeedContentItem): string {
-  if (item.source === 'post') return `${WEB_BASE_URL}/noticias/${item.sourceId}`
-  return WEB_BASE_URL
+  return `${WEB_BASE_URL}/p/${item.source}/${encodeURIComponent(item.sourceId)}`
 }
 
 /** true si el usuario completó el envío (para registrar el evento `share`). */
 export async function shareItem(item: FeedContentItem): Promise<boolean> {
   try {
-    const result = await Share.share({ message: `${item.title}\n${shareUrl(item)}` })
+    const url = shareUrl(item)
+    // En iOS el url va aparte para que se comparta como link (con vista previa); Android solo usa message.
+    const result = await Share.share(Platform.OS === 'ios' ? { message: item.title, url } : { message: `${item.title}\n${url}` })
     return result.action === Share.sharedAction
   } catch {
     return false

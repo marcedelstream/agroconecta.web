@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import { Text } from '@/components/ui/Text'
 import { DetailSheet } from '@/components/v2/detail/DetailSheet'
 import { CategoryGrid } from '@/components/v2/explore/CategoryGrid'
+import { ContactCard } from '@/components/v2/ContactCard'
 import { ExploreResults } from '@/components/v2/explore/ExploreResults'
 import { PricesShortcut } from '@/components/v2/explore/PricesShortcut'
 import { RubroChips } from '@/components/v2/explore/RubroChips'
@@ -76,6 +77,7 @@ export default function ExplorarScreen() {
                 <TrendingList trending={ex.trending} onPick={ex.setQuery} />
               </>
             )}
+            <ContactCard />
           </>
         )}
       </ScrollView>

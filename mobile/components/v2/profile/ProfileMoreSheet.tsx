@@ -47,9 +47,9 @@ export function ProfileMoreSheet({ visible, isMember, onClose, onNotifications, 
     {
       title: MORE_TEXT.agroconecta,
       items: [
+        { label: MORE_TEXT.contact, icon: 'chatbubbles-outline', href: '/(main)/contacto' },
         { label: MORE_TEXT.allies, icon: 'ribbon-outline', href: '/(main)/aliados' },
         { label: MORE_TEXT.about, icon: 'information-circle-outline', href: '/(main)/nosotros' },
-        { label: MORE_TEXT.contact, icon: 'chatbubbles-outline', href: '/(main)/contacto' },
       ],
     },
     {

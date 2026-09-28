@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { ExploreFilters, ExplorePage, FeedPage, GuardadosPage, LiveItem } from './types'
+import type { ExploreFilters, ExplorePage, FeedContentItem, FeedPage, FeedSource, GuardadosPage, LiveItem } from './types'
 
 // Con www a propósito: agroconecta.com.py redirige (308) a www, y en esa redirección el celular
 // descarta el header Authorization → la API respondería 401 (delete-account lo esquiva mandando el
@@ -39,6 +39,12 @@ export async function fetchExplore(filters: ExploreFilters): Promise<ExplorePage
 /** Todo el contenido de Explorar de una vez, para filtrar en el teléfono (ver use-explore.ts). */
 export async function fetchExploreCatalog(): Promise<ExplorePage> {
   return authorizedGet<ExplorePage>('/api/explore', new URLSearchParams({ all: '1' }), true)
+}
+
+/** Una publicación suelta (link compartido). Funciona sin sesión. */
+export async function fetchItem(source: FeedSource, id: string): Promise<FeedContentItem> {
+  const body = await authorizedGet<{ item: FeedContentItem }>('/api/item', new URLSearchParams({ source, id }), true)
+  return body.item
 }
 
 export async function fetchGuardados(): Promise<GuardadosPage> {

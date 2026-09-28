@@ -413,3 +413,35 @@ export function formatCount(n: number): string {
   if (n >= 10_000) return `${(n / 1000).toFixed(1).replace('.', ',')} mil`
   return n.toLocaleString('es-PY')
 }
+
+export const SHARED_TEXT = {
+  notFound: 'No encontramos esta publicación. Puede que ya no esté disponible.',
+  goHome: 'Ir al inicio',
+} as const
+
+export const CONTACT_TEXT = {
+  back: 'Volver',
+  eyebrow: 'HABLEMOS',
+  title: '¿En qué te podemos ayudar?',
+  body: 'Publicidad, alianzas, servicios o una idea para el agro: escribinos y te respondemos personalmente.',
+  whatsapp: 'Escribinos por WhatsApp',
+  whatsappHint: 'Respondemos en horario de oficina',
+  formTitle: 'O dejanos tu número y te llamamos',
+  reasons: ['Publicidad', 'Ser aliado', 'Servicios', 'Otra consulta'],
+  phone: 'Tu teléfono',
+  phoneHint: '+595 9xx xxx xxx',
+  message: 'Contanos un poco (opcional)',
+  messageHint: 'Qué necesitás, para cuándo…',
+  send: 'Enviar',
+  sending: 'Enviando…',
+  sentTitle: '¡Listo, te contactamos pronto!',
+  sentBody: 'Recibimos tu mensaje y te escribimos al número que nos dejaste.',
+  again: 'Enviar otro',
+  follow: 'SEGUINOS',
+  card: {
+    title: '¿Querés trabajar con Agroconecta?',
+    body: 'Publicidad, alianzas y servicios para el agro. Hablemos.',
+    whatsapp: 'WhatsApp',
+    more: 'Más opciones',
+  },
+} as const

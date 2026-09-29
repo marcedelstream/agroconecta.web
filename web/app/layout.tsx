@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Figtree } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { SplashScreen } from '@/components/SplashScreen'
-import { AppDownloadTab } from '@/components/AppDownloadTab'
+import { AppDownloadButton } from '@/components/AppDownloadButton'
 import { siteUrl } from '@/lib/seo'
 import './globals.css'
 
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <SplashScreen />
           {children}
-          <AppDownloadTab />
+          <AppDownloadButton />
         </ThemeProvider>
       </body>
     </html>

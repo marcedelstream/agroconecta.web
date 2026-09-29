@@ -2,16 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tema claro (default) */
+/* Web oficial (2026-09): misma paleta que la app v2 (mobile/constants/colors.ts → Colors.v2), solo tema
+   claro. "lime" es el verde de TEXTO (legible sobre fondo claro); el verde de relleno de la marca es
+   "brand" (tailwind.config.ts). */
 :root {
-  --clr-bg:        250 250 250;   /* #FAFAFA */
+  --clr-bg:        244 245 240;   /* #F4F5F0 ground */
   --clr-surface:   255 255 255;   /* #FFFFFF */
-  --clr-secondary: 240 240 240;   /* #F0F0F0 */
-  --clr-bdr:       229 229 229;   /* #E5E5E5 */
-  --clr-fg:        10 10 19;      /* #0A0A13 */
-  --clr-muted:     107 114 128;   /* #6B7280 */
-  --clr-lime:      122 184 0;     /* #7AB800 */
-  --clr-lime-dk:   101 153 0;     /* #659900 */
+  --clr-secondary: 236 238 230;   /* #ECEEE6 */
+  --clr-bdr:       224 227 218;   /* #E0E3DA */
+  --clr-fg:        11 22 32;      /* #0B1620 navy */
+  --clr-muted:     90 95 85;      /* #5A5F55 */
+  --clr-lime:      78 107 18;     /* #4E6B12 limeText */
+  --clr-lime-dk:   63 90 12;      /* #3F5A0C */
 }
 
 /* Tema oscuro */
@@ -106,7 +108,7 @@
   }
 
   .card {
-    @apply bg-surface border border-bdr rounded-xl p-5;
+    @apply bg-surface border border-bdr rounded-2xl p-5;
   }
 
   .badge {
@@ -120,7 +122,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-lime text-bg border-lime hover:bg-lime-dark hover:border-lime-dark;
+    @apply btn bg-brand text-navy border-brand font-semibold hover:bg-brand-dark hover:border-brand-dark;
   }
 
   .btn-ghost {

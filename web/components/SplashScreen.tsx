@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { useTheme } from './ThemeProvider'
 
 export function SplashScreen() {
   const [state, setState] = useState<'visible' | 'fading' | 'gone'>('visible')
-  const { theme } = useTheme()
-  const logoSrc = theme === 'light' ? '/logo-light.png' : '/logo-dark.png'
+  const logoSrc = '/logo-light.png'
 
   useEffect(() => {
     // En karai.agroconecta.com.py el rewrite a /karai/* pasa server-side (proxy.ts) — el
@@ -59,7 +57,7 @@ export function SplashScreen() {
       </p>
 
       <div className="mt-10 w-40 h-0.5 bg-secondary rounded-full overflow-hidden">
-        <div className="h-full bg-lime rounded-full animate-load-bar" />
+        <div className="h-full bg-brand rounded-full animate-load-bar" />
       </div>
     </div>
   )

@@ -9,6 +9,7 @@ export const SERVICE_LABELS: Record<string, string> = {
   suscripcion_karai_campo: 'Quiere KARAI Campo',
   suscripcion_organizacion: 'Quiere el plan Organizaciones',
   karai_campo_web: 'Pidió KARAI Campo (web)',
+  suscripcion_organizacion_web: 'Quiere el plan Organizaciones (web)',
   'membresia-anual': 'Membresía anual',
   'publicar-evento': 'Publicar evento',
   'publicar-empleo': 'Publicar empleo',

@@ -12,7 +12,7 @@ export function TickerBar({ posts }: Props) {
   const items = posts.slice(0, 8)
 
   return (
-    <div className="bg-lime text-bg overflow-hidden">
+    <div className="bg-brand text-navy overflow-hidden">
       <div className="site-container flex items-center h-9">
         <span className="shrink-0 font-display font-bold text-[11px] uppercase tracking-[0.14em] pr-4 mr-4 border-r border-bg/25">
           Al día

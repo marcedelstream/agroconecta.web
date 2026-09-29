@@ -28,8 +28,8 @@ export function AppDownloadTab() {
             Perfil, notificaciones, biblioteca, eventos y navegación diaria del ecosistema.
           </p>
           <div className="flex flex-wrap gap-2 mt-3">
-            <span className="badge bg-lime text-bg">iOS</span>
-            <span className="badge bg-lime text-bg">Android</span>
+            <span className="badge bg-brand text-navy">iOS</span>
+            <span className="badge bg-brand text-navy">Android</span>
           </div>
           <Link
             href="/ecosistema"
@@ -45,7 +45,7 @@ export function AppDownloadTab() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Descargá la app Agroconecta"
-        className="bg-lime text-bg rounded-l-xl shadow-lg px-2 py-4 flex flex-col items-center gap-2 hover:bg-lime-dark transition-colors"
+        className="bg-brand text-navy rounded-l-xl shadow-lg px-2 py-4 flex flex-col items-center gap-2 hover:bg-brand-dark transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
           <path d="M17 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zm-5 18.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zM17 17H7V4h10z" />

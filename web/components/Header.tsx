@@ -1,58 +1,33 @@
 import Link from 'next/link'
 import { Logo } from './Logo'
-import { ThemeToggle } from './ThemeToggle'
+import { MobileMenu } from './MobileMenu'
+import { NAV_LINKS } from './nav-links'
 
-const NAV_LINKS = [
-  { href: '/', label: 'Noticias' },
-  { href: '/precios', label: 'Precios' },
-  { href: '/ecosistema', label: 'Ecosistema' },
-  { href: '/quienes-somos', label: 'Nosotros' },
-]
-
+// Cabecera de la web oficial: misma línea que la app v2 (fondo claro, azul oscuro, verde de marca) y
+// "Descargá la app" siempre a mano, porque el objetivo del sitio es llevar gente a la app.
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 bg-bg/90 backdrop-blur-md border-b border-bdr">
+    <header className="sticky top-0 z-50 bg-bg/85 backdrop-blur-md border-b border-bdr">
       <div className="site-container flex items-center justify-between h-16 gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex items-center shrink-0" aria-label="Agroconecta, inicio">
           <Logo priority />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-1" aria-label="Secciones">
           {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="relative py-1 text-sm font-medium uppercase tracking-[0.08em] text-foreground/80 transition-colors hover:text-lime"
-            >
+            <Link key={href} href={href} className="px-3 py-2 rounded-full text-[15px] font-semibold text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors">
               {label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/ecosistema"
-            className="hidden sm:inline-flex btn-primary py-1.5 px-3.5 text-xs"
-          >
+        <div className="flex items-center gap-2">
+          <Link href="/descargar" className="hidden sm:inline-flex items-center rounded-full bg-navy text-white text-sm font-semibold px-4 py-2.5 hover:bg-navy/90 transition-colors">
             Descargá la app
           </Link>
-          <ThemeToggle />
+          <MobileMenu />
         </div>
       </div>
-
-      <nav className="md:hidden border-t border-bdr overflow-x-auto scrollbar-hide">
-        <div className="site-container flex items-center gap-5 h-11">
-          {NAV_LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className="shrink-0 text-xs font-medium uppercase tracking-[0.08em] text-foreground/80 hover:text-lime transition-colors"
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-      </nav>
     </header>
   )
 }

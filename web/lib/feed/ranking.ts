@@ -33,6 +33,8 @@ const HALF_LIFE_HOURS: Record<FeedContentType, number> = {
   producto: 14 * 24,
   servicio: 14 * 24,
   empleo: 14 * 24,
+  // Los libros no pierden vigencia como una noticia.
+  libro: 90 * 24,
 }
 
 // Afinidad profesión → tipo de contenido (0–1). Lo que no figura vale NEUTRAL_AFFINITY.
@@ -206,3 +208,37 @@ export function chronologicalEvents<T extends FeedCandidate>(ranked: T[]): T[] {
 
 /** Posición (0-based) de la tarjeta "Tu mercado hoy" en la primera página. */
 export const MARKET_CARD_POSITION = 2
+
+/** Cuántas publicaciones de otro tipo tiene que haber entre dos libros, y antes del primero. */
+export const BOOK_GAP = 6
+export const FIRST_BOOK_POSITION = 3
+
+/**
+ * Los libros no pierden vigencia, así que el ranking los deja muy arriba y se amontonan. Acá se
+ * reparten: uno cada `gap` publicaciones como mucho; los que sobran pasan más abajo (no se pierden).
+ */
+export function spaceOut<T extends FeedCandidate>(ranked: T[], type: FeedContentType, gap = BOOK_GAP, first = FIRST_BOOK_POSITION): T[] {
+  const out: T[] = []
+  const waiting: T[] = []
+  let sinceLast = gap - first
+  const placeWaiting = () => {
+    if (waiting.length > 0 && sinceLast >= gap) {
+      out.push(waiting.shift()!)
+      sinceLast = 0
+    }
+  }
+  for (const c of ranked) {
+    placeWaiting()
+    if (c.contentType !== type) {
+      out.push(c)
+      sinceLast += 1
+    } else if (sinceLast >= gap && waiting.length === 0) {
+      out.push(c)
+      sinceLast = 0
+    } else {
+      waiting.push(c)
+    }
+  }
+  placeWaiting()
+  return [...out, ...waiting]
+}

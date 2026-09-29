@@ -99,6 +99,41 @@ export function mapPostRow(r: PostRow, fallbackIso: string): FeedCandidate {
   }
 }
 
+export const LIBRARY_COLUMNS = 'id,title,author,description,category,cover_image_url,created_at'
+
+export interface LibraryRow {
+  id: string
+  title: string
+  author: string | null
+  description: string
+  category: string
+  cover_image_url: string
+  created_at: string
+}
+
+export function mapLibraryRow(r: LibraryRow): FeedCandidate {
+  return {
+    key: `library:${r.id}`,
+    source: 'library',
+    sourceId: r.id,
+    contentType: 'libro',
+    organizationId: null,
+    organizationName: r.author || 'Biblioteca Agroconecta',
+    organizationLogoUrl: null,
+    title: r.title,
+    summary: r.description,
+    mediaUrl: r.cover_image_url,
+    mediaKind: 'image',
+    youtubeUrl: null,
+    tags: ['biblioteca', r.category],
+    targetDepartments: [],
+    publishedAt: r.created_at,
+    startsAt: null,
+    location: null,
+    isLive: false,
+  }
+}
+
 export function mapListingRow(r: ListingRow): FeedCandidate {
   return {
     key: `listing:${r.id}`,

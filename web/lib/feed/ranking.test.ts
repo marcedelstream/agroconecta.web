@@ -9,6 +9,7 @@ import {
   rankFeed,
   recencyScore,
   scoreCandidate,
+  spaceOut,
 } from './ranking'
 import type { FeedCandidate, FeedContentType, FeedUserSignals } from './types'
 
@@ -167,5 +168,23 @@ describe('rankFeed — reglas de mezcla', () => {
     const a = rankFeed(items, user(), new Map(), DEFAULT_WEIGHTS, NOW).map((c) => c.key)
     const b = rankFeed([...items].reverse(), user(), new Map(), DEFAULT_WEIGHTS, NOW).map((c) => c.key)
     expect(a).toEqual(b)
+  })
+})
+
+describe('spaceOut', () => {
+  it('reparte los libros: ninguno antes de la posición 3 y al menos 6 publicaciones entre dos', () => {
+    const books = [1, 2, 3].map(() => cand({ contentType: 'libro' }))
+    const others = Array.from({ length: 16 }, () => cand())
+    const out = spaceOut([...books, ...others], 'libro', 6, 3)
+    const positions = out.map((c, i) => (c.contentType === 'libro' ? i : -1)).filter((i) => i >= 0)
+    expect(out).toHaveLength(19)
+    expect(positions[0]).toBe(3)
+    expect(positions[1] - positions[0]).toBeGreaterThanOrEqual(7)
+    expect(positions[2] - positions[1]).toBeGreaterThanOrEqual(7)
+  })
+
+  it('no pierde libros aunque no haya lugar para separarlos', () => {
+    const out = spaceOut([cand({ contentType: 'libro' }), cand({ contentType: 'libro' }), cand()], 'libro', 6, 3)
+    expect(out.filter((c) => c.contentType === 'libro')).toHaveLength(2)
   })
 })

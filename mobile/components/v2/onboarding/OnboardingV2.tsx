@@ -5,12 +5,13 @@ import { FormField } from '@/components/v2/form/FormField'
 import { ChoiceChips } from '@/components/v2/onboarding/ChoiceChips'
 import { ConsentPicker, NotificationsPicker, OrgsPicker, WelcomeHero, WelcomeItems } from '@/components/v2/onboarding/SpecialSteps'
 import { StepShell } from '@/components/v2/onboarding/StepShell'
+import { PlanPicker } from '@/components/v2/onboarding/PlanPicker'
 import { useApp } from '@/lib/app-context'
 import { HOME_ROUTE } from '@/lib/feature-flags'
-import { ONBOARDING_TEXT as T } from '@/lib/feed-v2/labels'
+import { ONBOARDING_TEXT as T, PLAN_TEXT, type PlanChoice } from '@/lib/feed-v2/labels'
 import { claimWelcomePoints } from '@/lib/feed-v2/points'
 import { departments, professions } from '@/lib/mock-data'
-import { GOAL_OPTIONS, PRODUCTION_BY_RUBRO, RUBRO_OPTIONS, rubrosToCategories, saveOnboardingExtras, SCALE_OPTIONS } from '@/lib/onboarding-v2'
+import { GOAL_OPTIONS, PRODUCTION_BY_RUBRO, RUBRO_OPTIONS, rubrosToCategories, saveOnboardingExtras, savePlanInterest, SCALE_OPTIONS } from '@/lib/onboarding-v2'
 import { registerPushToken } from '@/lib/push-notifications'
 import type { Department, NotificationPreferences, Profession } from '@/lib/types'
 
@@ -44,6 +45,7 @@ export function OnboardingV2() {
   const [phone, setPhone] = useState(onboarding.phone)
   const [terms, setTerms] = useState(false)
   const [points, setPoints] = useState(true)
+  const [plan, setPlan] = useState<PlanChoice>('free')
 
   const productionOptions = useMemo(() => rubros.flatMap((r) => PRODUCTION_BY_RUBRO[r] ?? []), [rubros])
 
@@ -59,6 +61,7 @@ export function OnboardingV2() {
     { title: T.orgsTitle, body: T.orgsBody, content: <OrgsPicker selected={orgs} onToggle={(v) => setOrgs((l) => toggle(l, v))} />, canContinue: true, optional: true },
     { title: T.notifTitle, body: T.notifBody, content: <NotificationsPicker prefs={prefs} onChange={setPrefs} />, canContinue: true, optional: true },
     { title: T.phoneTitle, body: T.phoneBody, content: <FormField label={T.phoneLabel} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={20} />, canContinue: true, optional: true },
+    { title: PLAN_TEXT.title, body: PLAN_TEXT.body, content: <PlanPicker value={plan} onChange={setPlan} />, canContinue: true },
     { title: T.consentTitle, content: <ConsentPicker terms={terms} points={points} onTerms={() => setTerms((t) => !t)} onPoints={() => setPoints((p) => !p)} />, canContinue: terms },
   ]
   const step = steps[i]
@@ -80,6 +83,7 @@ export function OnboardingV2() {
     if (userId) {
       // Best-effort: si algo de esto falla, la persona igual entra al feed.
       await saveOnboardingExtras(userId, { rubros, production, goals, scale }).catch(() => null)
+      await savePlanInterest(userId, plan, phone.trim()).catch(() => null)
       if (points) await claimWelcomePoints().catch(() => 0)
       const perm = await Notifications.getPermissionsAsync().catch(() => null)
       if (perm?.status === 'granted') registerPushToken(userId).catch(() => null)

@@ -9,6 +9,7 @@ export const TYPE_LABEL: Record<FeedContentType, string> = {
   servicio: 'SERVICIO',
   empleo: 'EMPLEO',
   remate: 'REMATE',
+  libro: 'LIBRO',
 }
 
 /** Tipos que usan el botón de acción: los de contenido + la tarjeta "Tu mercado hoy". */
@@ -24,6 +25,7 @@ export const CTA_LABEL: Record<CtaKind, string> = {
   servicio: 'Ver servicio',
   empleo: 'Ver oportunidad',
   remate: 'Ver remate',
+  libro: 'Ver libro',
   precios: 'Ver todos los precios',
   patrocinado: 'Ver promoción',
 }
@@ -34,6 +36,7 @@ export const CTA_MAX_LENGTH = 18
 export const FEED_TEXT = {
   brand: 'Agroconecta',
   search: 'Buscar',
+  publish: 'Publicar',
   like: 'Me gusta',
   save: 'Guardar',
   saved: 'Guardado',
@@ -67,6 +70,7 @@ export const DETAIL_TEXT = {
   share: 'Compartir',
   eventHub: 'Ver programa y noticias del evento',
   fullVideo: 'Ver video completo',
+  readBook: 'Leer libro',
   contact: 'Contactar',
   toastRemindOn: 'Te avisamos 1 hora antes',
   toastRemindOff: 'Recordatorio desactivado',
@@ -128,6 +132,7 @@ export const CATEGORY_LABEL: Record<FeedContentType, string> = {
   servicio: 'Servicios',
   empleo: 'Empleos',
   remate: 'Remates',
+  libro: 'Biblioteca',
 }
 
 export const GUARDADOS_TEXT = {
@@ -333,8 +338,8 @@ export const KARAI_TEXT = {
   campoEyebrow: 'KARAI CAMPO',
   campoTitle: 'Administrá tu establecimiento con ayuda de inteligencia artificial.',
   campoCta: 'Conocer KARAI Campo',
-  campoExcerpt: 'Interés en KARAI Campo (desde la app)',
-  campoThanks: '¡Listo! Te avisamos cuando KARAI Campo esté disponible.',
+  campoMemberTitle: 'Tenés KARAI Campo. Mantené Mi campo al día para respuestas a tu medida.',
+  campoMemberCta: 'Ir a Mi campo',
   quota: (left: number) => (left === 1 ? 'Te queda 1 consulta hoy' : `Te quedan ${left} consultas hoy`),
   error: 'No pudimos conectar con Karai. Probá de nuevo en un momento.',
   membersOnlyCta: 'Ver cómo sumarme',
@@ -512,4 +517,140 @@ export const ALLIES_TEXT = {
   none: 'Todavía no hay aliados.',
   noResults: (q: string) => (q ? `Sin resultados para "${q}"` : 'No hay aliados en esta categoría.'),
   whatsapp: (name: string) => `Escribir a ${name} por WhatsApp`,
+} as const
+
+export const KARAI_HISTORY_TEXT = {
+  title: 'Tus consultas',
+  subtitle: 'Tocá una para seguir la conversación.',
+  empty: 'Todavía no hiciste consultas a Karai.',
+  error: 'No pudimos cargar tus consultas. Probá de nuevo.',
+  today: 'Hoy',
+  yesterday: 'Ayer',
+  delete: 'Borrar',
+  deleteTitle: '¿Borrar esta consulta?',
+  deleteBody: 'Se borra la conversación completa. No se puede deshacer.',
+  cancel: 'Cancelar',
+  history: 'Historial de consultas',
+  farm: 'Mi campo',
+} as const
+
+export const MI_CAMPO_TEXT = {
+  title: 'Mi campo',
+  subtitle: 'Contale a Karai cómo es tu establecimiento para que te responda a tu medida.',
+  privacy: 'Estos datos se usan únicamente para que Karai te responda mejor. No se muestran a nadie, no se venden y no se usan para publicidad. Los podés cambiar o borrar cuando quieras.',
+  name: 'NOMBRE DEL ESTABLECIMIENTO',
+  namePlaceholder: 'Estancia San José',
+  district: 'DISTRITO',
+  districtPlaceholder: 'Ej.: Concepción',
+  hectares: 'HECTÁREAS TOTALES',
+  hectaresPlaceholder: 'Ej.: 250',
+  animals: 'Ganado y animales',
+  animalType: 'Ej.: Vacas de cría',
+  animalCount: 'Cabezas',
+  addAnimal: 'Agregar animales',
+  crops: 'Cultivos',
+  cropType: 'Ej.: Soja',
+  cropHa: 'Hectáreas',
+  addCrop: 'Agregar cultivo',
+  notes: 'Algo más que Karai deba saber',
+  notesPlaceholder: 'Sistema de producción, pasturas, maquinaria…',
+  save: 'Guardar Mi campo',
+  saving: 'Guardando…',
+  saved: 'Listo: Karai ya conoce tu campo',
+  error: 'No pudimos guardar. Probá de nuevo.',
+  invite: 'Completá Mi campo para que Karai te responda según tu establecimiento.',
+  inviteCta: 'Completar Mi campo',
+} as const
+
+export const KARAI_CAMPO_TEXT = {
+  eyebrow: 'KARAI CAMPO',
+  title: 'Karai, a la medida de tu establecimiento',
+  body: 'La versión completa de Karai para productores: conoce tu campo y te responde con tus números.',
+  memberBody: 'Ya tenés KARAI Campo. Mantené Mi campo al día para que Karai te responda con tus datos.',
+  benefits: [
+    { icon: 'leaf-outline', title: 'Mi campo', body: 'Karai conoce tus hectáreas, tu ganado y tus cultivos, y los tiene en cuenta en cada respuesta.' },
+    { icon: 'chatbubbles-outline', title: 'Más consultas por día', body: 'Hasta 15 consultas diarias para planificar sin quedarte corto.' },
+    { icon: 'ribbon-outline', title: 'Miembro de Agroconecta', body: 'Beneficios especiales para miembros, que vamos a ir sumando.' },
+  ] as { icon: 'leaf-outline' | 'chatbubbles-outline' | 'ribbon-outline'; title: string; body: string }[],
+  goFarm: 'Ir a Mi campo',
+  interested: '¿Te interesa para tu establecimiento? Nuestro equipo te cuenta todo.',
+  talk: 'Hablar con Agroconecta',
+} as const
+
+export const PUBLISH_TEXT = {
+  title: 'Publicar',
+  subtitle: 'Compartí una noticia o un video de tu organización con todo el agro.',
+  org: 'ORGANIZACIÓN',
+  type: 'QUÉ VAS A PUBLICAR',
+  types: [
+    { value: 'article', label: 'Noticia' },
+    { value: 'video', label: 'Video' },
+  ],
+  rubro: 'RUBRO',
+  titlePlaceholder: 'Título',
+  summaryPlaceholder: 'Bajada: de qué se trata, en una o dos líneas',
+  contentPlaceholder: 'Texto completo (opcional)',
+  youtubePlaceholder: 'Link de YouTube del video',
+  image: 'Agregar imagen',
+  imageHint: 'Horizontal, se ve arriba de la publicación',
+  review: 'Antes de salir en la app, nuestro equipo la revisa. Te avisamos si hace falta cambiar algo.',
+  send: 'Enviar a revisión',
+  sending: 'Enviando…',
+  error: 'No pudimos enviar la publicación. Probá de nuevo.',
+  sentTitle: '¡Recibimos tu publicación!',
+  sentBody: 'La revisamos y, apenas la aprobemos, aparece en el feed de Agroconecta.',
+  back: 'Volver',
+} as const
+
+export const PUBLISH_INFO_TEXT = {
+  title: 'Publicá en Agroconecta',
+  subtitle: 'Para organizaciones, gremios, medios y empresas del agro.',
+  points: [
+    { icon: 'newspaper-outline', title: 'Tus noticias y videos en el feed', body: 'Llegá a productores y profesionales según su rubro y departamento.' },
+    { icon: 'people-outline', title: 'Seguidores propios', body: 'La gente sigue a tu organización y ve más de lo que publicás.' },
+    { icon: 'stats-chart-outline', title: 'Resultados', body: 'Sabé cuántas personas vieron y guardaron tus publicaciones.' },
+  ] as { icon: 'newspaper-outline' | 'people-outline' | 'stats-chart-outline'; title: string; body: string }[],
+  cta: 'Quiero publicar',
+  already: 'Si tu organización ya tiene el plan y no ves el formulario, escribinos y te habilitamos.',
+} as const
+
+export type PlanChoice = 'free' | 'karai_campo' | 'organizacion'
+
+export const PLAN_TEXT = {
+  title: '¿Cómo querés usar Agroconecta?',
+  body: 'Podés empezar gratis y cambiar cuando quieras.',
+  plans: [
+    {
+      value: 'free',
+      title: 'Gratis',
+      for: 'Para estar al día con el agro.',
+      features: ['Feed de noticias, eventos, precios y videos', 'Karai: 5 consultas por día', 'Puntos y canjes'],
+    },
+    {
+      value: 'karai_campo',
+      title: 'KARAI Campo',
+      for: 'Para productores que quieren a Karai trabajando con sus datos.',
+      features: ['Todo lo gratis', 'Mi campo: Karai conoce tu establecimiento', 'Hasta 15 consultas por día', 'Beneficios de miembro de Agroconecta'],
+    },
+    {
+      value: 'organizacion',
+      title: 'Organizaciones',
+      for: 'Para gremios, medios, empresas e instituciones.',
+      features: ['Publicá noticias y videos en el feed', 'Seguidores propios y resultados', 'Tu perfil de organización'],
+    },
+  ] as { value: PlanChoice; title: string; for: string; features: string[] }[],
+  note: 'Si elegís un plan, nuestro equipo te contacta para contarte cómo activarlo.',
+} as const
+
+export const SERVICE_TEXT = {
+  notFound: 'Servicio no encontrado',
+  whatsapp: 'Consultar por WhatsApp',
+  formTitle: 'O dejanos tu número y te llamamos',
+  phone: 'Tu teléfono',
+  info: 'Contanos qué necesitás (opcional)',
+  send: 'Pedir que me contacten',
+  sending: 'Enviando…',
+  sentTitle: '¡Listo!',
+  sentBody: 'Te contactamos al número que nos dejaste.',
+  section: 'SERVICIOS DE AGROCONECTA',
 } as const

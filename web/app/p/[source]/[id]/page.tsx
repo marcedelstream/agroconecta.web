@@ -24,6 +24,7 @@ const TYPE_LABEL: Record<FeedContentType, string> = {
   servicio: 'Servicio',
   empleo: 'Empleo',
   remate: 'Remate',
+  libro: 'Libro',
 }
 
 // Qué se puede hacer en la app con esta publicación: es el motivo para descargarla.
@@ -32,6 +33,7 @@ const APP_PERKS: Partial<Record<FeedContentType, string>> = {
   remate: 'Activá un recordatorio y te avisamos cuando empiece.',
   curso: 'Guardalo y sumá puntos para canjear por cursos.',
   empleo: 'Guardalo y enterate de nuevas ofertas del agro.',
+  libro: 'Leelo completo gratis y guardalo en tus colecciones.',
 }
 const DEFAULT_PERK = 'Guardala, seguí a quien la publica y recibí lo que te interesa del agro.'
 

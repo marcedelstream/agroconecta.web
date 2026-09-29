@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
 import { MORE_TEXT } from '@/lib/feed-v2/labels'
+import { openPublish } from '@/lib/publish'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
@@ -38,10 +39,8 @@ export function ProfileMoreSheet({ visible, isMember, onClose, onNotifications, 
         { label: MORE_TEXT.notifications, icon: 'notifications-outline', onPress: onNotifications },
         { label: MORE_TEXT.following, icon: 'people-outline', href: '/(main)/media-subscriptions' },
         { label: MORE_TEXT.library, icon: 'library-outline', href: '/(main)/library' },
-        // Mismo criterio que el botón "+" de la v1: miembros publican, el resto ve cómo sumarse.
-        isMember
-          ? { label: MORE_TEXT.publish, icon: 'add-circle-outline', href: '/(main)/publish-form' }
-          : { label: MORE_TEXT.join, icon: 'add-circle-outline', href: '/(main)/sumate' },
+        // Organizaciones con plan van al formulario; el resto ve cómo publicar (lib/publish.ts).
+        { label: MORE_TEXT.publish, icon: 'add-circle-outline', onPress: () => void openPublish() },
       ],
     },
     {

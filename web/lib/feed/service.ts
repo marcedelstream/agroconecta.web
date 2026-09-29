@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadRankingContext, toContentItem } from './context'
-import { chronologicalEvents, deprioritizeSeen, MARKET_CARD_POSITION, rankFeed, sortByStart } from './ranking'
+import { chronologicalEvents, deprioritizeSeen, MARKET_CARD_POSITION, rankFeed, sortByStart, spaceOut } from './ranking'
 import { filterCandidates, searchRefs, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
 import { interleaveEvery, interleaveInteractive, loadInteractive } from './interactive'
 import { loadSponsored, SPONSORED_EVERY, SPONSORED_FIRST_POSITION } from './sponsored'
@@ -32,7 +32,7 @@ export function decodeCursor(raw: string | null): Cursor | null {
   }
 }
 
-const SEEN_KEY_PATTERN = /^(post|event|listing):[A-Za-z0-9_-]{1,80}$/
+const SEEN_KEY_PATTERN = /^(post|event|listing|library):[A-Za-z0-9_-]{1,80}$/
 const MAX_SEEN_KEYS = 100
 
 /** Parámetro `seen` de /api/feed: claves "source:id" separadas por coma. Lo inválido se ignora. */
@@ -56,7 +56,7 @@ export async function buildFeedPage(
     userId ? loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]) : Promise.resolve([] as FeedInteractiveItem[]),
   ])
   const ranked = deprioritizeSeen(
-    chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)),
+    spaceOut(chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)), 'libro'),
     sessionSeen,
   )
   const sponsored = await loadSponsored(admin, userId, ctx.state.signals, asOf).catch(() => [] as FeedSponsoredItem[])

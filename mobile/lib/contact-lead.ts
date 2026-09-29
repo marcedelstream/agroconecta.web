@@ -1,23 +1,34 @@
 import { supabase } from '@/lib/supabase'
 import { WEB_BASE_URL } from '@/lib/feed-v2/api'
 
-// Consulta desde "Contacto": queda en service_leads (panel → Consultas) y además se avisa por mail.
-const SERVICE_TYPE = 'oportunidad_comercial'
-const SERVICE_LABEL = 'Oportunidad comercial'
+// Consultas que llegan al panel (service_leads → Consultas) y además avisan por mail.
 
-export async function sendContactLead(input: { userId: string | null; phone: string; reason: string; message: string }): Promise<boolean> {
-  const additionalInfo = [input.reason && `Motivo: ${input.reason}`, input.message.trim()].filter(Boolean).join('\n')
+interface Lead {
+  userId: string | null
+  serviceType: string
+  serviceLabel: string
+  phone: string
+  info: string
+}
+
+export async function sendLead(lead: Lead): Promise<boolean> {
   const { error } = await supabase.from('service_leads').insert({
-    user_id: input.userId,
-    service_type: SERVICE_TYPE,
-    phone: input.phone.trim(),
-    additional_info: additionalInfo,
+    user_id: lead.userId,
+    service_type: lead.serviceType,
+    phone: lead.phone.trim(),
+    additional_info: lead.info.trim(),
   })
   // El mail es un aviso extra: si falla, la consulta ya quedó guardada en el panel.
   fetch(`${WEB_BASE_URL}/api/service-lead`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ serviceLabel: SERVICE_LABEL, phone: input.phone.trim(), additionalInfo }),
+    body: JSON.stringify({ serviceLabel: lead.serviceLabel, phone: lead.phone.trim(), additionalInfo: lead.info.trim() }),
   }).catch(() => null)
   return !error
+}
+
+/** Pantalla Contacto: el motivo elegido va al comienzo del texto. */
+export async function sendContactLead(input: { userId: string | null; phone: string; reason: string; message: string }): Promise<boolean> {
+  const info = [input.reason && `Motivo: ${input.reason}`, input.message.trim()].filter(Boolean).join('\n')
+  return sendLead({ userId: input.userId, serviceType: 'oportunidad_comercial', serviceLabel: 'Oportunidad comercial', phone: input.phone, info })
 }

@@ -89,3 +89,17 @@ export async function saveOnboardingExtras(userId: string, extras: OnboardingExt
     { profile_id: userId, consent_type: 'points_program', metadata: { source: 'onboarding_v2' } },
   ])
 }
+
+const PLAN_LEAD: Record<string, string> = { karai_campo: 'suscripcion_karai_campo', organizacion: 'suscripcion_organizacion' }
+
+/**
+ * Plan que eligió en el onboarding (profiles.subscription_interest, fix-v2-tanda4.sql). Si no es el
+ * gratis y dejó su WhatsApp, además queda como consulta en el panel para que el equipo lo contacte.
+ */
+export async function savePlanInterest(userId: string, plan: string, phone: string): Promise<void> {
+  await supabase.from('profiles').update({ subscription_interest: plan }).eq('id', userId)
+  const lead = PLAN_LEAD[plan]
+  if (lead && phone) {
+    await supabase.from('service_leads').insert({ user_id: userId, service_type: lead, phone, additional_info: 'Eligió este plan en el onboarding de la app.' })
+  }
+}

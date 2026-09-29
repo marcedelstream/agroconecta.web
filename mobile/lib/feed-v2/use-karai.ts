@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { KARAI_TEXT } from './labels'
-import { fetchKaraiQuota, fetchKaraiRefs, sendKaraiMessage } from './karai'
+import { fetchKaraiConversation, fetchKaraiQuota, fetchKaraiRefs, sendKaraiMessage } from './karai'
 import type { FeedContentItem } from './types'
 
 export interface KaraiMessage {
@@ -71,5 +71,12 @@ export function useKarai() {
     setMessages([])
   }, [])
 
-  return { messages, typing, quota, send, reset }
+  /** Abre una conversación del historial y sigue en ella (los mensajes nuevos se suman a esa misma). */
+  const openConversation = useCallback(async (id: string) => {
+    const history = await fetchKaraiConversation(id)
+    conversationId.current = id
+    setMessages(history.map((m) => ({ id: nextId(), role: m.role, text: m.content, refs: [] })))
+  }, [])
+
+  return { messages, typing, quota, send, reset, openConversation, conversationId }
 }

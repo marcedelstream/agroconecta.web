@@ -1,12 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   EVENT_COLUMNS,
+  LIBRARY_COLUMNS,
   LISTING_COLUMNS,
+  mapLibraryRow,
   mapEventRows,
   mapListingRow,
   mapPostRow,
   POST_COLUMNS,
   type EventRow,
+  type LibraryRow,
   type ListingRow,
   type PostRow,
 } from './rows'
@@ -19,6 +22,7 @@ const POSTS_WINDOW_DAYS = 60
 const POSTS_LIMIT = 200
 const LISTINGS_LIMIT = 100
 const EVENTS_LIMIT = 60
+const LIBRARY_LIMIT = 30
 
 export async function loadPostCandidates(db: SupabaseClient, asOf: Date): Promise<FeedCandidate[]> {
   const since = new Date(asOf.getTime() - POSTS_WINDOW_DAYS * 86_400_000).toISOString()
@@ -55,6 +59,21 @@ export async function loadListingCandidates(db: SupabaseClient, asOf: Date): Pro
     return []
   }
   return (data as ListingRow[]).map(mapListingRow)
+}
+
+/** Libros de la biblioteca (los más nuevos): aparecen en el feed y se guardan en Mis colecciones. */
+export async function loadLibraryCandidates(db: SupabaseClient): Promise<FeedCandidate[]> {
+  const { data, error } = await db
+    .from('library_items')
+    .select(LIBRARY_COLUMNS)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
+    .limit(LIBRARY_LIMIT)
+  if (error) {
+    console.error('feed: library_items falló:', error.message)
+    return []
+  }
+  return (data as LibraryRow[]).map(mapLibraryRow)
 }
 
 /** `events` es el cliente de la base externa de eventosagropy.com (solo lectura). */

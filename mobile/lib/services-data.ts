@@ -15,6 +15,12 @@ export const SERVICES: ServiceInfo[] = [
     description: 'Asesoramiento técnico para productores y empresas del agro que necesitan cumplir con normativa ambiental, gestionar permisos o mejorar sus prácticas de sostenibilidad en campo.',
   },
   {
+    id: 'comunicacion',
+    label: 'Consultoría en Comunicación',
+    icon: 'chatbubbles-outline',
+    description: 'Estrategia de comunicación, prensa y contenidos para gremios, cooperativas, instituciones y empresas del agro: qué decir, a quién y por qué canal.',
+  },
+  {
     id: 'marketing',
     label: 'Marketing Digital',
     icon: 'megaphone-outline',
@@ -28,7 +34,7 @@ export const SERVICES: ServiceInfo[] = [
   },
   {
     id: 'software',
-    label: 'Desarrollo Web y Software',
+    label: 'Desarrollo de Apps y Software',
     icon: 'code-slash-outline',
     description: 'Desarrollo de sitios web, apps y herramientas digitales a medida para organizaciones, cooperativas y empresas del agro.',
   },

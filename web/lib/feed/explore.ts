@@ -3,7 +3,7 @@ import type { FeedCandidate, FeedContentType } from './types'
 // Búsqueda, filtros y tendencias de Explorar (README §3.3). Funciones puras sobre los mismos
 // candidatos del feed, así Explorar y el feed muestran exactamente el mismo contenido.
 
-export const EXPLORE_TYPES: FeedContentType[] = ['noticia', 'evento', 'video', 'curso', 'producto', 'servicio', 'empleo', 'remate']
+export const EXPLORE_TYPES: FeedContentType[] = ['noticia', 'evento', 'video', 'curso', 'producto', 'servicio', 'empleo', 'remate', 'libro']
 export const EXPLORE_RUBROS = ['agricultura', 'ganaderia', 'horticultura', 'tecnologia', 'mercados'] as const
 
 const TRENDING_WINDOW_DAYS = 14

@@ -22,7 +22,7 @@ const SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: "4. Karai",
-    body: "Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje para poder contactarte.",
+    body: "Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje para poder contactarte. Si tenés KARAI Campo, los datos de tu establecimiento que cargás en Mi campo (o que mencionás en el chat: hectáreas, animales, cultivos) se usan únicamente para que Karai te responda mejor: no se muestran a nadie, no se venden y no se usan para publicidad. Los podés editar o borrar cuando quieras.",
   },
   {
     title: "5. Perfil público",

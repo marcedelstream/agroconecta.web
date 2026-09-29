@@ -17,6 +17,7 @@ const CATEGORIES: { type: FeedContentType; icon: IconName }[] = [
   { type: 'servicio', icon: 'construct-outline' },
   { type: 'empleo', icon: 'briefcase-outline' },
   { type: 'remate', icon: 'hammer-outline' },
+  { type: 'libro', icon: 'library-outline' },
 ]
 
 const COLUMNS = 4

@@ -24,6 +24,7 @@ interface Props {
 
 function secondaryLabel(item: FeedContentItem, link: DetailLink) {
   if (link.kind === 'url') return DETAIL_TEXT.contact
+  if (item.source === 'library') return DETAIL_TEXT.readBook
   return item.source === 'event' ? DETAIL_TEXT.eventHub : DETAIL_TEXT.fullVideo
 }
 

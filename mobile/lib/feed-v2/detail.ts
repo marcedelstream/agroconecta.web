@@ -59,6 +59,11 @@ export async function loadFeedDetail(item: FeedContentItem): Promise<FeedDetail>
     }
   }
 
+  // Libros: la lectura (PDF) y Mis colecciones viven en la ficha de la Biblioteca.
+  if (item.source === 'library') {
+    return { ...base, secondaryLink: { kind: 'route', href: `/(main)/book/${item.sourceId}` } }
+  }
+
   const listing = await fetchEcosystemListingById(item.sourceId)
   return {
     ...base,

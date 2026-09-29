@@ -1,12 +1,14 @@
 import { useCallback, useRef, useState } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { DetailSheet } from '@/components/v2/detail/DetailSheet'
 import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { KaraiIntro } from '@/components/v2/karai/KaraiIntro'
+import { KaraiHistorySheet } from '@/components/v2/karai/KaraiHistorySheet'
 import { KaraiBubble, TypingBubble } from '@/components/v2/karai/KaraiMessages'
 import { ToastHost } from '@/components/v2/ToastHost'
 import { GuestPrompt } from '@/components/v2/GuestPrompt'
@@ -14,7 +16,7 @@ import { useApp } from '@/lib/app-context'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
-import { KARAI_TEXT } from '@/lib/feed-v2/labels'
+import { KARAI_HISTORY_TEXT, KARAI_TEXT } from '@/lib/feed-v2/labels'
 import type { FeedContentItem } from '@/lib/feed-v2/types'
 import { useItemActions, type ItemUpdater } from '@/lib/feed-v2/use-item-actions'
 import { useKarai } from '@/lib/feed-v2/use-karai'
@@ -25,11 +27,12 @@ import { useKeyboardVisible } from '@/lib/use-keyboard-visible'
 export default function KaraiScreen() {
   const insets = useSafeAreaInsets()
   const bottomSpace = useFloatingTabBarSpace()
-  const { messages, typing, quota, send, reset } = useKarai()
+  const { messages, typing, quota, send, reset, openConversation, conversationId } = useKarai()
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [input, setInput] = useState('')
   const [refItem, setRefItem] = useState<FeedContentItem | null>(null)
   const scroll = useRef<ScrollView>(null)
-  const { session } = useApp()
+  const { session, user } = useApp()
   // Con el teclado abierto la barra de tabs queda tapada: el lugar reservado para ella dejaba la caja de
   // texto flotando lejos del teclado.
   const keyboardOpen = useKeyboardVisible()
@@ -57,10 +60,26 @@ export default function KaraiScreen() {
         <View style={styles.headRow}>
           <Text family="noto-sans" weight="extrabold" size={17} color={Colors.v2.navy}>{KARAI_TEXT.name}</Text>
           {left !== null && <Text family="noto-sans" size={13} color={Colors.v2.muted} style={styles.flex}>{KARAI_TEXT.quota(left)}</Text>}
-          {hasMessages && (
-            <TouchableOpacity onPress={reset} accessibilityRole="button" style={styles.newChat}>
-              <Text family="noto-sans" weight="semibold" size={13} color={Colors.v2.navy}>{KARAI_TEXT.newChat}</Text>
-            </TouchableOpacity>
+          {/* Esquina: nueva consulta, historial y Mi campo (Karai Campo; sin membresía muestra qué es). */}
+          {session && (
+            <View style={styles.corner}>
+              {hasMessages && (
+                <TouchableOpacity onPress={reset} accessibilityRole="button" accessibilityLabel={KARAI_TEXT.newChat} style={styles.iconBtn}>
+                  <Ionicons name="create-outline" size={19} color={Colors.v2.navy} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={() => setHistoryOpen(true)} accessibilityRole="button" accessibilityLabel={KARAI_HISTORY_TEXT.history} style={styles.iconBtn}>
+                <Ionicons name="time-outline" size={19} color={Colors.v2.navy} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push((user?.isMember ? '/(main)/mi-campo' : '/(main)/karai-campo') as never)}
+                accessibilityRole="button"
+                accessibilityLabel={KARAI_HISTORY_TEXT.farm}
+                style={[styles.iconBtn, styles.farmBtn]}
+              >
+                <Ionicons name="leaf" size={18} color={Colors.v2.navy} />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
         {!hasMessages && (
@@ -105,6 +124,16 @@ export default function KaraiScreen() {
       </View>}
 
       <ToastHost />
+      {historyOpen && (
+        <KaraiHistorySheet
+          activeId={conversationId.current}
+          onClose={() => setHistoryOpen(false)}
+          onOpen={(id) => {
+            setHistoryOpen(false)
+            void openConversation(id)
+          }}
+        />
+      )}
       <DetailSheet item={refItem} actions={actions} onClose={() => setRefItem(null)} />
     </KeyboardAvoidingView>
   )
@@ -115,7 +144,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   head: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  newChat: { marginLeft: 'auto', height: 36, paddingHorizontal: 14, borderRadius: 18, borderWidth: 1, borderColor: Colors.v2.sheet.border, backgroundColor: Colors.v2.surface, justifyContent: 'center' },
+  corner: { flexDirection: 'row', gap: 8, marginLeft: 'auto' },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: Colors.v2.sheet.border, backgroundColor: Colors.v2.surface, alignItems: 'center', justifyContent: 'center' },
+  farmBtn: { backgroundColor: Colors.v2.lime, borderColor: Colors.v2.lime },
   h1: { marginTop: 18, letterSpacing: -0.8 },
   body: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 8 },

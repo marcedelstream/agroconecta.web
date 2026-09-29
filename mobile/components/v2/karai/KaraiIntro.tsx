@@ -1,24 +1,18 @@
-import { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
+import { useApp } from '@/lib/app-context'
 import { KARAI_TEXT } from '@/lib/feed-v2/labels'
-import { notifyKaraiCampoInterest } from '@/lib/feed-v2/karai'
-import { showToast } from '@/lib/feed-v2/toast'
 
 const RING = 130
 
 // Pantalla inicial de Karai (sin mensajes): sugerencias + tarjeta KARAI Campo (README §3.4).
 export function KaraiIntro({ onAsk }: { onAsk: (text: string) => void }) {
-  const [sent, setSent] = useState(false)
-
-  async function campo() {
-    if (sent) return
-    const ok = await notifyKaraiCampoInterest(KARAI_TEXT.campoExcerpt)
-    if (ok) setSent(true)
-    showToast(ok ? KARAI_TEXT.campoThanks : KARAI_TEXT.error)
-  }
+  const { user } = useApp()
+  const member = !!user?.isMember
+  const campo = () => router.push((member ? '/(main)/mi-campo' : '/(main)/karai-campo') as never)
 
   return (
     <View style={styles.wrap}>
@@ -32,9 +26,9 @@ export function KaraiIntro({ onAsk }: { onAsk: (text: string) => void }) {
       <View style={styles.campo}>
         <View style={styles.ring} />
         <Text family="noto-sans" weight="bold" size={11} color={Colors.v2.lime} style={styles.eyebrow}>{KARAI_TEXT.campoEyebrow}</Text>
-        <Text family="noto-sans" weight="extrabold" size={21} lineHeight={25} color={Colors.v2.white} style={styles.campoTitle}>{KARAI_TEXT.campoTitle}</Text>
-        <TouchableOpacity onPress={campo} disabled={sent} accessibilityRole="button" style={[styles.campoBtn, sent && styles.sent]}>
-          <Text family="noto-sans" weight="bold" size={15} color={Colors.v2.navy}>{KARAI_TEXT.campoCta}</Text>
+        <Text family="noto-sans" weight="extrabold" size={21} lineHeight={25} color={Colors.v2.white} style={styles.campoTitle}>{member ? KARAI_TEXT.campoMemberTitle : KARAI_TEXT.campoTitle}</Text>
+        <TouchableOpacity onPress={campo} accessibilityRole="button" style={styles.campoBtn}>
+          <Text family="noto-sans" weight="bold" size={15} color={Colors.v2.navy}>{member ? KARAI_TEXT.campoMemberCta : KARAI_TEXT.campoCta}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -50,5 +44,4 @@ const styles = StyleSheet.create({
   eyebrow: { letterSpacing: 1.1 },
   campoTitle: { maxWidth: 250 },
   campoBtn: { alignSelf: 'flex-start', marginTop: 6, height: 46, paddingHorizontal: 20, borderRadius: 23, backgroundColor: Colors.v2.lime, justifyContent: 'center' },
-  sent: { opacity: 0.5 },
 })

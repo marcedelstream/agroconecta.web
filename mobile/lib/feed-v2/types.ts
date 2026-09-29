@@ -1,7 +1,7 @@
 // Espejo del contrato de web/lib/feed/types.ts (lo que devuelve GET /api/feed). Si cambia allá,
 // cambiarlo acá.
 
-export type FeedSource = 'post' | 'event' | 'listing'
+export type FeedSource = 'post' | 'event' | 'listing' | 'library'
 
 export type FeedContentType =
   | 'noticia'
@@ -12,6 +12,7 @@ export type FeedContentType =
   | 'servicio'
   | 'empleo'
   | 'remate'
+  | 'libro'
 
 export type FeedMediaKind = 'image' | 'youtube' | 'none'
 

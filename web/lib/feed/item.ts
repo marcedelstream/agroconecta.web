@@ -7,7 +7,7 @@ import type { FeedCandidate, FeedContentItem, FeedSource } from './types'
 // Una publicación suelta por su clave "source:id": la página pública para compartir (/p/…) y el link
 // que abre la app directo en esa ficha (GET /api/item).
 
-const SOURCES: FeedSource[] = ['post', 'event', 'listing']
+const SOURCES: FeedSource[] = ['post', 'event', 'listing', 'library']
 
 export function isFeedSource(value: string): value is FeedSource {
   return (SOURCES as string[]).includes(value)

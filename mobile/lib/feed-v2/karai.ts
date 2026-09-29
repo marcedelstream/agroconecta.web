@@ -80,14 +80,34 @@ export async function fetchKaraiQuota(): Promise<{ used: number; limit: number }
   }
 }
 
-/** "Conocer KARAI Campo": por ahora registra el interés como lead de Karai (reusa notify-interest). */
-export async function notifyKaraiCampoInterest(excerpt: string): Promise<boolean> {
+export interface KaraiConversation {
+  id: string
+  preview: string
+  lastMessageAt: string
+}
+
+/** Historial de conversaciones del usuario (mismo endpoint que el costado del chat web). */
+export async function fetchKaraiConversations(): Promise<KaraiConversation[]> {
+  const headers = await authHeaders()
+  if (!headers) return []
+  const res = await fetch(`${WEB_BASE_URL}/api/karai/conversations`, { headers })
+  if (!res.ok) throw new Error(`conversations HTTP ${res.status}`)
+  const body = (await res.json()) as { conversations: KaraiConversation[] }
+  return body.conversations
+}
+
+export async function fetchKaraiConversation(id: string): Promise<{ role: 'user' | 'assistant'; content: string }[]> {
+  const headers = await authHeaders()
+  if (!headers) return []
+  const res = await fetch(`${WEB_BASE_URL}/api/karai/conversations/${encodeURIComponent(id)}`, { headers })
+  if (!res.ok) throw new Error(`conversation HTTP ${res.status}`)
+  const body = (await res.json()) as { messages: { role: 'user' | 'assistant'; content: string }[] }
+  return body.messages
+}
+
+export async function deleteKaraiConversation(id: string): Promise<boolean> {
   const headers = await authHeaders()
   if (!headers) return false
-  try {
-    const res = await fetch(`${WEB_BASE_URL}/api/karai/notify-interest`, { method: 'POST', headers, body: JSON.stringify({ excerpt }) })
-    return res.ok
-  } catch {
-    return false
-  }
+  const res = await fetch(`${WEB_BASE_URL}/api/karai/conversations/${encodeURIComponent(id)}`, { method: 'DELETE', headers }).catch(() => null)
+  return !!res?.ok
 }

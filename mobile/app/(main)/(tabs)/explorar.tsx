@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/Text'
 import { DetailSheet } from '@/components/v2/detail/DetailSheet'
 import { CategoryGrid } from '@/components/v2/explore/CategoryGrid'
 import { ContactCard } from '@/components/v2/ContactCard'
+import { ServicesRow } from '@/components/v2/explore/ServicesRow'
 import { ExploreResults } from '@/components/v2/explore/ExploreResults'
 import { PricesShortcut } from '@/components/v2/explore/PricesShortcut'
 import { RubroChips } from '@/components/v2/explore/RubroChips'
@@ -15,7 +16,7 @@ import { useFloatingTabBarSpace } from '@/components/v2/FloatingTabBar'
 import { SearchField } from '@/components/v2/SearchField'
 import { ToastHost } from '@/components/v2/ToastHost'
 import { Colors } from '@/constants/colors'
-import { CATEGORY_LABEL, EXPLORE_TEXT, RUBROS } from '@/lib/feed-v2/labels'
+import { CATEGORY_LABEL, EXPLORE_TEXT, RUBROS, SERVICE_TEXT } from '@/lib/feed-v2/labels'
 import { useExplore } from '@/lib/feed-v2/use-explore'
 import type { ExploreFilters } from '@/lib/feed-v2/types'
 
@@ -77,6 +78,10 @@ export default function ExplorarScreen() {
                 <TrendingList trending={ex.trending} onPick={ex.setQuery} />
               </>
             )}
+            <Text family="noto-sans" weight="bold" size={13} color={Colors.v2.muted} style={styles.section}>
+              {SERVICE_TEXT.section}
+            </Text>
+            <ServicesRow side={SIDE} />
             <ContactCard />
           </>
         )}

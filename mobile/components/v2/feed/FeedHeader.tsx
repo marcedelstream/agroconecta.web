@@ -34,7 +34,7 @@ export function FeedHeader() {
         )}
         <GlassCircle
           size={V2Layout.minTouch}
-          onPress={() => router.navigate('/(main)/(tabs)/explorar' as never)}
+          onPress={() => router.navigate('/(main)/(tabs)/inicio' as never)}
           accessibilityLabel={FEED_TEXT.search}
         >
           <Ionicons name="search" size={20} color={Colors.v2.white} />

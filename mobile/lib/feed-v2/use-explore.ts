@@ -60,5 +60,5 @@ export function useExplore() {
   const { actions, detailKey, closeDetail } = useItemActions(update)
   const detailItem = detailKey ? catalog.find((i) => i.key === detailKey) ?? null : null
 
-  return { filters, active, results, trending, status, setQuery, toggleRubro, pickType, reset, retry, actions, detailItem, closeDetail }
+  return { filters, active, catalog, results, trending, status, setQuery, toggleRubro, pickType, reset, retry, actions, detailItem, closeDetail }
 }

@@ -654,3 +654,21 @@ export const SERVICE_TEXT = {
   sentBody: 'Te contactamos al número que nos dejaste.',
   section: 'SERVICIOS DE AGROCONECTA',
 } as const
+
+export const HOME_TEXT = {
+  morning: 'Buen día',
+  afternoon: 'Buenas tardes',
+  evening: 'Buenas noches',
+  guestSubtitle: 'Todo el agro paraguayo en un solo lugar',
+  login: 'Iniciá sesión y personalizá tu inicio',
+  order: 'Ordenar intereses',
+  orderTitle: 'Ordenar intereses',
+  orderBody: 'Subí o bajá cada bloque para ver primero lo que más te importa.',
+  up: (label: string) => `Subir ${label}`,
+  down: (label: string) => `Bajar ${label}`,
+  seeAll: 'Ver todo',
+  news: 'Noticias para vos',
+  agenda: 'Agenda del sector',
+  learn: 'Cursos y oportunidades',
+  library: 'Biblioteca',
+} as const

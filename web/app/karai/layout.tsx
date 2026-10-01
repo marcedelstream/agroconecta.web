@@ -1,14 +1,7 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import { JetBrains_Mono } from 'next/font/google'
 import { KaraiSplash } from './KaraiSplash'
 import { KaraiThemeProvider } from './KaraiThemeProvider'
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-karai-sans',
-  display: 'swap',
-})
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -30,7 +23,8 @@ export const metadata: Metadata = {
 export default function KaraiLayout({ children }: { children: React.ReactNode }) {
   return (
     <KaraiThemeProvider
-      className={`karai-root ${plusJakarta.variable} ${jetBrainsMono.variable} min-h-screen bg-[var(--k-bg)] font-[family-name:var(--font-karai-sans)]`}
+      // Figtree, la misma letra de la web y la app (la define el layout raíz como font-sans).
+      className={`karai-root ${jetBrainsMono.variable} min-h-screen bg-[var(--k-bg)] font-sans`}
     >
       <KaraiSplash />
       {children}

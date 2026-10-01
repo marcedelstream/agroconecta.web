@@ -38,68 +38,37 @@
   a    { @apply text-inherit no-underline; }
 }
 
-/* Karai tiene identidad visual propia (no sigue el toggle claro/oscuro del sitio, tiene el suyo
-   propio — ver KaraiThemeProvider.tsx). Variables scoped a .karai-root, referenciadas con la
-   sintaxis arbitraria de Tailwind (bg-[var(--k-bg)]) en vez de tocar el theme del sitio. Oscuro es
-   el default (sin atributo); [data-k-theme="light"] pisa todo el set para el modo claro. */
+/* Karai con la línea gráfica de Agroconecta (2026-10): misma paleta clara que la app v2 y la web oficial,
+   sin modo oscuro propio. Las variables --k-* se mantienen para no tocar cada clase de app/karai/*.
+   --k-lime es el verde de RELLENO (botones); el verde para texto es --k-lime-text. */
 .karai-root {
-  --k-bg: #070E1B;
-  --k-sidebar: #0A1322;
-  --k-card: #0C1526;
-  --k-raised: #0E1829;
-  --k-border: #16233A;
-  --k-border-strong: #1C2A43;
-  --k-border-hover: #2A3C5C;
-  --k-text: #F0F4FA;
-  --k-text-soft: #DCE4F0;
-  --k-muted: #8C9AB4;
-  --k-muted-2: #66748F;
-  --k-muted-3: #5A6880;
-  --k-muted-4: #4E5C74;
-  --k-lime: #B7EE55;
-  --k-lime-hover: #C9F477;
-  --k-lime-bg: #18280F;
-  --k-lime-border: #2F4A22;
-  --k-lime-soft: #8FD63F;
-  --k-lime-text: #CDF585;
-  --k-on-lime: #0A1424;
-  --k-positive: #6BE3A1;
-  --k-negative: #FF8080;
-  --k-warning: #F0A868;
-  --k-warning-bg: #251705;
-  --k-warning-border: #4A2F10;
-  --k-user-bubble: #132340;
-  --k-user-border: #1E3253;
-}
-
-.karai-root[data-k-theme='light'] {
-  --k-bg: #F4F7FC;
+  --k-bg: #F4F5F0;
   --k-sidebar: #FFFFFF;
   --k-card: #FFFFFF;
-  --k-raised: #EEF3FA;
-  --k-border: #E3E8F2;
-  --k-border-strong: #D2DAE9;
-  --k-border-hover: #BAC6DC;
-  --k-text: #10192B;
-  --k-text-soft: #2C3A52;
-  --k-muted: #57657E;
-  --k-muted-2: #76839B;
-  --k-muted-3: #96A2B8;
-  --k-muted-4: #B5BFD1;
-  --k-lime: #5C9A16;
-  --k-lime-hover: #4C8010;
-  --k-lime-bg: #EAF6D9;
-  --k-lime-border: #C7E6A2;
+  --k-raised: #ECEEE6;
+  --k-border: #E0E3DA;
+  --k-border-strong: #D3D7CB;
+  --k-border-hover: #B9BFAF;
+  --k-text: #0B1620;
+  --k-text-soft: #2A3540;
+  --k-muted: #5A5F55;
+  --k-muted-2: #6F7469;
+  --k-muted-3: #8A8F83;
+  --k-muted-4: #A6AA9F;
+  --k-lime: #A4D233;
+  --k-lime-hover: #93C022;
+  --k-lime-bg: #EEF4DC;
+  --k-lime-border: #C9DDA0;
   --k-lime-soft: #8FC94A;
-  --k-lime-text: #3E6B0C;
-  --k-on-lime: #FFFFFF;
+  --k-lime-text: #4E6B12;
+  --k-on-lime: #0B1620;
   --k-positive: #1E9A5C;
   --k-negative: #D6304A;
   --k-warning: #B36A0E;
   --k-warning-bg: #FBF1DD;
   --k-warning-border: #E9D19C;
-  --k-user-bubble: #E8EEFB;
-  --k-user-border: #CBD9F2;
+  --k-user-bubble: #EEF4DC;
+  --k-user-border: #C9DDA0;
 }
 
 @layer components {

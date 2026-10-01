@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { KaraiThemeToggle } from './KaraiThemeToggle'
 
 interface DisplayMessage {
   role: 'user' | 'assistant'
@@ -44,7 +43,7 @@ const markdownComponents = {
   ol: ({ children }: { children?: React.ReactNode }) => <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>,
   li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
   a: ({ children, href }: { children?: React.ReactNode; href?: string }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="underline text-[var(--k-lime)] hover:text-[var(--k-lime-hover)]">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline text-[var(--k-lime-text)] hover:text-[var(--k-lime-text)]">
       {children}
     </a>
   ),
@@ -407,7 +406,7 @@ export function KaraiChatClient({ email }: { email: string }) {
             href="/karai/mis-datos"
             className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl bg-[var(--k-raised)] border border-[var(--k-border)] hover:border-[var(--k-border-hover)] transition-colors"
           >
-            <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] bg-[var(--k-user-bubble)] flex items-center justify-center text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)] text-xs font-bold">
+            <div className="w-[30px] h-[30px] shrink-0 rounded-[9px] bg-[var(--k-user-bubble)] flex items-center justify-center text-[var(--k-lime-text)] font-[family-name:var(--font-karai-mono)] text-xs font-bold">
               MD
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -438,7 +437,6 @@ export function KaraiChatClient({ email }: { email: string }) {
                 </p>
               </div>
             )}
-            <KaraiThemeToggle />
             <button
               onClick={handleSignOut}
               title={email}
@@ -491,7 +489,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                             <button
                               onClick={() => handleNotifyInterest(i)}
                               disabled={notifiedIndex === i}
-                              className="text-[var(--k-muted-2)] hover:text-[var(--k-lime)] text-xs font-semibold transition-colors disabled:text-[var(--k-lime)]"
+                              className="text-[var(--k-muted-2)] hover:text-[var(--k-lime-text)] text-xs font-semibold transition-colors disabled:text-[var(--k-lime-text)]"
                             >
                               {notifiedIndex === i ? 'Le avisamos a Agroconecta ✓' : 'Avisar a Agroconecta'}
                             </button>

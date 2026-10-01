@@ -14,8 +14,8 @@ export function isFeedSource(value: string): value is FeedSource {
   return (SOURCES as string[]).includes(value)
 }
 
-// Tablas con slug propio. Los eventos ya usan el slug como id; la biblioteca no tiene.
-const SLUG_TABLES: Partial<Record<FeedSource, string>> = { post: 'posts', listing: 'ecosystem_listings' }
+// Tablas con slug propio (fix-v2-slugs.sql). Los eventos ya usan el slug como id.
+const SLUG_TABLES: Partial<Record<FeedSource, string>> = { post: 'posts', listing: 'ecosystem_listings', library: 'library_items' }
 
 /** `idOrSlug`: el id interno o la dirección con el título (lo que aparece en los links compartidos). */
 export async function loadCandidate(admin: SupabaseClient, source: FeedSource, idOrSlug: string): Promise<FeedCandidate | null> {

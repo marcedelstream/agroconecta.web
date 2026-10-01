@@ -102,10 +102,11 @@ export function mapPostRow(r: PostRow, fallbackIso: string): FeedCandidate {
   }
 }
 
-export const LIBRARY_COLUMNS = 'id,title,author,description,category,cover_image_url,created_at'
+export const LIBRARY_COLUMNS = 'id,slug,title,author,description,category,cover_image_url,created_at'
 
 export interface LibraryRow {
   id: string
+  slug: string | null
   title: string
   author: string | null
   description: string
@@ -119,7 +120,7 @@ export function mapLibraryRow(r: LibraryRow): FeedCandidate {
     key: `library:${r.id}`,
     source: 'library',
     sourceId: r.id,
-    slug: null,
+    slug: r.slug,
     contentType: 'libro',
     organizationId: null,
     organizationName: r.author || 'Biblioteca Agroconecta',

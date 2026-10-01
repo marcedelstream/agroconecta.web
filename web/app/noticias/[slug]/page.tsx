@@ -204,7 +204,7 @@ export default async function ArticlePage({ params }: Props) {
           )}
 
           <div
-            className="prose prose-invert prose-lg max-w-none text-foreground/80 leading-relaxed"
+            className="article-body"
             dangerouslySetInnerHTML={{ __html: normalizeArticleHtml(post.content) }}
           />
 

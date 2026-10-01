@@ -127,15 +127,53 @@
     @apply absolute inset-0 w-full h-full;
   }
 
-  .prose blockquote {
+  /* Cuerpo de las notas (/noticias/[slug]). Sin el plugin de tipografía de Tailwind: los párrafos,
+     subtítulos y listas necesitan su espacio propio, si no la nota queda como un bloque apretado. */
+  .article-body {
+    @apply text-[17px] md:text-lg leading-[1.75] text-foreground/85;
+  }
+
+  .article-body p {
+    @apply mb-5;
+  }
+
+  .article-body h2 {
+    @apply font-display font-extrabold text-2xl text-foreground mt-10 mb-4 leading-tight;
+  }
+
+  .article-body h3 {
+    @apply font-display font-bold text-xl text-foreground mt-8 mb-3 leading-snug;
+  }
+
+  .article-body ul,
+  .article-body ol {
+    @apply mb-5 pl-6 space-y-2;
+  }
+
+  .article-body ul { @apply list-disc; }
+  .article-body ol { @apply list-decimal; }
+
+  .article-body a {
+    @apply text-lime font-semibold underline underline-offset-2;
+  }
+
+  .article-body strong {
+    @apply font-bold text-foreground;
+  }
+
+  .article-body img {
+    @apply rounded-2xl my-6;
+  }
+
+  .article-body blockquote {
     @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
   }
 
-  .prose blockquote cite {
+  .article-body blockquote cite {
     @apply block text-sm text-muted not-italic mt-3;
   }
 
-  .prose > p:first-of-type::first-letter {
+  .article-body > p:first-of-type::first-letter {
     @apply font-display font-bold text-lime;
     float: left;
     font-size: 3.4em;

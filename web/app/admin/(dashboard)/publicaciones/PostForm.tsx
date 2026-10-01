@@ -8,6 +8,8 @@ import { Help } from '@/components/admin/ui'
 
 interface Props {
   post?: PostRow
+  /** Valores iniciales para una publicación nueva (ej. importada desde un link). */
+  draft?: Partial<PostRow>
   orgs: Pick<OrganizationRow, 'id' | 'name'>[]
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>
 }
@@ -17,9 +19,10 @@ const inputClass =
 
 const labelClass = 'block text-sm font-medium text-foreground mb-1.5'
 
-export function PostForm({ post, orgs, action }: Props) {
+export function PostForm({ post, draft, orgs, action }: Props) {
   const [state, formAction, isPending] = useActionState(action, { error: null })
-  const selectedDepartments = new Set(post?.target_departments ?? [])
+  const values: Partial<PostRow> | undefined = post ?? draft
+  const selectedDepartments = new Set(values?.target_departments ?? [])
   const contentRef = useRef<HTMLTextAreaElement>(null)
 
   function insertContent(snippet: string) {
@@ -88,7 +91,7 @@ export function PostForm({ post, orgs, action }: Props) {
         <input
           name="title"
           required
-          defaultValue={post?.title ?? ''}
+          defaultValue={values?.title ?? ''}
           className={inputClass}
           placeholder="Título de la publicación"
         />
@@ -99,7 +102,7 @@ export function PostForm({ post, orgs, action }: Props) {
         <textarea
           name="summary"
           rows={2}
-          defaultValue={post?.summary ?? ''}
+          defaultValue={values?.summary ?? ''}
           className={`${inputClass} resize-none`}
           placeholder="Descripción corta que aparece en la tarjeta de noticia"
         />
@@ -124,7 +127,7 @@ export function PostForm({ post, orgs, action }: Props) {
           ref={contentRef}
           name="content"
           rows={14}
-          defaultValue={post?.content ?? ''}
+          defaultValue={values?.content ?? ''}
           className={`${inputClass} resize-y font-mono text-xs leading-relaxed`}
           placeholder="<p>Contenido completo de la noticia...</p>"
         />
@@ -136,7 +139,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <select
             name="category"
             required
-            defaultValue={post?.category ?? 'ganaderia'}
+            defaultValue={values?.category ?? 'ganaderia'}
             className={inputClass}
           >
             {(Object.entries(CATEGORY_LABELS) as [NewsCategory, string][]).map(([val, label]) => (
@@ -149,7 +152,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <label className={labelClass}>Tipo de contenido<Help text="Nota, video, remate o aviso. Video y remate necesitan el link de YouTube." /></label>
           <select
             name="content_type"
-            defaultValue={post?.content_type ?? 'article'}
+            defaultValue={values?.content_type ?? 'article'}
             className={inputClass}
           >
             {(Object.entries(CONTENT_TYPE_LABELS) as [ContentType, string][]).map(([val, label]) => (
@@ -162,7 +165,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <label className={labelClass}>Estado de transmisión<Help text="Solo para remates. 'En vivo' lo muestra en el aviso EN VIVO de la app." /></label>
           <select
             name="auction_status"
-            defaultValue={post?.auction_status ?? ''}
+            defaultValue={values?.auction_status ?? ''}
             className={inputClass}
           >
             <option value="">— No aplica —</option>
@@ -177,7 +180,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <label className={labelClass}>Estado editorial<Help text="Borrador no se ve. Publicado aparece en la app y la web." /></label>
           <select
             name="editorial_status"
-            defaultValue={post?.editorial_status ?? 'draft'}
+            defaultValue={values?.editorial_status ?? 'draft'}
             className={inputClass}
           >
             {(Object.entries(STATUS_LABELS) as [EditorialStatus, string][]).map(([val, label]) => (
@@ -190,7 +193,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <label className={labelClass}>Organización<Help text="Quién publica. A quienes siguen esa organización se les muestra más arriba." /></label>
           <select
             name="organization_id"
-            defaultValue={post?.organization_id ?? ''}
+            defaultValue={values?.organization_id ?? ''}
             className={inputClass}
           >
             <option value="">— Sin organización —</option>
@@ -216,7 +219,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <input
             name="image_url"
             type="text"
-            defaultValue={post?.image_url ?? ''}
+            defaultValue={values?.image_url ?? ''}
             className={inputClass}
             placeholder="https://..."
           />
@@ -227,7 +230,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <input
             name="youtube_url"
             type="text"
-            defaultValue={post?.youtube_url ?? ''}
+            defaultValue={values?.youtube_url ?? ''}
             className={inputClass}
             placeholder="https://youtube.com/watch?v=..."
           />
@@ -260,7 +263,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <input
             type="checkbox"
             name="is_important"
-            defaultChecked={post?.is_important ?? false}
+            defaultChecked={values?.is_important ?? false}
             className="w-4 h-4 rounded accent-lime"
           />
           <span className="text-sm text-foreground">Marcar como importante</span>
@@ -269,7 +272,7 @@ export function PostForm({ post, orgs, action }: Props) {
           <input
             type="checkbox"
             name="is_highlighted"
-            defaultChecked={post?.is_highlighted ?? false}
+            defaultChecked={values?.is_highlighted ?? false}
             className="w-4 h-4 rounded accent-lime"
           />
           <span className="text-sm text-foreground">Destacar en home</span>

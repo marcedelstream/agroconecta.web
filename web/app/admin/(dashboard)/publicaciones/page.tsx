@@ -34,7 +34,12 @@ export default async function PublicacionesPage({ searchParams }: Props) {
       <PageHeader
         title="Publicaciones"
         help="Las notas, videos y remates que se ven en la app y la web. Acá aprobás lo que mandan las organizaciones o cargás lo tuyo."
-        actions={<Link href="/admin/publicaciones/nueva" className="btn-primary text-sm">+ Nueva publicación</Link>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/publicaciones/importar" className="btn text-sm">Importar desde link</Link>
+            <Link href="/admin/publicaciones/nueva" className="btn-primary text-sm">+ Nueva publicación</Link>
+          </div>
+        }
       />
 
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1">

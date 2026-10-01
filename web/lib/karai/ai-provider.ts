@@ -7,7 +7,7 @@ import type { ChatMessage } from './types'
 export type StreamEvent = { type: 'delta'; text: string } | { type: 'done'; tokensUsed: number | null }
 
 export interface AIProvider {
-  generate(input: { messages: ChatMessage[] }): Promise<{ text: string; tokensUsed: number | null }>
+  generate(input: { messages: ChatMessage[]; maxOutputTokens?: number }): Promise<{ text: string; tokensUsed: number | null }>
   generateStream(input: { messages: ChatMessage[] }): AsyncGenerator<StreamEvent>
 }
 
@@ -25,7 +25,7 @@ interface ResponsesApiOutputItem {
 export class OpenAIProvider implements AIProvider {
   constructor(private readonly apiKey: string) {}
 
-  async generate({ messages }: { messages: ChatMessage[] }): Promise<{ text: string; tokensUsed: number | null }> {
+  async generate({ messages, maxOutputTokens = 600 }: { messages: ChatMessage[]; maxOutputTokens?: number }): Promise<{ text: string; tokensUsed: number | null }> {
     const res = await fetch(OPENAI_URL, {
       method: 'POST',
       headers: {
@@ -35,7 +35,7 @@ export class OpenAIProvider implements AIProvider {
       body: JSON.stringify({
         model: MODEL,
         input: messages,
-        max_output_tokens: 600,
+        max_output_tokens: maxOutputTokens,
         reasoning: { effort: 'low' },
       }),
     })

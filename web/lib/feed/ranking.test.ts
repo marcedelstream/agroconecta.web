@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest'
 import {
   chronologicalEvents,
   DEFAULT_WEIGHTS,
-  deprioritizeSeen,
+  withoutSeen,
   engagementScore,
   eventProximityScore,
   geoMatch,
   rankFeed,
   recencyScore,
   scoreCandidate,
+  spaceOut,
 } from './ranking'
 import type { FeedCandidate, FeedContentType, FeedUserSignals } from './types'
 
@@ -26,6 +27,7 @@ function cand(over: Partial<FeedCandidate> & { contentType?: FeedContentType } =
     key: `post:${id}`,
     source: 'post',
     sourceId: id,
+    slug: null,
     contentType: 'noticia',
     organizationId: `org${seq}`,
     organizationName: 'Org',
@@ -146,11 +148,11 @@ describe('rankFeed — reglas de mezcla', () => {
     expect(firstTen.filter((c) => c.tags.includes('horticultura')).length).toBeGreaterThanOrEqual(2)
   })
 
-  it('al actualizar, lo ya visto en la sesión pasa al final sin cambiar el orden del resto', () => {
+  it('al actualizar, lo ya visto en la sesión no se repite y el resto conserva su orden', () => {
     const [a, b, c, d] = Array.from({ length: 4 }, () => cand())
-    const result = deprioritizeSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
-    expect(result).toEqual([b.key, d.key, a.key, c.key])
-    expect(deprioritizeSeen([a, b], new Set())).toEqual([a, b])
+    const result = withoutSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
+    expect(result).toEqual([b.key, d.key])
+    expect(withoutSeen([a, b], new Set())).toEqual([a, b])
   })
 
   it('los eventos ocupan sus lugares en orden cronológico, sin mover el resto', () => {
@@ -167,5 +169,23 @@ describe('rankFeed — reglas de mezcla', () => {
     const a = rankFeed(items, user(), new Map(), DEFAULT_WEIGHTS, NOW).map((c) => c.key)
     const b = rankFeed([...items].reverse(), user(), new Map(), DEFAULT_WEIGHTS, NOW).map((c) => c.key)
     expect(a).toEqual(b)
+  })
+})
+
+describe('spaceOut', () => {
+  it('reparte los libros: ninguno antes de la posición 3 y al menos 6 publicaciones entre dos', () => {
+    const books = [1, 2, 3].map(() => cand({ contentType: 'libro' }))
+    const others = Array.from({ length: 16 }, () => cand())
+    const out = spaceOut([...books, ...others], 'libro', 6, 3)
+    const positions = out.map((c, i) => (c.contentType === 'libro' ? i : -1)).filter((i) => i >= 0)
+    expect(out).toHaveLength(19)
+    expect(positions[0]).toBe(3)
+    expect(positions[1] - positions[0]).toBeGreaterThanOrEqual(7)
+    expect(positions[2] - positions[1]).toBeGreaterThanOrEqual(7)
+  })
+
+  it('no pierde libros aunque no haya lugar para separarlos', () => {
+    const out = spaceOut([cand({ contentType: 'libro' }), cand({ contentType: 'libro' }), cand()], 'libro', 6, 3)
+    expect(out.filter((c) => c.contentType === 'libro')).toHaveLength(2)
   })
 })

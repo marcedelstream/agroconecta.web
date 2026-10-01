@@ -1,7 +1,7 @@
 // Contrato del feed v2 (docs/design_handoff_v2_feed). La app mobile tiene su copia espejo de
 // FeedItem/FeedContentType — si cambia algo acá, cambiarlo también en mobile/lib/feed-v2/types.ts.
 
-export type FeedSource = 'post' | 'event' | 'listing'
+export type FeedSource = 'post' | 'event' | 'listing' | 'library'
 
 // encuesta, quiz y patrocinado se suman en las Fases 2 y 4.
 export type FeedContentType =
@@ -13,6 +13,7 @@ export type FeedContentType =
   | 'servicio'
   | 'empleo'
   | 'remate'
+  | 'libro'
 
 export type FeedMediaKind = 'image' | 'youtube' | 'none'
 
@@ -21,6 +22,8 @@ export interface FeedCandidate {
   key: string
   source: FeedSource
   sourceId: string
+  /** Dirección legible armada con el título (todas las fuentes, fix-v2-slugs.sql). Los links públicos usan esto, nunca el id. */
+  slug: string | null
   contentType: FeedContentType
   organizationId: string | null
   organizationName: string

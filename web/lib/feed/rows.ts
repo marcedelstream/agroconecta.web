@@ -8,12 +8,13 @@ import type { FeedCandidate, FeedContentType } from './types'
 const EVENTS_FALLBACK_ORG = 'Eventos Agro'
 
 export const POST_COLUMNS =
-  'id,organization_id,title,summary,category,target_departments,content_type,image_url,youtube_url,auction_status,starts_at,published_at,organizations(name,logo_url)'
-export const LISTING_COLUMNS = 'id,kind,title,description,image_url,category_label,publisher_name,location,published_at'
+  'id,slug,organization_id,title,summary,category,target_departments,content_type,image_url,youtube_url,auction_status,starts_at,published_at,organizations(name,logo_url)'
+export const LISTING_COLUMNS = 'id,slug,kind,title,description,image_url,category_label,publisher_name,location,published_at'
 export const EVENT_COLUMNS = 'id,slug,title,description,category,date,time,location,city,department,image_url,organization_id,created_at'
 
 export interface PostRow {
   id: string
+  slug: string
   organization_id: string
   title: string
   summary: string
@@ -30,6 +31,7 @@ export interface PostRow {
 
 export interface ListingRow {
   id: string
+  slug: string | null
   kind: 'empleo' | 'clasificado' | 'curso'
   title: string
   description: string
@@ -81,6 +83,7 @@ export function mapPostRow(r: PostRow, fallbackIso: string): FeedCandidate {
     key: `post:${r.id}`,
     source: 'post',
     sourceId: r.id,
+    slug: r.slug,
     contentType: POST_TYPE[r.content_type],
     organizationId: r.organization_id,
     organizationName: r.organizations?.name ?? '',
@@ -99,11 +102,49 @@ export function mapPostRow(r: PostRow, fallbackIso: string): FeedCandidate {
   }
 }
 
+export const LIBRARY_COLUMNS = 'id,slug,title,author,description,category,cover_image_url,created_at'
+
+export interface LibraryRow {
+  id: string
+  slug: string | null
+  title: string
+  author: string | null
+  description: string
+  category: string
+  cover_image_url: string
+  created_at: string
+}
+
+export function mapLibraryRow(r: LibraryRow): FeedCandidate {
+  return {
+    key: `library:${r.id}`,
+    source: 'library',
+    sourceId: r.id,
+    slug: r.slug,
+    contentType: 'libro',
+    organizationId: null,
+    organizationName: r.author || 'Biblioteca Agroconecta',
+    organizationLogoUrl: null,
+    title: r.title,
+    summary: r.description,
+    mediaUrl: r.cover_image_url,
+    mediaKind: 'image',
+    youtubeUrl: null,
+    tags: ['biblioteca', r.category],
+    targetDepartments: [],
+    publishedAt: r.created_at,
+    startsAt: null,
+    location: null,
+    isLive: false,
+  }
+}
+
 export function mapListingRow(r: ListingRow): FeedCandidate {
   return {
     key: `listing:${r.id}`,
     source: 'listing',
     sourceId: r.id,
+    slug: r.slug,
     contentType: LISTING_TYPE[r.kind],
     // Los listings no tienen organización propia: se agrupan por publicador para la regla de mezcla.
     organizationId: null,
@@ -139,6 +180,7 @@ export async function mapEventRows(events: SupabaseClient, rows: EventRow[]): Pr
       key: `event:${r.slug}`,
       source: 'event',
       sourceId: r.slug,
+      slug: r.slug,
       contentType: 'evento',
       // Prefijo para que un id de la base externa nunca coincida con una organización nuestra.
       organizationId: r.organization_id ? `ext:${r.organization_id}` : null,

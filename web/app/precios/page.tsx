@@ -54,7 +54,7 @@ function PriceGroup({ title, rows }: { title: string; rows: MarketPriceRow[] }) 
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-display font-semibold text-lg text-foreground">{row.label}</p>
-                  <p className="text-muted text-xs mt-1">{row.market} Â· {row.unit}</p>
+                  <p className="text-muted text-xs mt-1">{row.market} · {row.unit}</p>
                 </div>
                 <span className={`badge text-[11px] ${positive ? 'bg-lime/15 text-lime' : 'bg-red-500/10 text-red-500'}`}>
                   {positive ? '+' : ''}{Number(row.change_percent).toFixed(2)}%
@@ -88,7 +88,7 @@ export default async function PreciosPage() {
             Referencias de mercado para decidir mejor
           </h1>
           <p className="text-muted text-base mt-3 leading-relaxed">
-            Un resumen web de las referencias que la app organiza para productores y profesionales: ganaderÃ­a local en guaranÃ­es y commodities internacionales en dÃ³lares.
+            Un resumen web de las referencias que la app organiza para productores y profesionales: ganadería local en guaraníes y commodities internacionales en dólares.
           </p>
         </section>
 
@@ -104,7 +104,7 @@ export default async function PreciosPage() {
           <div className="card text-center py-12 text-muted">No hay precios publicados por ahora.</div>
         ) : (
           <div className="space-y-8">
-            {cattle.length > 0 && <PriceGroup title="GanaderÃ­a" rows={cattle} />}
+            {cattle.length > 0 && <PriceGroup title="Ganadería" rows={cattle} />}
             {international.length > 0 && <PriceGroup title="Commodities internacionales" rows={international} />}
           </div>
         )}

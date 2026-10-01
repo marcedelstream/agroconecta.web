@@ -1,0 +1,192 @@
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Header } from '@/components/Header'
+import { Footer } from '@/components/Footer'
+import { NewsCard } from '@/components/NewsCard'
+import { CategoryBadge } from '@/components/CategoryBadge'
+import { HomeSidebar } from '@/components/HomeSidebar'
+import { TickerBar } from '@/components/TickerBar'
+import { ShortsSection } from '@/components/ShortsSection'
+import { VideoBanner } from '@/components/VideoBanner'
+import { createSupabaseServer } from '@/lib/supabase-server'
+import { CATEGORY_LABELS, type NewsCategory, type PostRow } from '@/lib/types'
+
+const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as NewsCategory[]
+
+export const metadata: Metadata = {
+  title: 'Noticias agropecuarias del Paraguay',
+  description: 'Noticias, precios, eventos y contenidos del ecosistema Agroconecta para el sector agropecuario paraguayo.',
+  alternates: {
+    canonical: '/noticias',
+  },
+}
+
+interface Props {
+  searchParams: Promise<{ categoria?: string }>
+}
+
+function isCategory(value: string | undefined): value is NewsCategory {
+  return ALL_CATEGORIES.includes(value as NewsCategory)
+}
+
+async function loadAvailableCategories() {
+  try {
+    const supabase = await createSupabaseServer()
+    const { data, error } = await supabase
+      .from('posts')
+      .select('category')
+      .eq('editorial_status', 'published')
+      .limit(200)
+
+    if (error) return []
+
+    return Array.from(
+      new Set(
+        (data ?? [])
+          .map((row) => row.category)
+          .filter((category): category is NewsCategory => isCategory(category))
+      )
+    )
+  } catch (error) {
+    console.error('Home categories failed', error)
+    return []
+  }
+}
+
+async function loadPosts(category?: NewsCategory) {
+  try {
+    const supabase = await createSupabaseServer()
+    let query = supabase
+      .from('posts')
+      .select('id,slug,title,summary,content,category,target_departments,content_type,editorial_status,image_url,youtube_url,is_important,is_highlighted,published_at,created_at,organizations(name,logo_url,slug,is_verified)')
+      .eq('editorial_status', 'published')
+      .order('is_important', { ascending: false })
+      .order('published_at', { ascending: false })
+      .limit(30)
+
+    if (category) query = query.eq('category', category)
+
+    const { data, error } = await query
+    if (error) return []
+    return (data ?? []) as unknown as PostRow[]
+  } catch (error) {
+    console.error('Home posts failed', error)
+    return []
+  }
+}
+
+// Portal de noticias (antes era la portada; con la web oficial la portada pasó a ser el buscador +
+// la landing de la app).
+export default async function NoticiasPage({ searchParams }: Props) {
+  const { categoria } = await searchParams
+  const requestedCategory = isCategory(categoria) ? categoria : undefined
+  const [availableCategories, posts] = await Promise.all([
+    loadAvailableCategories(),
+    loadPosts(requestedCategory),
+  ])
+  const activeCategory = requestedCategory
+  const featured = posts.find((p) => p.is_highlighted) ?? posts[0]
+  const afterFeatured = posts.filter((p) => p.id !== featured?.id)
+  const secondary = activeCategory ? [] : afterFeatured.slice(0, 3)
+  const remainder = activeCategory ? afterFeatured : afterFeatured.slice(3)
+  const gridPosts = activeCategory ? remainder : remainder.slice(0, 9)
+  const categoryRows = activeCategory
+    ? []
+    : availableCategories
+        .map((cat) => ({ cat, items: posts.filter((p) => p.category === cat).slice(0, 3) }))
+        .filter((row) => row.items.length >= 3)
+
+  return (
+    <>
+      <Header />
+      <TickerBar posts={posts} />
+
+      <main className="site-container py-8 md:py-10">
+        <VideoBanner className="mb-8" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8 items-start">
+          <div>
+            {featured && (
+              <section className="mb-8">
+                <NewsCard post={featured} featured />
+              </section>
+            )}
+
+            {secondary.length > 0 && (
+              <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8 pb-8 border-b border-bdr">
+                {secondary.map((post) => (
+                  <NewsCard key={post.id} post={post} />
+                ))}
+              </section>
+            )}
+
+            {availableCategories.length > 0 && (
+              <nav className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide" aria-label="Filtros de noticias">
+                <Link
+                  href="/noticias"
+                  className={`badge shrink-0 py-1.5 px-3 text-xs font-medium ${!activeCategory ? 'bg-brand text-navy' : 'bg-lime/15 text-lime'}`}
+                >
+                  Todos
+                </Link>
+                {availableCategories.map((cat) => (
+                  <Link key={cat} href={`/noticias?categoria=${cat}`} className="shrink-0">
+                    <CategoryBadge category={cat} active={activeCategory === cat} />
+                  </Link>
+                ))}
+              </nav>
+            )}
+
+            <section>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="font-display font-semibold text-lg text-foreground">
+                  {activeCategory ? CATEGORY_LABELS[activeCategory] : 'Más recientes'}
+                </h2>
+                <p className="text-muted text-sm">{posts.length} publicadas</p>
+              </div>
+
+              {gridPosts.length === 0 && !featured ? (
+                <div className="card text-center py-12 text-muted">
+                  No hay publicaciones disponibles por ahora.
+                </div>
+              ) : gridPosts.length === 0 ? (
+                <div className="card text-center py-10 text-muted">
+                  No hay más publicaciones para este filtro.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7">
+                  {gridPosts.map((post) => (
+                    <NewsCard key={post.id} post={post} />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          <aside className="lg:sticky lg:top-24 hidden lg:block">
+            <HomeSidebar posts={posts} />
+          </aside>
+        </div>
+
+        <ShortsSection />
+
+        {categoryRows.map(({ cat, items }) => (
+          <section key={cat} className="mt-12 pt-8 border-t border-bdr">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <h2 className="font-display font-bold text-xl text-foreground">{CATEGORY_LABELS[cat]}</h2>
+              <Link href={`/categoria/${cat}`} className="text-xs font-semibold text-lime hover:text-lime-dark transition-colors shrink-0">
+                Ver todo →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-7">
+              {items.map((post) => (
+                <NewsCard key={post.id} post={post} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </main>
+
+      <Footer />
+    </>
+  )
+}

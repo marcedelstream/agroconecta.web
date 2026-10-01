@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 import { sendPushToAll } from '@/lib/push'
-import { slugify } from '@/lib/seo'
+import { uniquePostSlug } from '@/lib/post-slug'
 
 export type ActionState = { error: string | null }
 
@@ -61,19 +61,6 @@ async function uploadFeaturedImage(formData: FormData, supabase: ReturnType<type
 
   const { data } = supabase.storage.from(POST_IMAGES_BUCKET).getPublicUrl(path)
   return data.publicUrl
-}
-
-async function uniqueSlug(supabase: ReturnType<typeof createSupabaseAdmin>, title: string) {
-  const base = slugify(title) || 'noticia'
-  let candidate = base
-  let n = 1
-  // Colisión de slug: se prueba con sufijo numérico en vez de pegar el uuid a la URL.
-  while (true) {
-    const { data } = await supabase.from('posts').select('id').eq('slug', candidate).maybeSingle()
-    if (!data) return candidate
-    n += 1
-    candidate = `${base}-${n}`
-  }
 }
 
 async function extractPayload(formData: FormData, supabase: ReturnType<typeof createSupabaseAdmin>) {
@@ -200,7 +187,7 @@ export async function createPost(
     return { error: error instanceof Error ? error.message : 'No se pudo preparar la publicación.' }
   }
 
-  const slug = await uniqueSlug(supabase, payload.title)
+  const slug = await uniquePostSlug(supabase, payload.title)
   const { error } = await supabase.from('posts').insert({ ...payload, slug })
   if (error) return { error: error.message }
 

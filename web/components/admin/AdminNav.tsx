@@ -6,7 +6,10 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { ADMIN_NAV, isActive } from './nav-config'
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+/** Contadores por sección (ej. publicaciones esperando aprobación), calculados en el layout. */
+export type NavBadges = Record<string, number>
+
+function NavLinks({ onNavigate, badges }: { onNavigate?: () => void; badges: NavBadges }) {
   const pathname = usePathname()
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Secciones del panel">
@@ -30,6 +33,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               >
                 <Icon size={18} strokeWidth={active ? 2.4 : 2} className="shrink-0" aria-hidden />
                 <span className="truncate">{item.label}</span>
+                {badges[item.href] ? (
+                  <span className="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-danger text-white text-xs font-bold flex items-center justify-center" aria-label={`${badges[item.href]} pendientes`}>
+                    {badges[item.href]}
+                  </span>
+                ) : null}
               </Link>
             )
           })}
@@ -40,12 +48,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 /** Menú lateral fijo en computadora. */
-export function AdminSidebarNav() {
-  return <NavLinks />
+export function AdminSidebarNav({ badges }: { badges: NavBadges }) {
+  return <NavLinks badges={badges} />
 }
 
 /** En el celular: botón "Menú" que abre el mismo menú en un panel lateral. */
-export function AdminMobileNav() {
+export function AdminMobileNav({ badges }: { badges: NavBadges }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   useEffect(() => setOpen(false), [pathname])
@@ -54,6 +62,7 @@ export function AdminMobileNav() {
     <>
       <button type="button" onClick={() => setOpen(true)} className="btn-ghost px-3 py-2 gap-2" aria-label="Abrir menú">
         <Menu size={20} aria-hidden /> Menú
+        {Object.values(badges).some(Boolean) && <span className="w-2 h-2 rounded-full bg-danger" aria-hidden />}
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex">
@@ -62,7 +71,7 @@ export function AdminMobileNav() {
             <button type="button" onClick={() => setOpen(false)} className="btn-ghost p-2 ml-auto flex" aria-label="Cerrar menú">
               <X size={20} aria-hidden />
             </button>
-            <NavLinks onNavigate={() => setOpen(false)} />
+            <NavLinks onNavigate={() => setOpen(false)} badges={badges} />
           </div>
         </div>
       )}

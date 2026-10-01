@@ -14,7 +14,7 @@ export function HomeSidebar({ posts }: Props) {
       {popular.length > 0 && (
         <section className="card p-5">
           <h2 className="font-display font-semibold text-lg text-foreground mb-4 flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-lime rounded-full shrink-0" />
+            <span className="w-1.5 h-5 bg-brand rounded-full shrink-0" />
             Más leídas
           </h2>
           <ol className="space-y-4">

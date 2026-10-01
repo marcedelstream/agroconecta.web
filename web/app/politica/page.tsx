@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
 }
 
-const UPDATED = '26 de septiembre de 2026'
+const UPDATED = '29 de septiembre de 2026'
 
 const soporte = <Link href="/soporte" className="text-lime hover:underline">la página de Soporte</Link>
 const reglamento = <Link href="/reglamento-puntos" className="text-lime hover:underline">Reglamento de puntos</Link>
@@ -46,7 +46,7 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: '4. Karai',
-    body: 'Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje puntual para poder contactarte; nunca el resto de la conversación.',
+    body: 'Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje puntual para poder contactarte; nunca el resto de la conversación. Si tenés KARAI Campo, los datos de tu establecimiento que cargás en Mi campo (o que mencionás en el chat: hectáreas, animales, cultivos) se usan únicamente para que Karai te responda mejor: no se muestran a nadie, no se venden y no se usan para publicidad. Los podés editar o borrar cuando quieras.',
   },
   {
     title: '5. Perfil público',

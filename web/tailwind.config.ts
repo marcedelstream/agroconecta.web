@@ -19,6 +19,10 @@ const config: Config = {
         bdr:        'rgb(var(--clr-bdr)       / <alpha-value>)',
         foreground: 'rgb(var(--clr-fg)        / <alpha-value>)',
         muted:      'rgb(var(--clr-muted)     / <alpha-value>)',
+        // Paleta fija de la app v2: verde de relleno de la marca y azul oscuro.
+        brand: { DEFAULT: '#A4D233', dark: '#93C022', tint: '#EEF4DC' },
+        navy: '#0B1620',
+        whatsapp: '#1FA855',
         // Colores de sistema — fijos
         success: '#22C55E',
         warning: '#F59E0B',

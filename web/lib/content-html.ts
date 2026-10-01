@@ -12,17 +12,29 @@ function escapeHtml(value: string): string {
 export function normalizeArticleHtml(raw: string): string {
   const trimmed = raw.trim()
   if (!trimmed) return ''
-  if (HTML_BLOCK_TAGS.test(trimmed)) return trimmed
+  if (HTML_BLOCK_TAGS.test(trimmed)) return splitBrParagraphs(trimmed)
 
+  // Cada renglón es un párrafo: en el admin y en las notas sindicadas se escribe un párrafo por renglón
+  // (con o sin renglón vacío entre medio). Antes los renglones sueltos se pegaban con <br /> dentro de
+  // un mismo párrafo y la nota quedaba como un bloque apretado.
   return trimmed
-    .split(/\n\s*\n+/)
-    .map((paragraph) => paragraph.trim())
+    .split(/\n+/)
+    .map((line) => line.trim())
     .filter(Boolean)
-    .map((paragraph) =>
-      `<p>${escapeHtml(paragraph)
-        .split('\n')
-        .map((line) => line.trim())
-        .join('<br />')}</p>`
-    )
+    .map((line) => `<p>${escapeHtml(line)}</p>`)
     .join('')
+}
+
+const EMPTY_TEXT = /^(?:&nbsp;|\s)*$/
+
+/** Un <p> con varios renglones separados por <br> se convierte en un párrafo por renglón. */
+function splitBrParagraphs(html: string): string {
+  return html.replace(/<p([^>]*)>([\s\S]*?)<\/p>/gi, (_match, attrs: string, inner: string) =>
+    inner
+      .split(/(?:<br\s*\/?>\s*)+/i)
+      .map((part) => part.trim())
+      .filter((part) => !EMPTY_TEXT.test(part))
+      .map((part) => `<p${attrs}>${part}</p>`)
+      .join(''),
+  )
 }

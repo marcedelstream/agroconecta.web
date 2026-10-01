@@ -70,7 +70,7 @@ export function SoporteForm() {
       <button
         type="submit"
         disabled={loading || !phone.trim()}
-        className="mt-1 rounded-lg bg-lime text-bg text-sm font-semibold py-2.5 px-6 hover:bg-lime/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors self-start"
+        className="mt-1 rounded-lg bg-brand text-navy text-sm font-semibold py-2.5 px-6 hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors self-start"
       >
         {loading ? 'Enviando…' : 'Enviar consulta'}
       </button>

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
-import { loadEventCandidates, loadListingCandidates, loadPostCandidates } from './candidates'
+import { loadEventCandidates, loadLibraryCandidates, loadListingCandidates, loadPostCandidates } from './candidates'
 import { loadEngagement, loadUserFeedState, loadWeights, type UserFeedState } from './signals'
 import type { FeedCandidate, FeedContentItem, FeedEngagement, FeedWeights } from './types'
 
@@ -24,15 +24,16 @@ export interface RankingContext {
 }
 
 export async function loadRankingContext(admin: SupabaseClient, userId: string | null, asOf: Date): Promise<RankingContext> {
-  const [posts, listings, events, state, weights, engagement] = await Promise.all([
+  const [posts, listings, events, books, state, weights, engagement] = await Promise.all([
     loadPostCandidates(admin, asOf),
     loadListingCandidates(admin, asOf),
     loadEventCandidates(createEventsClient(), asOf),
+    loadLibraryCandidates(admin),
     loadUserFeedState(admin, userId, asOf),
     loadWeights(admin),
     loadEngagement(admin, asOf),
   ])
-  return { candidates: [...posts, ...listings, ...events], state, weights, engagement }
+  return { candidates: [...posts, ...listings, ...events, ...books], state, weights, engagement }
 }
 
 /** Solo necesita el estado del usuario y los contadores (Guardados no carga el resto del contexto). */

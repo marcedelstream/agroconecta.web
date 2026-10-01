@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { saveFarmProfile } from './actions'
 import type { ExtractedFarmData, FarmAnimalRow, FarmCultivoRow } from '@/lib/karai/farm-extraction'
-import { KaraiThemeToggle } from '../KaraiThemeToggle'
 
 interface Lead {
   id: string
@@ -164,14 +163,13 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
           <div className="hidden sm:block w-px h-6 bg-[var(--k-border-strong)] shrink-0" />
           <div className="flex items-center gap-2.5 min-w-0">
             <p className="text-[15px] font-extrabold tracking-[-0.01em] text-[var(--k-text)] truncate">Mis datos</p>
-            <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-lime)] bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] rounded-full px-2.5 py-1">
+            <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-lime-text)] bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] rounded-full px-2.5 py-1">
               Privado
             </span>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <p className="hidden md:block text-[11.5px] font-medium text-[var(--k-muted-3)] font-[family-name:var(--font-karai-mono)]">{savedLabel}</p>
-          <KaraiThemeToggle />
           <button
             onClick={handleSave}
             disabled={saving}
@@ -196,7 +194,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
         >
           <div className="flex flex-col gap-3.5 bg-[var(--k-raised)] border border-[var(--k-border-strong)] rounded-2xl p-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 shrink-0 rounded-[13px] bg-[var(--k-user-bubble)] border border-[var(--k-border-hover)] flex items-center justify-center text-[13px] font-bold text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)]">
+              <div className="w-10 h-10 shrink-0 rounded-[13px] bg-[var(--k-user-bubble)] border border-[var(--k-border-hover)] flex items-center justify-center text-[13px] font-bold text-[var(--k-lime-text)] font-[family-name:var(--font-karai-mono)]">
                 {orgInitials}
               </div>
               <div className="min-w-0 flex flex-col gap-0.5">
@@ -207,7 +205,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
             <div className="flex flex-col gap-1.5">
               <div className="flex items-baseline justify-between">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--k-muted-2)]">Perfil completo</p>
-                <p className="text-xs font-bold text-[var(--k-lime)] font-[family-name:var(--font-karai-mono)]">{completeness}%</p>
+                <p className="text-xs font-bold text-[var(--k-lime-text)] font-[family-name:var(--font-karai-mono)]">{completeness}%</p>
               </div>
               <div className="h-1.5 rounded-full bg-[var(--k-border-strong)] overflow-hidden">
                 <div className="h-full rounded-full bg-gradient-to-r from-[var(--k-lime-soft)] to-[var(--k-lime)]" style={{ width: `${completeness}%` }} />
@@ -226,7 +224,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                 }`}
               >
                 <p className={`flex-1 text-[13px] ${section === s.id ? 'font-semibold text-[var(--k-text)]' : 'font-medium text-[var(--k-muted)]'}`}>{s.label}</p>
-                <p className={`text-[11px] font-semibold font-[family-name:var(--font-karai-mono)] ${section === s.id ? 'text-[var(--k-lime)]' : 'text-[var(--k-muted-3)]'}`}>
+                <p className={`text-[11px] font-semibold font-[family-name:var(--font-karai-mono)] ${section === s.id ? 'text-[var(--k-lime-text)]' : 'text-[var(--k-muted-3)]'}`}>
                   {s.count}
                 </p>
               </button>
@@ -371,7 +369,7 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
                   <div className="px-5 md:px-[22px] pb-[18px] pt-1 flex flex-col">
                     {leads.map((l) => (
                       <div key={l.id} className="flex items-center gap-4 py-3.5 border-b border-[var(--k-border)] last:border-b-0">
-                        <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-lime)] bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] rounded-[7px] py-1 px-2.5">
+                        <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-wider text-[var(--k-lime-text)] bg-[var(--k-lime-bg)] border border-[var(--k-lime-border)] rounded-[7px] py-1 px-2.5">
                           {LEAD_STATUS_LABEL[l.status]}
                         </span>
                         <p className="flex-1 min-w-0 text-[13.5px] font-medium text-[var(--k-text)] line-clamp-1">{l.excerpt}</p>

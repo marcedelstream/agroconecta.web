@@ -1,16 +1,15 @@
 import type { Metadata } from 'next'
-import { Lexend } from 'next/font/google'
+import { Figtree } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { SplashScreen } from '@/components/SplashScreen'
-import { AppDownloadTab } from '@/components/AppDownloadTab'
+import { AppDownloadButton } from '@/components/AppDownloadButton'
 import { siteUrl } from '@/lib/seo'
 import './globals.css'
 
-// Una sola familia (Lexend) para toda la web. Se mantienen las dos variables CSS
-// (--font-dm-sans / --font-poppins) para no tener que tocar tailwind.config ni las
-// clases font-sans/font-display usadas en todo components/.
-const dmSans = Lexend({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-dm-sans', display: 'swap' })
-const poppins = Lexend({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-poppins', display: 'swap' })
+// Figtree, la misma familia de la app v2. Se mantienen las dos variables CSS (--font-dm-sans /
+// --font-poppins) para no tocar tailwind.config ni las clases font-sans/font-display de components/.
+const dmSans = Figtree({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--font-dm-sans', display: 'swap' })
+const poppins = Figtree({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--font-poppins', display: 'swap' })
 
 const description = 'Noticias agropecuarias publicadas por Agroconecta y organizaciones verificadas del sector paraguayo.'
 
@@ -49,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <SplashScreen />
           {children}
-          <AppDownloadTab />
+          <AppDownloadButton />
         </ThemeProvider>
       </body>
     </html>

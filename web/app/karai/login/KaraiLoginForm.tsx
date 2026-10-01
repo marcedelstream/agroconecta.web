@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import { WHATSAPP_URL } from '@/lib/social-links'
-import { KaraiThemeToggle } from '../KaraiThemeToggle'
 
 type View = 'initial' | 'otp-verify' | 'password'
 
@@ -90,30 +88,31 @@ export function KaraiLoginForm() {
 
   return (
     <div className="h-screen flex overflow-hidden bg-[var(--k-bg)] text-[var(--k-text)]">
-      <div className="hidden md:flex flex-1 min-w-0 flex-col justify-between p-11 bg-[var(--k-sidebar)] border-r border-[var(--k-border)]">
-        <p className="text-[15px] font-extrabold text-[var(--k-text)]">Agroconecta</p>
-        <div className="flex flex-col gap-[18px] max-w-[420px]">
+      {/* Panel de marca: mismo azul y aro verde que la app y la web oficial. */}
+      <div className="hidden md:flex relative overflow-hidden flex-1 min-w-0 flex-col justify-between p-11 bg-navy">
+        <div className="absolute -right-24 -bottom-28 w-96 h-96 rounded-full border-[40px] border-brand/80" aria-hidden />
+        <Image src="/logo-dark.png" alt="Agroconecta" width={150} height={32} className="relative h-8 w-auto self-start" />
+        <div className="relative flex flex-col gap-[18px] max-w-[420px]">
           <Image src="/karai-avatar.png" alt="Karai" width={76} height={76} className="rounded-[24px] block" />
-          <h1 className="text-[34px] leading-[1.15] font-extrabold tracking-[-0.03em] text-[var(--k-text)] text-balance">
+          <h1 className="text-[34px] leading-[1.15] font-extrabold tracking-[-0.03em] text-white text-balance">
             La IA oficial del agro paraguayo, hablando tu idioma.
           </h1>
-          <p className="text-[15px] leading-relaxed font-medium text-[var(--k-muted)] text-balance">
+          <p className="text-[15px] leading-relaxed font-medium text-white/70 text-balance">
             Precios, clima, noticias y los datos de tu finca en un solo lugar. Contale a Karai lo que pasa en el campo y él ordena el resto.
           </p>
         </div>
-        <p className="text-xs font-medium text-[var(--k-muted-4)]">Ganadería · Agricultura · Mercado · Clima</p>
+        <p className="relative text-xs font-medium text-white/50">Ganadería · Agricultura · Mercado · Clima</p>
       </div>
 
       <div className="relative flex-1 min-w-0 flex items-center justify-center p-8 overflow-y-auto">
         <div className="absolute top-5 right-5">
-          <KaraiThemeToggle />
         </div>
         <div className="w-full max-w-[376px] flex flex-col gap-6">
           <div className="flex flex-col items-center gap-3.5 text-center">
             <Image src="/karai-avatar.png" alt="Karai" width={60} height={60} className="rounded-[20px] block" />
             <div className="flex flex-col gap-1.5">
               <h2 className="text-[23px] font-extrabold tracking-[-0.02em] text-[var(--k-text)]">Ingresá a Karai</h2>
-              <p className="text-[13.5px] font-medium text-[var(--k-muted)]">Con tu cuenta de miembro de Agroconecta</p>
+              <p className="text-[13.5px] font-medium text-[var(--k-muted)]">Con tu cuenta de Agroconecta</p>
             </div>
           </div>
 
@@ -237,9 +236,9 @@ export function KaraiLoginForm() {
           )}
 
           <p className="text-center text-[11.5px] leading-relaxed font-medium text-[var(--k-muted-4)]">
-            Karai es exclusivo para miembros activos. ¿Todavía no sos miembro?{' '}
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--k-lime)] hover:text-[var(--k-lime-hover)]">
-              Escribinos por WhatsApp
+            Karai es gratis: 5 consultas por día con tu cuenta. ¿Necesitás más?{' '}
+            <a href="/karai-campo" className="font-semibold text-[var(--k-lime-text)] hover:underline">
+              Conocé KARAI Campo
             </a>.
           </p>
         </div>

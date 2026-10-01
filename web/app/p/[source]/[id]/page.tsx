@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
@@ -24,6 +24,7 @@ const TYPE_LABEL: Record<FeedContentType, string> = {
   servicio: 'Servicio',
   empleo: 'Empleo',
   remate: 'Remate',
+  libro: 'Libro',
 }
 
 // Qué se puede hacer en la app con esta publicación: es el motivo para descargarla.
@@ -32,6 +33,7 @@ const APP_PERKS: Partial<Record<FeedContentType, string>> = {
   remate: 'Activá un recordatorio y te avisamos cuando empiece.',
   curso: 'Guardalo y sumá puntos para canjear por cursos.',
   empleo: 'Guardalo y enterate de nuevas ofertas del agro.',
+  libro: 'Leelo completo gratis y guardalo en tus colecciones.',
 }
 const DEFAULT_PERK = 'Guardala, seguí a quien la publica y recibí lo que te interesa del agro.'
 
@@ -41,8 +43,11 @@ async function load(params: Props['params']): Promise<FeedCandidate | null> {
   return loadCandidate(createSupabaseAdmin(), source, decodeURIComponent(id))
 }
 
+// Siempre con la dirección del título cuando existe; el id largo solo si la fuente no tiene slug.
+const publicId = (c: FeedCandidate) => c.slug || c.sourceId
+
 function sharePath(c: FeedCandidate) {
-  return `/p/${c.source}/${encodeURIComponent(c.sourceId)}`
+  return `/p/${c.source}/${encodeURIComponent(publicId(c))}`
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -57,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: { title: c.title, description, url: absoluteUrl(sharePath(c)), images: [image], type: 'article' },
     twitter: { card: 'summary_large_image', title: c.title, description, images: [image] },
     // Safari en iPhone muestra arriba el banner "Abrir / Obtener" de la app.
-    other: { 'apple-itunes-app': `app-id=${APP_STORE_ID}, app-argument=${APP_SCHEME}p/${c.source}/${encodeURIComponent(c.sourceId)}` },
+    other: { 'apple-itunes-app': `app-id=${APP_STORE_ID}, app-argument=${APP_SCHEME}p/${c.source}/${encodeURIComponent(publicId(c))}` },
   }
 }
 
@@ -77,8 +82,11 @@ function formatDate(iso: string) {
 export default async function SharedItemPage({ params }: Props) {
   const c = await load(params)
   if (!c) notFound()
+  // Si entraron con el id (links viejos), se redirige a la dirección con el título.
+  const { id } = await params
+  if (c.slug && decodeURIComponent(id) !== c.slug) permanentRedirect(sharePath(c))
 
-  const appLink = `${APP_SCHEME}p/${c.source}/${encodeURIComponent(c.sourceId)}`
+  const appLink = `${APP_SCHEME}p/${c.source}/${encodeURIComponent(publicId(c))}`
   const image = c.mediaUrl && c.mediaKind === 'image' ? c.mediaUrl : null
   const details = [c.startsAt ? formatDate(c.startsAt) : null, c.location].filter(Boolean)
 
@@ -99,7 +107,7 @@ export default async function SharedItemPage({ params }: Props) {
             {details.length > 0 && <p className="text-sm text-foreground first-letter:uppercase">{details.join(' · ')}</p>}
             {c.summary && <p className="text-muted leading-relaxed">{c.summary}</p>}
             {c.source === 'post' && (
-              <Link href={`/noticias/${c.sourceId}`} className="inline-block text-lime text-sm font-semibold hover:underline">
+              <Link href={`/noticias/${publicId(c)}`} className="inline-block text-lime text-sm font-semibold hover:underline">
                 Leer completo en la web →
               </Link>
             )}

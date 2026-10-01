@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { authenticateKaraiRequest } from '@/lib/karai/auth'
 import { uniquePostSlug } from '@/lib/post-slug'
+import { loadInterestOptions } from '@/lib/interest-options'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 const PUBLISHING_STATUSES = ['trial', 'active']
 const TYPES = ['article', 'video'] as const
-const CATEGORIES = ['agricultura', 'ganaderia', 'horticultura', 'tecnologia', 'mercados']
+const BASE_CATEGORIES = ['agricultura', 'ganaderia', 'horticultura', 'tecnologia', 'mercados']
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const IMAGE_TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 const LIMITS = { title: 140, summary: 300, content: 12_000 }
@@ -66,7 +67,9 @@ export async function POST(request: Request) {
   const title = text(body.title, LIMITS.title)
   const summary = text(body.summary, LIMITS.summary)
   const content = text(body.content, LIMITS.content)
-  const category = CATEGORIES.includes(body.category ?? '') ? body.category! : 'agricultura'
+  const rubros = (await loadInterestOptions(auth.admin, true)).filter((o) => o.kind === 'rubro').map((o) => o.value)
+  const categories = new Set([...BASE_CATEGORIES, ...rubros])
+  const category = categories.has(body.category ?? '') ? body.category! : 'agricultura'
   const youtubeUrl = text(body.youtubeUrl, 300)
   if (title.length < 5 || summary.length < 10) return NextResponse.json({ error: 'Completá el título y la bajada.' }, { status: 400 })
   if (type === 'video' && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(youtubeUrl)) {

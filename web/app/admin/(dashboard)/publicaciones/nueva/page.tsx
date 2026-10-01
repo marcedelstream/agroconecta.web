@@ -1,3 +1,5 @@
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { extraPostCategories } from '@/lib/interest-options'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { PostForm } from '../PostForm'
 import { createPost } from '../actions'
@@ -16,12 +18,13 @@ async function loadOrgs() {
 export default async function NuevaPublicacionPage() {
   const orgs = await loadOrgs()
 
+  const extraCategories = await extraPostCategories(createSupabaseAdmin())
   return (
     <div className="max-w-4xl">
       <PageHeader title="Nueva publicación" help="Completá los campos. Podés guardarla como borrador o publicarla directo." />
 
       <div className="card">
-        <PostForm orgs={orgs} action={createPost} />
+        <PostForm orgs={orgs} action={createPost} extraCategories={extraCategories} />
       </div>
     </div>
   )

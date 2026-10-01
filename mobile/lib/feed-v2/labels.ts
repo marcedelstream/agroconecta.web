@@ -119,14 +119,6 @@ export const EXPLORE_TEXT = {
   posts: (n: number) => (n === 1 ? '1 publicación' : `${n} publicaciones`),
 } as const
 
-export const RUBROS: { value: string; label: string }[] = [
-  { value: 'agricultura', label: 'Agricultura' },
-  { value: 'ganaderia', label: 'Ganadería' },
-  { value: 'horticultura', label: 'Horticultura' },
-  { value: 'tecnologia', label: 'Tecnología' },
-  { value: 'mercados', label: 'Mercados' },
-]
-
 export const CATEGORY_LABEL: Record<FeedContentType, string> = {
   noticia: 'Noticias',
   evento: 'Eventos',

@@ -11,7 +11,8 @@ import { HOME_ROUTE } from '@/lib/feature-flags'
 import { ONBOARDING_TEXT as T, PLAN_TEXT, type PlanChoice } from '@/lib/feed-v2/labels'
 import { claimWelcomePoints } from '@/lib/feed-v2/points'
 import { departments, professions } from '@/lib/mock-data'
-import { GOAL_OPTIONS, PRODUCTION_BY_RUBRO, RUBRO_OPTIONS, rubrosToCategories, saveOnboardingExtras, savePlanInterest, SCALE_OPTIONS } from '@/lib/onboarding-v2'
+import { rubrosToCategories, saveOnboardingExtras, savePlanInterest } from '@/lib/onboarding-v2'
+import { useInterestCatalog } from '@/lib/interest-options'
 import { registerPushToken } from '@/lib/push-notifications'
 import type { Department, NotificationPreferences, Profession } from '@/lib/types'
 
@@ -47,17 +48,19 @@ export function OnboardingV2() {
   const [points, setPoints] = useState(true)
   const [plan, setPlan] = useState<PlanChoice>('free')
 
-  const productionOptions = useMemo(() => rubros.flatMap((r) => PRODUCTION_BY_RUBRO[r] ?? []), [rubros])
+  // Opciones del panel (/admin/intereses); si no cargan, las que trae la app.
+  const catalog = useInterestCatalog()
+  const productionOptions = useMemo(() => rubros.flatMap((r) => catalog.productionByRubro[r] ?? []), [rubros, catalog])
 
   const steps: Step[] = [
     { title: T.welcomeTitle, body: T.welcomeBody, content: <WelcomeItems />, canContinue: true, hero: <WelcomeHero /> },
     { title: T.nameTitle, content: <FormField label={T.nameLabel} value={name} onChangeText={setName} maxLength={60} autoCapitalize="words" />, canContinue: name.trim().length >= 2 },
-    { title: T.rubrosTitle, body: T.rubrosBody, content: <ChoiceChips options={RUBRO_OPTIONS} selected={rubros} onToggle={(v) => setRubros((l) => toggle(l, v))} />, canContinue: rubros.length > 0 },
+    { title: T.rubrosTitle, body: T.rubrosBody, content: <ChoiceChips options={catalog.rubros} selected={rubros} onToggle={(v) => setRubros((l) => toggle(l, v))} />, canContinue: rubros.length > 0 },
     { title: T.productionTitle, body: T.productionBody, content: <ChoiceChips options={productionOptions} selected={production} onToggle={(v) => setProduction((l) => toggle(l, v))} />, canContinue: true, optional: true },
     { title: T.professionTitle, content: <ChoiceChips options={professions} selected={profession ? [profession] : []} onToggle={(v) => setProfession(v as Profession)} />, canContinue: profession !== null },
-    { title: T.scaleTitle, body: T.scaleBody, content: <ChoiceChips options={SCALE_OPTIONS} selected={scale ? [scale] : []} onToggle={(v) => setScale((s) => (s === v ? null : v))} />, canContinue: true, optional: true },
+    { title: T.scaleTitle, body: T.scaleBody, content: <ChoiceChips options={catalog.scale} selected={scale ? [scale] : []} onToggle={(v) => setScale((s) => (s === v ? null : v))} />, canContinue: true, optional: true },
     { title: T.departmentTitle, body: T.departmentBody, content: <ChoiceChips options={departments} selected={department ? [department] : []} onToggle={(v) => setDepartment(v as Department)} />, canContinue: department !== null },
-    { title: T.goalsTitle, body: T.goalsBody, content: <ChoiceChips options={GOAL_OPTIONS} selected={goals} onToggle={(v) => setGoals((l) => toggle(l, v))} />, canContinue: goals.length > 0 },
+    { title: T.goalsTitle, body: T.goalsBody, content: <ChoiceChips options={catalog.goals} selected={goals} onToggle={(v) => setGoals((l) => toggle(l, v))} />, canContinue: goals.length > 0 },
     { title: T.orgsTitle, body: T.orgsBody, content: <OrgsPicker selected={orgs} onToggle={(v) => setOrgs((l) => toggle(l, v))} />, canContinue: true, optional: true },
     { title: T.notifTitle, body: T.notifBody, content: <NotificationsPicker prefs={prefs} onChange={setPrefs} />, canContinue: true, optional: true },
     { title: T.phoneTitle, body: T.phoneBody, content: <FormField label={T.phoneLabel} value={phone} onChangeText={setPhone} keyboardType="phone-pad" maxLength={20} />, canContinue: true, optional: true },

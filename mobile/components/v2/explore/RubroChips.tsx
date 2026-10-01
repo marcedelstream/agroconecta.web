@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native'
 import { Text } from '@/components/ui/Text'
 import { Colors } from '@/constants/colors'
-import { RUBROS } from '@/lib/feed-v2/labels'
+import { useInterestCatalog } from '@/lib/interest-options'
 
 interface Props {
   selected: string | null
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function RubroChips({ selected, onToggle, side }: Props) {
+  const { rubros } = useInterestCatalog()
   return (
     <ScrollView
       horizontal
@@ -18,7 +19,7 @@ export function RubroChips({ selected, onToggle, side }: Props) {
       style={{ marginHorizontal: -side }}
       contentContainerStyle={[styles.row, { paddingHorizontal: side }]}
     >
-      {RUBROS.map((r) => {
+      {rubros.map((r) => {
         const on = r.value === selected
         return (
           <TouchableOpacity

@@ -22,17 +22,18 @@ import { ToastHost } from '@/components/v2/ToastHost'
 import { Colors } from '@/constants/colors'
 import { useApp } from '@/lib/app-context'
 import { normalizeHomeOrder, type HomeBlockKey } from '@/lib/feed-v2/home-sections'
-import { CATEGORY_LABEL, EXPLORE_TEXT, HOME_TEXT, RUBROS, SERVICE_TEXT } from '@/lib/feed-v2/labels'
+import { CATEGORY_LABEL, EXPLORE_TEXT, HOME_TEXT, SERVICE_TEXT } from '@/lib/feed-v2/labels'
+import { useInterestCatalog } from '@/lib/interest-options'
 import { useExplore } from '@/lib/feed-v2/use-explore'
 import type { ExploreFilters, FeedContentItem, FeedContentType } from '@/lib/feed-v2/types'
 
 const SIDE = 18
 const BLOCK_SIZE = 8
 
-function resultsTitle(f: ExploreFilters): string {
+function resultsTitle(f: ExploreFilters, rubros: { value: string; label: string }[]): string {
   if (f.query.trim()) return `${EXPLORE_TEXT.resultsFor} “${f.query.trim()}”`
   if (f.type) return CATEGORY_LABEL[f.type]
-  return RUBROS.find((r) => r.value === f.rubro)?.label ?? ''
+  return rubros.find((r) => r.value === f.rubro)?.label ?? f.rubro ?? ''
 }
 
 const ofTypes = (items: FeedContentItem[], types: FeedContentType[]) => items.filter((i) => types.includes(i.contentType))
@@ -49,6 +50,7 @@ export default function InicioScreen() {
   const { user, updateUser } = useApp()
   const [ordering, setOrdering] = useState(false)
   const order = normalizeHomeOrder(user?.sectionOrder)
+  const catalog = useInterestCatalog()
 
   // El catálogo ya viene ordenado para el usuario (mismo ranking que el feed).
   const blocks = useMemo(
@@ -124,7 +126,7 @@ export default function InicioScreen() {
 
         {ex.active ? (
           <ExploreResults
-            title={resultsTitle(ex.filters)}
+            title={resultsTitle(ex.filters, catalog.rubros)}
             items={ex.results}
             status={ex.status}
             onOpen={ex.actions.openDetail}

@@ -1,3 +1,4 @@
+import { extraPostCategories } from '@/lib/interest-options'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
@@ -39,6 +40,7 @@ export default async function EditarPublicacionPage({ params }: Props) {
 
   const boundUpdate = updatePost.bind(null, id)
 
+  const extraCategories = await extraPostCategories(createSupabaseAdmin())
   return (
     <div className="max-w-4xl">
       <div className="flex items-start justify-between mb-6 gap-4">
@@ -70,7 +72,7 @@ export default async function EditarPublicacionPage({ params }: Props) {
       </div>
 
       <div className="card">
-        <PostForm post={post} orgs={orgs} action={boundUpdate} />
+        <PostForm post={post} orgs={orgs} action={boundUpdate} extraCategories={extraCategories} />
       </div>
     </div>
   )

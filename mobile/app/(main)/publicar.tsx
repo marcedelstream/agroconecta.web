@@ -12,7 +12,8 @@ import { PickChips } from '@/components/v2/PickChips'
 import { Colors } from '@/constants/colors'
 import { V2Layout } from '@/constants/spacing'
 import { Fonts } from '@/constants/typography'
-import { PUBLISH_TEXT as T, RUBROS } from '@/lib/feed-v2/labels'
+import { PUBLISH_TEXT as T } from '@/lib/feed-v2/labels'
+import { useInterestCatalog } from '@/lib/interest-options'
 import { showToast } from '@/lib/feed-v2/toast'
 import { goBack } from '@/lib/navigation'
 import { fetchPublishingOrgs, submitPost, type PostKind, type PublishingOrg } from '@/lib/publish'
@@ -35,7 +36,8 @@ export default function PublicarScreen() {
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
   const [content, setContent] = useState('')
-  const [category, setCategory] = useState<string>(RUBROS[0].value)
+  const { rubros } = useInterestCatalog()
+  const [category, setCategory] = useState<string>(rubros[0].value)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [image, setImage] = useState<Picked | null>(null)
   const [sending, setSending] = useState(false)
@@ -123,7 +125,7 @@ export default function PublicarScreen() {
               <Text family="noto-sans" weight="bold" size={13} color={V.muted} style={styles.label}>{T.type}</Text>
               <PickChips options={T.types} value={type} onChange={(v) => setType(v as PostKind)} />
               <Text family="noto-sans" weight="bold" size={13} color={V.muted} style={styles.label}>{T.rubro}</Text>
-              <PickChips options={RUBROS} value={category} onChange={setCategory} />
+              <PickChips options={rubros} value={category} onChange={setCategory} />
             </View>
 
             <View style={styles.card}>

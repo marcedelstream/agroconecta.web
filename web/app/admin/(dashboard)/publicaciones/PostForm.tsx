@@ -12,6 +12,8 @@ interface Props {
   draft?: Partial<PostRow>
   orgs: Pick<OrganizationRow, 'id' | 'name'>[]
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>
+  /** Rubros nuevos cargados en /admin/intereses que todavía no son categoría fija. */
+  extraCategories?: { value: string; label: string }[]
 }
 
 const inputClass =
@@ -19,7 +21,7 @@ const inputClass =
 
 const labelClass = 'block text-sm font-medium text-foreground mb-1.5'
 
-export function PostForm({ post, draft, orgs, action }: Props) {
+export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Props) {
   const [state, formAction, isPending] = useActionState(action, { error: null })
   const values: Partial<PostRow> | undefined = post ?? draft
   const selectedDepartments = new Set(values?.target_departments ?? [])
@@ -144,6 +146,9 @@ export function PostForm({ post, draft, orgs, action }: Props) {
           >
             {(Object.entries(CATEGORY_LABELS) as [NewsCategory, string][]).map(([val, label]) => (
               <option key={val} value={val}>{label}</option>
+            ))}
+            {extraCategories.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
         </div>

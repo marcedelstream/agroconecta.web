@@ -139,7 +139,8 @@ export default function KaraiScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.v2.ground },
   flex: { flex: 1 },
-  head: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },
+  // Línea fina abajo: separa la barra fija de Karai de lo que scrollea.
+  head: { paddingHorizontal: 20, paddingBottom: 12, gap: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.v2.light.inputBorder },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   corner: { flexDirection: 'row', gap: 8, marginLeft: 'auto' },
   iconBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: Colors.v2.sheet.border, backgroundColor: Colors.v2.surface, alignItems: 'center', justifyContent: 'center' },

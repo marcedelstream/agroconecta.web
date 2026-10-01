@@ -346,7 +346,7 @@ export const KARAI_TEXT = {
   campoMemberCta: 'Ir a Mi campo',
   campoMore: 'Saber más',
   campoLess: 'Cerrar',
-  quota: (left: number) => (left === 1 ? 'Te queda 1 consulta hoy' : `Te quedan ${left} consultas hoy`),
+  quota: (left: number) => `Consultas: ${left}`,
   error: 'No pudimos conectar con Karai. Probá de nuevo en un momento.',
   membersOnlyCta: 'Ver cómo sumarme',
   guestTitle: 'Preguntale a Karai',

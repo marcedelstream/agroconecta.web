@@ -10,6 +10,8 @@ type Status = 'loading' | 'ready' | 'error'
 // Cuando faltan estos items para el final se pide la página siguiente (BACKEND-Y-DATOS.md §3.4).
 export const PREFETCH_THRESHOLD = 3
 
+const END: FeedItem = { kind: 'end', key: 'end' }
+
 export function useFeed() {
   const { session } = useApp()
   const signedIn = !!session
@@ -31,7 +33,8 @@ export function useFeed() {
       const page = await fetchFeedPage(null, seenAtLoad.current)
       cursor.current = page.nextCursor
       hasMore.current = page.nextCursor !== null
-      setItems(signedIn ? page.items : [{ kind: 'welcome', key: 'welcome' }, ...page.items])
+      const first: FeedItem[] = signedIn ? page.items : [{ kind: 'welcome', key: 'welcome' }, ...page.items]
+      setItems(hasMore.current ? first : [...first, END])
       setStatus('ready')
     } catch {
       // En un refresh fallido se conserva lo que ya estaba en pantalla.
@@ -55,7 +58,8 @@ export function useFeed() {
       hasMore.current = page.nextCursor !== null
       setItems((prev) => {
         const seen = new Set(prev.map((i) => i.key))
-        return [...prev, ...page.items.filter((i) => !seen.has(i.key))]
+        const next = [...prev, ...page.items.filter((i) => !seen.has(i.key))]
+        return hasMore.current ? next : [...next, END]
       })
     } catch {
       // Se reintenta solo en el próximo cambio de item.

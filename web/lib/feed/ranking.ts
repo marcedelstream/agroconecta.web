@@ -180,11 +180,12 @@ export function rankFeed(
 /**
  * Manda al final lo que el usuario ya vio en esta sesión, sin cambiar el orden relativo. Lo usa el
  * "tirar para actualizar": la telemetría llega en lotes y el ranking todavía no sabe qué se vio,
- * así que la app manda esas claves y la recarga arranca con contenido nuevo.
+ * así que la app manda esas claves y la recarga trae solo contenido nuevo. Si ya se vio todo, el feed
+ * termina antes y la app muestra "Ya viste todo por hoy".
  */
-export function deprioritizeSeen<T extends { key: string }>(ranked: T[], seenKeys: Set<string>): T[] {
+export function withoutSeen<T extends { key: string }>(ranked: T[], seenKeys: Set<string>): T[] {
   if (seenKeys.size === 0) return ranked
-  return [...ranked.filter((c) => !seenKeys.has(c.key)), ...ranked.filter((c) => seenKeys.has(c.key))]
+  return ranked.filter((c) => !seenKeys.has(c.key))
 }
 
 const DATED_TYPES: FeedContentType[] = ['evento', 'remate']

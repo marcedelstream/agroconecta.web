@@ -56,7 +56,7 @@ function PublishTabButton({ accessibilityState }: BottomTabBarButtonProps) {
 
 // Pantallas que existen como archivo en (tabs)/ pero no pertenecen a la barra v1. Expo Router
 // muestra en la barra todo archivo de la carpeta salvo que tenga href: null.
-const V2_ONLY_ROUTES = ['feed', 'explorar', 'karai', 'guardados'] as const
+const V2_ONLY_ROUTES = ['inicio', 'feed', 'karai', 'guardados'] as const
 // En v2 la barra la dibuja FloatingTabBar (filtra por V2_TAB_ROUTES); estas rutas v1 siguen
 // navegables — Precios desde la tarjeta de mercado/Explorar, Noticias desde Explorar, etc.
 const V1_ONLY_ROUTES = ['home', 'publish', 'ecosystem', 'prices', 'noticias'] as const
@@ -64,7 +64,7 @@ const V1_ONLY_ROUTES = ['home', 'publish', 'ecosystem', 'prices', 'noticias'] as
 function V2TabsLayout() {
   return (
     <Tabs
-      initialRouteName="feed"
+      initialRouteName="inicio"
       tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{ headerShown: false, animation: 'none' }}
     >

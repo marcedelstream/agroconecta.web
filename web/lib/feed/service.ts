@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { loadRankingContext, toContentItem } from './context'
-import { chronologicalEvents, deprioritizeSeen, MARKET_CARD_POSITION, rankFeed, sortByStart, spaceOut } from './ranking'
+import { chronologicalEvents, withoutSeen, MARKET_CARD_POSITION, rankFeed, sortByStart, spaceOut } from './ranking'
 import { filterCandidates, searchRefs, trendingTags, type ExploreFilters, type TrendingTag } from './explore'
 import { interleaveEvery, interleaveInteractive, loadInteractive } from './interactive'
 import { loadSponsored, SPONSORED_EVERY, SPONSORED_FIRST_POSITION } from './sponsored'
@@ -55,7 +55,7 @@ export async function buildFeedPage(
     loadRankingContext(admin, userId, asOf),
     userId ? loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]) : Promise.resolve([] as FeedInteractiveItem[]),
   ])
-  const ranked = deprioritizeSeen(
+  const ranked = withoutSeen(
     spaceOut(chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)), 'libro'),
     sessionSeen,
   )

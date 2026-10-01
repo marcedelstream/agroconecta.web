@@ -17,6 +17,7 @@ import { PollSlide } from '@/components/v2/interactive/PollSlide'
 import { QuizSlide } from '@/components/v2/interactive/QuizSlide'
 import { SponsoredSlide } from '@/components/v2/feed/SponsoredSlide'
 import { WelcomeSlide } from '@/components/v2/feed/WelcomeSlide'
+import { EndSlide } from '@/components/v2/feed/EndSlide'
 import { RefreshingPill } from '@/components/v2/feed/RefreshingPill'
 import { useFeedInsets } from '@/components/v2/feed/layout'
 import { V2Layout } from '@/constants/spacing'
@@ -37,6 +38,8 @@ const NATIVE_REFRESH = Platform.OS === 'android'
 
 interface Props {
   controller: FeedController
+  /** Cambia cada vez que se toca la pestaña Explorar: vuelve al primer item y recarga. */
+  restartSignal?: number
 }
 
 interface ActiveView {
@@ -53,7 +56,7 @@ function closeView(view: ActiveView | null) {
   trackFeedEvent(source, sourceId, dwell < SKIP_FAST_MS ? 'skip_fast' : 'dwell', dwell)
 }
 
-export function FeedPager({ controller }: Props) {
+export function FeedPager({ controller, restartSignal = 0 }: Props) {
   const { items, refreshing, refresh, loadMore, actions } = controller
   // Alto medido del contenedor, no Dimensions: así cada item mide exactamente la pantalla visible
   // (con barra de estado, recortes y barra de navegación de Android incluidos).
@@ -71,6 +74,18 @@ export function FeedPager({ controller }: Props) {
     activeView.current = null
     void refresh()
   }, [refresh])
+
+  const listRef = useRef<FlatList<FeedItem>>(null)
+  const restart = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false })
+    setActiveIndex(0)
+    refreshFromTop()
+  }, [refreshFromTop])
+
+  useEffect(() => {
+    if (restartSignal > 0) restart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo cuando llega una señal nueva
+  }, [restartSignal])
 
   const onScrollEndDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -118,19 +133,22 @@ export function FeedPager({ controller }: Props) {
           return <QuizSlide item={item} height={height} />
         case 'welcome':
           return <WelcomeSlide height={height} />
+        case 'end':
+          return <EndSlide height={height} onRestart={restart} />
         case 'sponsored':
           return <SponsoredSlide item={item} height={height} active={focused && index === activeIndex} />
         default:
           return <FeedContentSlide item={item} height={height} active={focused && index === activeIndex} actions={actions} />
       }
     },
-    [height, activeIndex, focused, actions],
+    [height, activeIndex, focused, actions, restart],
   )
 
   return (
     <View style={styles.root} onLayout={onLayout}>
       {height > 0 && (
         <FlatList
+          ref={listRef}
           data={items}
           keyExtractor={(item) => item.key}
           renderItem={renderItem}

@@ -36,6 +36,6 @@ export const RUBRO_LABEL: Record<string, string> = {
 }
 
 /** Link público de cada publicación: la página que invita a abrirla en la app. */
-export function itemPath(c: { source: string; sourceId: string }): string {
-  return `/p/${c.source}/${encodeURIComponent(c.sourceId)}`
+export function itemPath(c: { source: string; sourceId: string; slug: string | null }): string {
+  return `/p/${c.source}/${encodeURIComponent(c.slug || c.sourceId)}`
 }

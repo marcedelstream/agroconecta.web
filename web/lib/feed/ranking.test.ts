@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   chronologicalEvents,
   DEFAULT_WEIGHTS,
-  deprioritizeSeen,
+  withoutSeen,
   engagementScore,
   eventProximityScore,
   geoMatch,
@@ -27,6 +27,7 @@ function cand(over: Partial<FeedCandidate> & { contentType?: FeedContentType } =
     key: `post:${id}`,
     source: 'post',
     sourceId: id,
+    slug: null,
     contentType: 'noticia',
     organizationId: `org${seq}`,
     organizationName: 'Org',
@@ -147,11 +148,11 @@ describe('rankFeed — reglas de mezcla', () => {
     expect(firstTen.filter((c) => c.tags.includes('horticultura')).length).toBeGreaterThanOrEqual(2)
   })
 
-  it('al actualizar, lo ya visto en la sesión pasa al final sin cambiar el orden del resto', () => {
+  it('al actualizar, lo ya visto en la sesión no se repite y el resto conserva su orden', () => {
     const [a, b, c, d] = Array.from({ length: 4 }, () => cand())
-    const result = deprioritizeSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
-    expect(result).toEqual([b.key, d.key, a.key, c.key])
-    expect(deprioritizeSeen([a, b], new Set())).toEqual([a, b])
+    const result = withoutSeen([a, b, c, d], new Set([a.key, c.key])).map((x) => x.key)
+    expect(result).toEqual([b.key, d.key])
+    expect(withoutSeen([a, b], new Set())).toEqual([a, b])
   })
 
   it('los eventos ocupan sus lugares en orden cronológico, sin mover el resto', () => {

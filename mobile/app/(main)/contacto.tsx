@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useLocalSearchParams } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
@@ -18,9 +19,10 @@ import { SOCIAL_LINKS, WHATSAPP_URL } from '@/lib/social-links'
 export default function ContactoScreen() {
   const insets = useSafeAreaInsets()
   const { user } = useApp()
-  const [reason, setReason] = useState<string>(T.reasons[0])
+  const params = useLocalSearchParams<{ motivo?: string; mensaje?: string }>()
+  const [reason, setReason] = useState<string>(params.motivo === 'publicar' ? T.publishReason : T.reasons[0])
   const [phone, setPhone] = useState(user?.phone ?? '')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(params.mensaje ?? '')
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
 

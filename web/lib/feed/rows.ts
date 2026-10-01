@@ -8,12 +8,13 @@ import type { FeedCandidate, FeedContentType } from './types'
 const EVENTS_FALLBACK_ORG = 'Eventos Agro'
 
 export const POST_COLUMNS =
-  'id,organization_id,title,summary,category,target_departments,content_type,image_url,youtube_url,auction_status,starts_at,published_at,organizations(name,logo_url)'
-export const LISTING_COLUMNS = 'id,kind,title,description,image_url,category_label,publisher_name,location,published_at'
+  'id,slug,organization_id,title,summary,category,target_departments,content_type,image_url,youtube_url,auction_status,starts_at,published_at,organizations(name,logo_url)'
+export const LISTING_COLUMNS = 'id,slug,kind,title,description,image_url,category_label,publisher_name,location,published_at'
 export const EVENT_COLUMNS = 'id,slug,title,description,category,date,time,location,city,department,image_url,organization_id,created_at'
 
 export interface PostRow {
   id: string
+  slug: string
   organization_id: string
   title: string
   summary: string
@@ -30,6 +31,7 @@ export interface PostRow {
 
 export interface ListingRow {
   id: string
+  slug: string | null
   kind: 'empleo' | 'clasificado' | 'curso'
   title: string
   description: string
@@ -81,6 +83,7 @@ export function mapPostRow(r: PostRow, fallbackIso: string): FeedCandidate {
     key: `post:${r.id}`,
     source: 'post',
     sourceId: r.id,
+    slug: r.slug,
     contentType: POST_TYPE[r.content_type],
     organizationId: r.organization_id,
     organizationName: r.organizations?.name ?? '',
@@ -116,6 +119,7 @@ export function mapLibraryRow(r: LibraryRow): FeedCandidate {
     key: `library:${r.id}`,
     source: 'library',
     sourceId: r.id,
+    slug: null,
     contentType: 'libro',
     organizationId: null,
     organizationName: r.author || 'Biblioteca Agroconecta',
@@ -139,6 +143,7 @@ export function mapListingRow(r: ListingRow): FeedCandidate {
     key: `listing:${r.id}`,
     source: 'listing',
     sourceId: r.id,
+    slug: r.slug,
     contentType: LISTING_TYPE[r.kind],
     // Los listings no tienen organización propia: se agrupan por publicador para la regla de mezcla.
     organizationId: null,
@@ -174,6 +179,7 @@ export async function mapEventRows(events: SupabaseClient, rows: EventRow[]): Pr
       key: `event:${r.slug}`,
       source: 'event',
       sourceId: r.slug,
+      slug: r.slug,
       contentType: 'evento',
       // Prefijo para que un id de la base externa nunca coincida con una organización nuestra.
       organizationId: r.organization_id ? `ext:${r.organization_id}` : null,

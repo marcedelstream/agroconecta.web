@@ -12,6 +12,7 @@ function cand(over: Partial<FeedCandidate> = {}): FeedCandidate {
     key: `post:x${seq}`,
     source: 'post',
     sourceId: `x${seq}`,
+    slug: null,
     contentType: 'noticia',
     organizationId: null,
     organizationName: 'Org',

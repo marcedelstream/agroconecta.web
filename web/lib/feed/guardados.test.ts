@@ -8,6 +8,7 @@ function cand(key: string, contentType: FeedContentType, title: string): FeedCan
     key,
     source,
     sourceId,
+    slug: null,
     contentType,
     organizationId: null,
     organizationName: '',

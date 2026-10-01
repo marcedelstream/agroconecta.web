@@ -26,6 +26,7 @@ function slim(c: FeedCandidate): FeedCandidate {
     key: c.key,
     source: c.source,
     sourceId: c.sourceId,
+    slug: c.slug,
     contentType: c.contentType,
     organizationId: null,
     organizationName: c.organizationName,

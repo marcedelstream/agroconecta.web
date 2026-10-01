@@ -37,7 +37,7 @@ export async function setFollowing(item: FeedContentItem, on: boolean): Promise<
 
 // Página web de cada publicación (web/app/p/…): muestra lo principal e invita a abrirla o bajar la app.
 function shareUrl(item: FeedContentItem): string {
-  return `${WEB_BASE_URL}/p/${item.source}/${encodeURIComponent(item.sourceId)}`
+  return `${WEB_BASE_URL}/p/${item.source}/${encodeURIComponent(item.slug || item.sourceId)}`
 }
 
 /** true si el usuario completó el envío (para registrar el evento `share`). */

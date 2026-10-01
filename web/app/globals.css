@@ -161,6 +161,14 @@
     @apply font-bold text-foreground;
   }
 
+  .article-body li::marker {
+    @apply text-lime;
+  }
+
+  .article-body hr {
+    @apply border-bdr my-10;
+  }
+
   .article-body img {
     @apply rounded-2xl my-6;
   }

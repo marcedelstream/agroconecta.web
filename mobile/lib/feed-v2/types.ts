@@ -21,6 +21,8 @@ export interface FeedContentItem {
   key: string
   source: FeedSource
   sourceId: string
+  /** Dirección legible (título) para los links compartidos; null si no hay. Servidores viejos no la mandan. */
+  slug?: string | null
   contentType: FeedContentType
   organizationId: string | null
   organizationName: string
@@ -93,7 +95,13 @@ export interface FeedWelcomeItem {
   key: 'welcome'
 }
 
-export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem | FeedSponsoredItem | FeedWelcomeItem
+/** Última tarjeta: "Ya viste todo por hoy" (la agrega la app cuando el servidor no tiene más páginas). */
+export interface FeedEndItem {
+  kind: 'end'
+  key: 'end'
+}
+
+export type FeedItem = FeedContentItem | FeedMarketItem | FeedPollItem | FeedQuizItem | FeedSponsoredItem | FeedWelcomeItem | FeedEndItem
 
 export interface LiveItem {
   key: string

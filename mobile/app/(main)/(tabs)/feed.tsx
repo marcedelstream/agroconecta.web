@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { useNavigation } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { DetailSheet } from '@/components/v2/detail/DetailSheet'
 import { FeedHeader } from '@/components/v2/feed/FeedHeader'
@@ -12,19 +14,28 @@ import { openLive, useLive } from '@/lib/feed-v2/live'
 import { Colors } from '@/constants/colors'
 import { useFeed } from '@/lib/feed-v2/use-feed'
 
-// Inicio v2: feed vertical a pantalla completa (docs/design_handoff_v2_feed, README §3.1).
+// Explorar v2 (antes Inicio): feed vertical a pantalla completa (docs/design_handoff_v2_feed, README §3.1).
 export default function FeedScreen() {
   const controller = useFeed()
   const { status, items, retry, actions, detailItem, closeDetail } = controller
   const { live, setDismissed } = useLive()
   const { headerTop } = useFeedInsets()
   const liveNow = live.find((l) => !l.dismissed)
+  const navigation = useNavigation()
+  const [restartSignal, setRestartSignal] = useState(0)
+
+  // Tocar la pestaña Explorar (también estando ya en ella) vuelve arriba y trae contenido nuevo.
+  useEffect(() => {
+    // El evento lo emite la barra propia (FloatingTabBar / MaterialNavBar).
+    const unsubscribe = navigation.addListener('tabPress' as never, () => setRestartSignal((n) => n + 1))
+    return unsubscribe
+  }, [navigation])
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       {status === 'ready' && items.length > 0 ? (
-        <FeedPager controller={controller} />
+        <FeedPager controller={controller} restartSignal={restartSignal} />
       ) : (
         <FeedStateView state={status === 'ready' ? 'empty' : status} onRetry={retry} />
       )}

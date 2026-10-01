@@ -156,6 +156,44 @@
     @apply absolute inset-0 w-full h-full;
   }
 
+  /* Sin @tailwindcss/typography, `prose` no trae estilos: el preflight deja párrafos sin margen,
+     h2 del tamaño del texto y listas sin viñetas. Se define a mano lo que genera el admin/importador. */
+  .prose > * + * {
+    @apply mt-5;
+  }
+
+  .prose h2 {
+    @apply font-display font-bold text-foreground text-2xl leading-tight mt-10 mb-1;
+  }
+
+  .prose h3 {
+    @apply font-display font-semibold text-foreground text-xl leading-snug mt-8;
+  }
+
+  .prose ul {
+    @apply list-disc pl-6 space-y-2;
+  }
+
+  .prose ol {
+    @apply list-decimal pl-6 space-y-2;
+  }
+
+  .prose li::marker {
+    @apply text-lime;
+  }
+
+  .prose strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .prose a {
+    @apply text-lime-dark underline underline-offset-2 hover:opacity-80;
+  }
+
+  .prose hr {
+    @apply border-bdr my-10;
+  }
+
   .prose blockquote {
     @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
   }

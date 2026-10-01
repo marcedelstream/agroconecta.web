@@ -17,9 +17,13 @@ function matchesQuery(item: FeedContentItem, query: string): boolean {
   return words.every((w) => haystack.includes(w))
 }
 
+// Productos viven dentro de Servicios (review 2026-09-30): elegir Servicios muestra los dos.
+const sameCategory = (item: FeedContentItem, type: string) =>
+  item.contentType === type || (type === 'servicio' && item.contentType === 'producto')
+
 export function filterExplore(catalog: FeedContentItem[], f: ExploreFilters): FeedContentItem[] {
   const matches = catalog.filter(
-    (i) => (!f.type || i.contentType === f.type) && (!f.rubro || i.tags.includes(f.rubro)) && matchesQuery(i, f.query),
+    (i) => (!f.type || sameCategory(i, f.type)) && (!f.rubro || i.tags.includes(f.rubro)) && matchesQuery(i, f.query),
   )
   // Eventos y remates: del más cercano al más lejano.
   if (f.type === 'evento' || f.type === 'remate') {

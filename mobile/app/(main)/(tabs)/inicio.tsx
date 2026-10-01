@@ -130,6 +130,7 @@ export default function InicioScreen() {
             onOpen={ex.actions.openDetail}
             onClear={ex.reset}
             onRetry={ex.retry}
+            emptyCategory={ex.filters.type && !ex.filters.query.trim() ? CATEGORY_LABEL[ex.filters.type] : null}
           />
         ) : (
           <>

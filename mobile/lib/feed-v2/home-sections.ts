@@ -9,7 +9,7 @@ export const HOME_BLOCKS: { key: HomeBlockKey; label: string; icon: React.Compon
   { key: 'market', label: 'Tu mercado hoy', icon: 'trending-up-outline' },
   { key: 'live', label: 'En vivo', icon: 'radio-outline' },
   { key: 'news', label: 'Noticias para vos', icon: 'newspaper-outline' },
-  { key: 'agenda', label: 'Agenda del sector', icon: 'calendar-outline' },
+  { key: 'agenda', label: 'Eventos Agro', icon: 'calendar-outline' },
   { key: 'learn', label: 'Cursos y oportunidades', icon: 'school-outline' },
   { key: 'library', label: 'Biblioteca', icon: 'library-outline' },
   { key: 'categories', label: 'Categorías', icon: 'grid-outline' },
@@ -22,13 +22,4 @@ const DEFAULT_ORDER = HOME_BLOCKS.map((b) => b.key)
 export function normalizeHomeOrder(order: string[] | undefined): HomeBlockKey[] {
   const valid = (order ?? []).filter((k): k is HomeBlockKey => DEFAULT_ORDER.includes(k as HomeBlockKey))
   return [...new Set(valid), ...DEFAULT_ORDER.filter((k) => !valid.includes(k))]
-}
-
-export function moveBlock(order: HomeBlockKey[], key: HomeBlockKey, delta: -1 | 1): HomeBlockKey[] {
-  const i = order.indexOf(key)
-  const j = i + delta
-  if (i < 0 || j < 0 || j >= order.length) return order
-  const next = [...order]
-  ;[next[i], next[j]] = [next[j], next[i]]
-  return next
 }

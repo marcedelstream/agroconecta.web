@@ -13,7 +13,6 @@ const CATEGORIES: { type: FeedContentType; icon: IconName }[] = [
   { type: 'evento', icon: 'calendar-outline' },
   { type: 'video', icon: 'play-circle-outline' },
   { type: 'curso', icon: 'school-outline' },
-  { type: 'producto', icon: 'pricetag-outline' },
   { type: 'servicio', icon: 'construct-outline' },
   { type: 'empleo', icon: 'briefcase-outline' },
   { type: 'remate', icon: 'hammer-outline' },

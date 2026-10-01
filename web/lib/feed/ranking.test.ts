@@ -27,6 +27,7 @@ function cand(over: Partial<FeedCandidate> & { contentType?: FeedContentType } =
     key: `post:${id}`,
     source: 'post',
     sourceId: id,
+    slug: null,
     contentType: 'noticia',
     organizationId: `org${seq}`,
     organizationName: 'Org',

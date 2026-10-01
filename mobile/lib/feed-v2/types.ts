@@ -21,6 +21,8 @@ export interface FeedContentItem {
   key: string
   source: FeedSource
   sourceId: string
+  /** Dirección legible (título) para los links compartidos; null si no hay. Servidores viejos no la mandan. */
+  slug?: string | null
   contentType: FeedContentType
   organizationId: string | null
   organizationName: string

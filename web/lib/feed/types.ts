@@ -22,6 +22,8 @@ export interface FeedCandidate {
   key: string
   source: FeedSource
   sourceId: string
+  /** Dirección legible armada con el título (posts, avisos, eventos). Los links públicos usan esto, nunca el id. */
+  slug: string | null
   contentType: FeedContentType
   organizationId: string | null
   organizationName: string

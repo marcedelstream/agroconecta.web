@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
@@ -90,6 +90,8 @@ export default async function ArticlePage({ params }: Props) {
   const { slug } = await params
   const post = await loadPost(slug)
   if (!post) notFound()
+  // La nota siempre se ve con la dirección del título: los links viejos con el id redirigen.
+  if (post.slug && slug !== post.slug) permanentRedirect(`/noticias/${post.slug}`)
 
   const related = await loadRelated(post)
   const org = post.organizations

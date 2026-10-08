@@ -1,9 +1,11 @@
 'use client'
 
-import { useActionState, useRef } from 'react'
+import { useRef, useState, useTransition, type FormEvent } from 'react'
 import type { PostRow, OrganizationRow, NewsCategory, ContentType, AuctionStatus, EditorialStatus, Department } from '@/lib/types'
 import { CATEGORY_LABELS, CONTENT_TYPE_LABELS, AUCTION_STATUS_LABELS, STATUS_LABELS, DEPARTMENT_LABELS } from '@/lib/types'
-import type { ActionState } from './actions'
+import { uploadInlineImage, type ActionState } from './actions'
+import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/compress-image'
+import { validatePost } from '@/lib/post-validation'
 import { Help } from '@/components/admin/ui'
 
 interface Props {
@@ -20,7 +22,11 @@ const inputClass =
 const labelClass = 'block text-sm font-medium text-foreground mb-1.5'
 
 export function PostForm({ post, draft, orgs, action }: Props) {
-  const [state, formAction, isPending] = useActionState(action, { error: null })
+  const [errors, setErrors] = useState<string[]>([])
+  const [isPending, startTransition] = useTransition()
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const errorBoxRef = useRef<HTMLDivElement>(null)
+  const inlineImageRef = useRef<HTMLInputElement>(null)
   const values: Partial<PostRow> | undefined = post ?? draft
   const selectedDepartments = new Set(values?.target_departments ?? [])
   const contentRef = useRef<HTMLTextAreaElement>(null)
@@ -73,11 +79,83 @@ export function PostForm({ post, draft, orgs, action }: Props) {
     insertContent(`<div class="content-video"><iframe src="${url}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`)
   }
 
+  function showErrors(list: string[]) {
+    setErrors(list)
+    if (list.length) requestAnimationFrame(() => errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  }
+
+  async function handleInlineImage(file: File | undefined) {
+    if (!file) return
+    setUploadingImage(true)
+    try {
+      const compressed = await compressImage(file)
+      if (compressed.size > MAX_UPLOAD_BYTES) throw new Error('La imagen sigue pesando demasiado después de achicarla. Probá con otra.')
+      const data = new FormData()
+      data.set('file', compressed)
+      const result = await uploadInlineImage(data)
+      if (result.error !== null) throw new Error(result.error)
+      const caption = window.prompt('Epígrafe de la foto (opcional — qué se ve o de quién es)') ?? ''
+      const alt = caption.replace(/"/g, '&quot;')
+      insertContent(`<figure><img src="${result.url}" alt="${alt}" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`)
+    } catch (error) {
+      showErrors([error instanceof Error ? error.message : 'No se pudo subir la imagen.'])
+    } finally {
+      setUploadingImage(false)
+      if (inlineImageRef.current) inlineImageRef.current.value = ''
+    }
+  }
+
+  // Se manda a mano (no con <form action>) para que, si algo falla, el formulario NO se vacíe:
+  // React borra los campos después de cada envío con form action, y se perdía todo lo cargado.
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (isPending || uploadingImage) return
+    const formData = new FormData(event.currentTarget)
+    const imageFile = formData.get('image_file')
+    const hasImageFile = imageFile instanceof File && imageFile.size > 0
+
+    const problems = validatePost({
+      title: String(formData.get('title') ?? ''),
+      summary: String(formData.get('summary') ?? ''),
+      content: String(formData.get('content') ?? ''),
+      contentType: String(formData.get('content_type') ?? 'article'),
+      editorialStatus: String(formData.get('editorial_status') ?? 'draft'),
+      organizationId: String(formData.get('organization_id') ?? ''),
+      youtubeUrl: String(formData.get('youtube_url') ?? ''),
+      imageUrl: String(formData.get('image_url') ?? ''),
+      hasImageFile,
+    })
+    if (problems.length) return showErrors(problems)
+
+    if (hasImageFile) {
+      try {
+        const compressed = await compressImage(imageFile)
+        if (compressed.size > MAX_UPLOAD_BYTES) return showErrors(['La imagen destacada pesa demasiado incluso achicada. Probá con otra.'])
+        formData.set('image_file', compressed)
+      } catch (error) {
+        return showErrors([error instanceof Error ? error.message : 'No se pudo leer la imagen destacada.'])
+      }
+    }
+
+    showErrors([])
+    startTransition(async () => {
+      try {
+        const result = await action({ error: null }, formData)
+        if (result?.error) showErrors([result.error])
+      } catch {
+        showErrors(['No se pudo guardar por un problema de conexión con el servidor. Lo que cargaste sigue acá: probá de nuevo en un momento.'])
+      }
+    })
+  }
+
   return (
-    <form action={formAction} encType="multipart/form-data" className="space-y-6">
-      {state.error && (
-        <div className="rounded-lg bg-danger/10 border border-danger/30 px-4 py-3 text-sm text-danger">
-          {state.error}
+    <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-6">
+      {errors.length > 0 && (
+        <div ref={errorBoxRef} className="rounded-lg bg-danger/10 border border-danger/30 px-4 py-3 text-sm text-danger">
+          <p className="font-medium mb-1">Antes de guardar, revisá:</p>
+          <ul className="list-disc pl-5 space-y-0.5">
+            {errors.map((error) => <li key={error}>{error}</li>)}
+          </ul>
         </div>
       )}
 
@@ -119,6 +197,16 @@ export function PostForm({ post, draft, orgs, action }: Props) {
             <button type="button" onClick={addSubtitle} className="btn text-xs px-3 py-1.5">Subtítulo</button>
             <button type="button" onClick={addQuote} className="btn text-xs px-3 py-1.5">Cita</button>
             <button type="button" onClick={addLink} className="btn text-xs px-3 py-1.5">Link</button>
+            <button type="button" onClick={() => inlineImageRef.current?.click()} disabled={uploadingImage} className="btn text-xs px-3 py-1.5">
+              {uploadingImage ? 'Subiendo…' : 'Imagen'}
+            </button>
+            <input
+              ref={inlineImageRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => handleInlineImage(event.target.files?.[0])}
+            />
             <button type="button" onClick={addVideo} className="btn text-xs px-3 py-1.5">Video</button>
             <button type="button" onClick={() => insertContent('<hr />')} className="btn text-xs px-3 py-1.5">Separador</button>
           </div>
@@ -190,13 +278,13 @@ export function PostForm({ post, draft, orgs, action }: Props) {
         </div>
 
         <div>
-          <label className={labelClass}>Organización<Help text="Quién publica. A quienes siguen esa organización se les muestra más arriba." /></label>
+          <label className={labelClass}>Organización *<Help text="Quién publica. A quienes siguen esa organización se les muestra más arriba." /></label>
           <select
             name="organization_id"
             defaultValue={values?.organization_id ?? ''}
             className={inputClass}
           >
-            <option value="">— Sin organización —</option>
+            <option value="">— Elegí quién publica —</option>
             {orgs.map((org) => (
               <option key={org.id} value={org.id}>{org.name}</option>
             ))}
@@ -211,7 +299,7 @@ export function PostForm({ post, draft, orgs, action }: Props) {
             accept="image/*"
             className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-lime file:px-3 file:py-2 file:text-sm file:font-medium file:text-bg hover:file:bg-lime-dark"
           />
-          <p className="text-xs text-muted mt-1">JPG, PNG o WebP. Máximo 8 MB.</p>
+          <p className="text-xs text-muted mt-1">JPG, PNG o WebP. Si pesa mucho se achica sola al guardar.</p>
         </div>
 
         <div>

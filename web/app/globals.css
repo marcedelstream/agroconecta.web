@@ -173,6 +173,18 @@
     @apply rounded-2xl my-6;
   }
 
+  .article-body figure {
+    @apply my-8;
+  }
+
+  .article-body figure img {
+    @apply w-full h-auto my-0;
+  }
+
+  .article-body figcaption {
+    @apply mt-2 text-sm text-muted text-center leading-snug;
+  }
+
   .article-body blockquote {
     @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
   }

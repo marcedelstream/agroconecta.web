@@ -194,6 +194,22 @@
     @apply border-bdr my-10;
   }
 
+  .prose img {
+    @apply rounded-2xl;
+  }
+
+  .prose figure {
+    @apply my-8;
+  }
+
+  .prose figure img {
+    @apply w-full h-auto;
+  }
+
+  .prose figcaption {
+    @apply mt-2 text-sm text-muted text-center leading-snug;
+  }
+
   .prose blockquote {
     @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
   }

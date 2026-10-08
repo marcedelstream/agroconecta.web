@@ -7,6 +7,7 @@ import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 import { sendPushToAll } from '@/lib/push'
 import { uniquePostSlug } from '@/lib/post-slug'
+import { friendlyDbError, validatePost } from '@/lib/post-validation'
 
 export type ActionState = { error: string | null }
 
@@ -27,40 +28,67 @@ function fileExtension(file: File) {
   return 'jpg'
 }
 
-async function uploadFeaturedImage(formData: FormData, supabase: ReturnType<typeof createSupabaseAdmin>) {
-  const imageFile = formData.get('image_file')
-
-  if (!(imageFile instanceof File) || imageFile.size === 0) {
-    return (formData.get('image_url') as string) || null
-  }
-
-  if (!imageFile.type.startsWith('image/')) {
-    throw new Error('La imagen destacada debe ser un archivo de imagen.')
-  }
-
-  if (imageFile.size > MAX_IMAGE_SIZE) {
-    throw new Error('La imagen destacada no puede superar 8 MB.')
-  }
+async function uploadImage(file: File, folder: 'featured' | 'inline', supabase: ReturnType<typeof createSupabaseAdmin>) {
+  if (!file.type.startsWith('image/')) throw new Error('La imagen debe ser un archivo de imagen (JPG, PNG o WebP).')
+  if (file.size > MAX_IMAGE_SIZE) throw new Error('La imagen no puede superar 8 MB.')
 
   await supabase.storage.createBucket(POST_IMAGES_BUCKET, { public: true }).catch(() => null)
 
   const now = new Date()
   const year = now.getFullYear()
   const month = String(now.getMonth() + 1).padStart(2, '0')
-  const path = `featured/${year}/${month}/${randomUUID()}.${fileExtension(imageFile)}`
-  const buffer = Buffer.from(await imageFile.arrayBuffer())
+  const path = `${folder}/${year}/${month}/${randomUUID()}.${fileExtension(file)}`
+  const buffer = Buffer.from(await file.arrayBuffer())
 
   const { error } = await supabase.storage
     .from(POST_IMAGES_BUCKET)
     .upload(path, buffer, {
-      contentType: imageFile.type,
+      contentType: file.type,
       upsert: false,
     })
 
-  if (error) throw new Error(`No se pudo subir la imagen destacada: ${error.message}`)
+  if (error) throw new Error(`No se pudo subir la imagen: ${error.message}`)
 
   const { data } = supabase.storage.from(POST_IMAGES_BUCKET).getPublicUrl(path)
   return data.publicUrl
+}
+
+async function uploadFeaturedImage(formData: FormData, supabase: ReturnType<typeof createSupabaseAdmin>) {
+  const imageFile = formData.get('image_file')
+  if (!(imageFile instanceof File) || imageFile.size === 0) {
+    return (formData.get('image_url') as string) || null
+  }
+  return uploadImage(imageFile, 'featured', supabase)
+}
+
+export type InlineImageResult = { url: string; error: null } | { url: null; error: string }
+
+/** Sube una foto para ir entre los párrafos del contenido (botón "Imagen" del formulario). */
+export async function uploadInlineImage(formData: FormData): Promise<InlineImageResult> {
+  try {
+    await requireAdmin()
+    const file = formData.get('file')
+    if (!(file instanceof File) || file.size === 0) return { url: null, error: 'No llegó ninguna imagen.' }
+    return { url: await uploadImage(file, 'inline', createSupabaseAdmin()), error: null }
+  } catch (error) {
+    return { url: null, error: error instanceof Error ? error.message : 'No se pudo subir la imagen.' }
+  }
+}
+
+function validationErrors(formData: FormData): string | null {
+  const imageFile = formData.get('image_file')
+  const errors = validatePost({
+    title: String(formData.get('title') ?? ''),
+    summary: String(formData.get('summary') ?? ''),
+    content: String(formData.get('content') ?? ''),
+    contentType: String(formData.get('content_type') ?? 'article'),
+    editorialStatus: String(formData.get('editorial_status') ?? 'draft'),
+    organizationId: String(formData.get('organization_id') ?? ''),
+    youtubeUrl: String(formData.get('youtube_url') ?? ''),
+    imageUrl: String(formData.get('image_url') ?? ''),
+    hasImageFile: imageFile instanceof File && imageFile.size > 0,
+  })
+  return errors.length ? errors.join(' ') : null
 }
 
 async function extractPayload(formData: FormData, supabase: ReturnType<typeof createSupabaseAdmin>) {
@@ -178,6 +206,9 @@ export async function createPost(
     return { error: error instanceof Error ? error.message : 'No tenés permiso.' }
   }
 
+  const invalid = validationErrors(formData)
+  if (invalid) return { error: invalid }
+
   const supabase = createSupabaseAdmin()
   let payload: Awaited<ReturnType<typeof extractPayload>>
 
@@ -189,7 +220,7 @@ export async function createPost(
 
   const slug = await uniquePostSlug(supabase, payload.title)
   const { error } = await supabase.from('posts').insert({ ...payload, slug })
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error.message) }
 
   revalidatePath('/admin/publicaciones')
   revalidatePath('/admin')
@@ -208,6 +239,9 @@ export async function updatePost(
     return { error: error instanceof Error ? error.message : 'No tenés permiso.' }
   }
 
+  const invalid = validationErrors(formData)
+  if (invalid) return { error: invalid }
+
   const supabase = createSupabaseAdmin()
   let payload: Awaited<ReturnType<typeof extractPayload>>
 
@@ -218,7 +252,7 @@ export async function updatePost(
   }
 
   const { error, data: updated } = await supabase.from('posts').update(payload).eq('id', id).select('slug').maybeSingle()
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyDbError(error.message) }
 
   revalidatePath('/admin/publicaciones')
   revalidatePath('/admin')

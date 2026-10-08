@@ -9,6 +9,7 @@ import { DetailHero } from '@/components/v2/detail/DetailHero'
 import { ToastHost } from '@/components/v2/ToastHost'
 import { Colors } from '@/constants/colors'
 import { DETAIL_TEXT } from '@/lib/feed-v2/labels'
+import { isFlyerContent } from '@/lib/flyer'
 import { useFeedDetail } from '@/lib/feed-v2/use-detail'
 import type { FeedContentItem } from '@/lib/feed-v2/types'
 import type { FeedActions } from '@/lib/feed-v2/use-feed'
@@ -87,7 +88,7 @@ export function DetailSheet({ item, actions, onClose }: Props) {
           >
             <GestureDetector gesture={drag}>
               <View>
-                <DetailHero item={item} onClose={close} />
+                <DetailHero item={item} onClose={close} blurred={isFlyerContent(detail?.bodyHtml)} />
               </View>
             </GestureDetector>
             <View style={styles.body}>

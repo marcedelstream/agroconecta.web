@@ -13,14 +13,25 @@ const SHEET_RADIUS = 28
 interface Props {
   item: FeedContentItem
   onClose: () => void
+  /** Solo flyer: el flyer completo va en el cuerpo, acá queda de fondo desenfocado para no repetirlo recortado. */
+  blurred?: boolean
 }
 
 // Imagen de cabecera de la ficha + botón cerrar + la manija que indica que se puede bajar.
-export function DetailHero({ item, onClose }: Props) {
+export function DetailHero({ item, onClose, blurred = false }: Props) {
   return (
     <View style={styles.hero}>
       {item.mediaUrl ? (
-        <Image source={item.mediaUrl} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={`${item.key}-hero`} />
+        <>
+          <Image
+            source={item.mediaUrl}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            blurRadius={blurred ? 30 : 0}
+            recyclingKey={`${item.key}-hero`}
+          />
+          {blurred ? <View style={[StyleSheet.absoluteFill, styles.dim]} /> : null}
+        </>
       ) : (
         <LinearGradient colors={Colors.v2.feed.fallback} style={StyleSheet.absoluteFill} />
       )}
@@ -47,6 +58,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: SHEET_RADIUS,
     backgroundColor: Colors.v2.navy,
   },
+  dim: { backgroundColor: Colors.v2.viewer.heroDim },
   handle: {
     position: 'absolute',
     top: 8,

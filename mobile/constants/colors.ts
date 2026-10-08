@@ -141,6 +141,13 @@ export const Colors = {
       body: '#3E433B',
       handle: 'rgba(255,255,255,0.7)',
     },
+    // Visor de imagen a pantalla completa (flyers con zoom).
+    viewer: {
+      bg: '#000000',
+      closeBg: 'rgba(255,255,255,0.18)',
+      hintBg: 'rgba(0,0,0,0.55)',
+      heroDim: 'rgba(11,22,32,0.35)',
+    },
     toastBg: 'rgba(11,22,32,0.86)',
     // Material You (Android): barra acoplada oscura sobre el feed, clara en el resto.
     android: {

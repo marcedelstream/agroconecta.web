@@ -41,3 +41,12 @@ describe('validatePost', () => {
     expect(friendlyDbError('null value in column "organization_id" violates not-null constraint')).toMatch(/organización/)
   })
 })
+
+describe('validatePost — solo flyer', () => {
+  const flyer = { ...ok, summary: '', content: '', imageUrl: '', flyerOnly: true }
+
+  it('no pide texto ni resumen, solo el flyer', () => {
+    expect(validatePost({ ...flyer, hasImageFile: true })).toEqual([])
+    expect(validatePost(flyer)).toHaveLength(1)
+  })
+})

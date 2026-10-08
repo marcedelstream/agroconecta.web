@@ -8,6 +8,7 @@ import { getAuthContext } from '@/lib/auth-roles'
 import { sendPushToAll } from '@/lib/push'
 import { uniquePostSlug } from '@/lib/post-slug'
 import { friendlyDbError, validatePost } from '@/lib/post-validation'
+import { flyerHtml } from '@/lib/flyer'
 
 export type ActionState = { error: string | null }
 
@@ -87,6 +88,7 @@ function validationErrors(formData: FormData): string | null {
     youtubeUrl: String(formData.get('youtube_url') ?? ''),
     imageUrl: String(formData.get('image_url') ?? ''),
     hasImageFile: imageFile instanceof File && imageFile.size > 0,
+    flyerOnly: formData.get('flyer_only') === 'on',
   })
   return errors.length ? errors.join(' ') : null
 }
@@ -98,17 +100,23 @@ async function extractPayload(formData: FormData, supabase: ReturnType<typeof cr
     .getAll('target_departments')
     .map(String)
     .filter(Boolean)
+  const imageUrl = await uploadFeaturedImage(formData, supabase)
+  const title = formData.get('title') as string
+  // Solo flyer: el contenido se arma con la imagen, así siempre coincide con el flyer subido.
+  const content = formData.get('flyer_only') === 'on' && imageUrl
+    ? flyerHtml(imageUrl, title)
+    : (formData.get('content') as string) || ''
 
   return {
-    title: formData.get('title') as string,
+    title,
     summary: (formData.get('summary') as string) || '',
-    content: (formData.get('content') as string) || '',
+    content,
     category: formData.get('category') as string,
     target_departments: targetDepartments,
     content_type: (formData.get('content_type') as string) || 'article',
     auction_status: (formData.get('auction_status') as string) || null,
     editorial_status: status,
-    image_url: await uploadFeaturedImage(formData, supabase),
+    image_url: imageUrl,
     youtube_url: (formData.get('youtube_url') as string) || null,
     is_important: formData.get('is_important') === 'on',
     is_highlighted: formData.get('is_highlighted') === 'on',

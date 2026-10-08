@@ -185,6 +185,18 @@
     @apply mt-2 text-sm text-muted text-center leading-snug;
   }
 
+  .article-body figure.flyer {
+    @apply mt-0;
+  }
+
+  .article-body figure.flyer a {
+    @apply block no-underline cursor-zoom-in;
+  }
+
+  .article-body figure.flyer img {
+    @apply rounded-2xl border border-bdr;
+  }
+
   .article-body blockquote {
     @apply border-l-4 border-lime bg-secondary/60 rounded-r-xl px-5 py-4 my-6 text-foreground;
   }

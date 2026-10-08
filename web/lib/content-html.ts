@@ -12,7 +12,7 @@ function escapeHtml(value: string): string {
 export function normalizeArticleHtml(raw: string): string {
   const trimmed = raw.trim()
   if (!trimmed) return ''
-  if (HTML_BLOCK_TAGS.test(trimmed)) return splitBrParagraphs(trimmed)
+  if (HTML_BLOCK_TAGS.test(trimmed)) return splitBrParagraphs(wrapLooseText(trimmed))
 
   // Cada renglón es un párrafo: en el admin y en las notas sindicadas se escribe un párrafo por renglón
   // (con o sin renglón vacío entre medio). Antes los renglones sueltos se pegaban con <br /> dentro de
@@ -26,6 +26,34 @@ export function normalizeArticleHtml(raw: string): string {
 }
 
 const EMPTY_TEXT = /^(?:&nbsp;|\s)*$/
+
+// Bloques de primer nivel que ya vienen armados (botones del admin, importador, foto con "Imagen").
+const TOP_LEVEL_BLOCK =
+  /<(p|h[1-6]|div|ul|ol|blockquote|figure|table)\b[^>]*>[\s\S]*?<\/\1>|<iframe\b[^>]*>[\s\S]*?<\/iframe>|<(?:img|hr)\b[^>]*\/?>/gi
+
+/**
+ * Nota mixta: párrafos escritos a mano en el textarea + algún bloque HTML (ej. una foto agregada con
+ * el botón "Imagen"). El texto suelto entre bloques pasa a un <p> por renglón; sin esto el navegador
+ * pegaba todos esos renglones en un único bloque corrido. El HTML inline (<strong>, <a>) queda tal
+ * cual porque viene del panel, no de afuera.
+ */
+function wrapLooseText(html: string): string {
+  const out: string[] = []
+  let last = 0
+  const pushLoose = (text: string) => {
+    for (const line of text.split(/\r?\n+/)) {
+      const value = line.trim()
+      if (!EMPTY_TEXT.test(value)) out.push(`<p>${value}</p>`)
+    }
+  }
+  for (const match of html.matchAll(TOP_LEVEL_BLOCK)) {
+    pushLoose(html.slice(last, match.index))
+    out.push(match[0])
+    last = (match.index ?? 0) + match[0].length
+  }
+  pushLoose(html.slice(last))
+  return out.join('')
+}
 
 /** Un <p> con varios renglones separados por <br> se convierte en un párrafo por renglón. */
 function splitBrParagraphs(html: string): string {

@@ -10,6 +10,8 @@ export interface PostDraftInput {
   youtubeUrl: string
   imageUrl: string
   hasImageFile: boolean
+  /** "Solo flyer": el contenido es la imagen; no lleva texto ni resumen obligatorio. */
+  flyerOnly?: boolean
 }
 
 const YOUTUBE = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i
@@ -37,6 +39,12 @@ export function validatePost(input: PostDraftInput): string[] {
     errors.push('La "URL de imagen alternativa" tiene que empezar con https://')
   }
 
+  const hasImage = input.hasImageFile || Boolean(input.imageUrl.trim())
+  if (input.flyerOnly) {
+    if (!hasImage) errors.push('Subí el flyer en "Imagen destacada": en una publicación solo flyer es lo único que se muestra.')
+    return errors
+  }
+
   if (EMBEDDED_IMAGE.test(input.content)) {
     errors.push('El contenido tiene una imagen pegada directamente. Borrala y agregala con el botón "Imagen".')
   }
@@ -45,7 +53,7 @@ export function validatePost(input: PostDraftInput): string[] {
   if (publishing) {
     if (!input.summary.trim()) errors.push('Para publicar, completá el resumen (la bajada que se ve en el feed).')
     if (!needsVideo && !input.content.trim()) errors.push('Para publicar una nota, completá el contenido.')
-    if (!needsVideo && !input.hasImageFile && !input.imageUrl.trim()) {
+    if (!needsVideo && !hasImage) {
       errors.push('Para publicar una nota, agregá una imagen destacada (en la app se ve a pantalla completa).')
     }
   }

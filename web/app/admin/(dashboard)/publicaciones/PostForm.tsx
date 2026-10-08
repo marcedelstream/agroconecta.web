@@ -6,6 +6,7 @@ import { CATEGORY_LABELS, CONTENT_TYPE_LABELS, AUCTION_STATUS_LABELS, STATUS_LAB
 import { uploadInlineImage, type ActionState } from './actions'
 import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/compress-image'
 import { validatePost } from '@/lib/post-validation'
+import { isFlyerContent } from '@/lib/flyer'
 import { Help } from '@/components/admin/ui'
 
 interface Props {
@@ -31,6 +32,7 @@ export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Pr
   const inlineImageRef = useRef<HTMLInputElement>(null)
   const values: Partial<PostRow> | undefined = post ?? draft
   const selectedDepartments = new Set(values?.target_departments ?? [])
+  const [flyerOnly, setFlyerOnly] = useState(() => isFlyerContent(values?.content))
   const contentRef = useRef<HTMLTextAreaElement>(null)
 
   function insertContent(snippet: string) {
@@ -126,6 +128,7 @@ export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Pr
       youtubeUrl: String(formData.get('youtube_url') ?? ''),
       imageUrl: String(formData.get('image_url') ?? ''),
       hasImageFile,
+      flyerOnly,
     })
     if (problems.length) return showErrors(problems)
 
@@ -177,8 +180,25 @@ export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Pr
         />
       </div>
 
+      <label className="flex items-start gap-3 rounded-lg border border-bdr bg-secondary px-4 py-3 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          name="flyer_only"
+          checked={flyerOnly}
+          onChange={(event) => setFlyerOnly(event.target.checked)}
+          className="mt-0.5 w-4 h-4 rounded accent-lime"
+        />
+        <span className="text-sm">
+          <span className="font-medium text-foreground">Solo flyer</span>
+          <span className="block text-xs text-muted">
+            Para programas, cronogramas o avisos que ya dicen todo en la imagen. No lleva texto: subí el flyer en
+            &quot;Imagen destacada&quot; y en la app y la web se ve completo, con zoom.
+          </span>
+        </span>
+      </label>
+
       <div>
-        <label className={labelClass}>Resumen<Help text="La bajada: una o dos líneas que se ven en el feed debajo del título." /></label>
+        <label className={labelClass}>Resumen{flyerOnly ? ' (opcional)' : ''}<Help text="La bajada: una o dos líneas que se ven en el feed debajo del título." /></label>
         <textarea
           name="summary"
           rows={2}
@@ -188,7 +208,7 @@ export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Pr
         />
       </div>
 
-      <div>
+      <div className={flyerOnly ? 'hidden' : undefined}>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
           <label className="text-sm font-medium text-foreground">
             Contenido
@@ -297,7 +317,7 @@ export function PostForm({ post, draft, orgs, action, extraCategories = [] }: Pr
         </div>
 
         <div>
-          <label className={labelClass}>Imagen destacada<Help text="Horizontal y de buena calidad: en la app se ve a pantalla completa." /></label>
+          <label className={labelClass}>{flyerOnly ? 'Flyer *' : 'Imagen destacada'}<Help text="Horizontal y de buena calidad: en la app se ve a pantalla completa." /></label>
           <input
             name="image_file"
             type="file"

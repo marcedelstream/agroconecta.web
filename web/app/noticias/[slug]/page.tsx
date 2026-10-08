@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
+import { isFlyerContent } from '@/lib/flyer'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
@@ -94,6 +95,8 @@ export default async function ArticlePage({ params }: Props) {
   if (post.slug && slug !== post.slug) permanentRedirect(`/noticias/${post.slug}`)
 
   const related = await loadRelated(post)
+  // Solo flyer: el flyer completo va en el cuerpo; la foto recortada de cabecera lo repetiría.
+  const flyer = isFlyerContent(post.content)
   const org = post.organizations
   const dateStr = post.published_at
     ? new Date(post.published_at).toLocaleDateString('es-PY', {
@@ -175,11 +178,11 @@ export default async function ArticlePage({ params }: Props) {
               </div>
             )}
             {dateStr && <time dateTime={post.published_at ?? post.created_at}>{dateStr}</time>}
-            <span>{readingTime(post.content)} min de lectura</span>
+            {!flyer && <span>{readingTime(post.content)} min de lectura</span>}
           </div>
         </header>
 
-        {post.image_url && (
+        {post.image_url && !flyer && (
           <div className="relative w-full aspect-[16/9] max-w-4xl mx-auto rounded-2xl overflow-hidden mb-8">
             <Image
               src={post.image_url}

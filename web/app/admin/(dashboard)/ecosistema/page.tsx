@@ -8,6 +8,7 @@ import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 import { PageHeader, Notice } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
+import { isEcosystemKind } from '@/lib/ecosystem-kinds'
 
 async function loadListings() {
   const supabase = createSupabaseAdmin()
@@ -22,11 +23,13 @@ async function loadListings() {
 }
 
 interface Props {
-  searchParams: Promise<{ kind?: string } & FeedbackParams>
+  searchParams: Promise<{ kind?: string; nuevo?: string } & FeedbackParams>
 }
 
 export default async function EcosistemaPage({ searchParams }: Props) {
-  const { kind, ...feedback } = await searchParams
+  const { kind, nuevo, ...feedback } = await searchParams
+  // ?nuevo=empleo llega desde "Cargar algo nuevo": abre el alta con el tipo ya elegido.
+  const initialKind = isEcosystemKind(nuevo) ? nuevo : isEcosystemKind(kind) ? kind : undefined
   const { listings, error } = await loadListings()
   const filtered = kind ? listings.filter((l) => l.kind === kind) : listings
 
@@ -59,10 +62,8 @@ export default async function EcosistemaPage({ searchParams }: Props) {
       </div>
 
       <div className="mb-5 flex justify-end">
-        <CreateDrawer label="Nuevo aviso" title="Nuevo aviso" description="Un empleo, clasificado o curso para la app.">
-            <div>
-              <EcosystemListingForm action={createListing} submitLabel="Crear publicación" />
-            </div>
+        <CreateDrawer label="Nuevo aviso" title="Nuevo aviso" description="Un empleo, curso o clasificado para la app." defaultOpen={!!nuevo}>
+          <EcosystemListingForm key={initialKind ?? 'elegir'} action={createListing} initialKind={initialKind} submitLabel="Publicar aviso" />
         </CreateDrawer>
       </div>
 

@@ -11,13 +11,15 @@ interface Props {
   title: string
   /** Una línea opcional debajo del título. */
   description?: string
+  /** Abre el panel apenas carga la pantalla (ej. al llegar desde "Cargar algo nuevo"). */
+  defaultOpen?: boolean
   children: React.ReactNode
 }
 
 // Formulario de alta en un panel que entra desde la derecha (rediseño del admin): la pantalla queda
 // en una sola columna con la lista a lo ancho, y el formulario aparece solo cuando se lo pide.
-export function CreateDrawer({ label, title, description, children }: Props) {
-  const [open, setOpen] = useState(false)
+export function CreateDrawer({ label, title, description, defaultOpen = false, children }: Props) {
+  const [open, setOpen] = useState(defaultOpen)
   const params = useSearchParams()
   const feedback = params.get('ok') ?? params.get('error')
 

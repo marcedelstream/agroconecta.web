@@ -20,8 +20,8 @@ async function loadItems() {
   }
 }
 
-export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<FeedbackParams> }) {
-  const feedback = await searchParams
+export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<FeedbackParams & { nuevo?: string }> }) {
+  const { nuevo, ...feedback } = await searchParams
   const { items, error } = await loadItems()
 
   return (
@@ -36,7 +36,7 @@ export default async function BibliotecaPage({ searchParams }: { searchParams: P
       )}
 
       <div className="mb-5 flex justify-end">
-        <CreateDrawer label="Nuevo título" title="Nuevo título" description="Un libro o guía en PDF para leer desde la app.">
+        <CreateDrawer label="Nuevo título" title="Nuevo título" description="Un libro o guía en PDF para leer desde la app." defaultOpen={!!nuevo}>
             <LibraryForm />
         </CreateDrawer>
       </div>

@@ -75,8 +75,8 @@ export default async function AdminHome() {
         title="Hoy"
         help="Acá ves lo que hay para hacer. Cada tarjeta te lleva directo a la pantalla donde se resuelve."
         actions={
-          <Link href="/admin/publicaciones/nueva" className="btn-primary text-sm gap-2">
-            <Plus size={16} aria-hidden /> Nueva publicación
+          <Link href="/admin/cargar" className="btn-primary text-sm gap-2">
+            <Plus size={16} aria-hidden /> Cargar algo nuevo
           </Link>
         }
       />

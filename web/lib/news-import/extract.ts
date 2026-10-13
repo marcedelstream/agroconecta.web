@@ -195,7 +195,8 @@ export function parseArticle(html: string, url: string): ExtractedArticle {
 
 const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|\[?::1\]?$)/i
 
-export async function fetchArticle(rawUrl: string): Promise<ExtractedArticle> {
+// Lee cualquier página pública (notas, avisos de empleo, cursos…) sin exigir que tenga cuerpo de nota.
+export async function fetchPage(rawUrl: string): Promise<ExtractedArticle> {
   let url: URL
   try {
     url = new URL(rawUrl.trim())
@@ -203,7 +204,7 @@ export async function fetchArticle(rawUrl: string): Promise<ExtractedArticle> {
     throw new Error('El link no es válido. Copiá la dirección completa (con https://).')
   }
   if (!/^https?:$/.test(url.protocol) || PRIVATE_HOST.test(url.hostname)) {
-    throw new Error('Solo se pueden importar notas de sitios públicos (http/https).')
+    throw new Error('Solo se pueden importar páginas de sitios públicos (http/https).')
   }
 
   const res = await fetch(url, {
@@ -219,7 +220,11 @@ export async function fetchArticle(rawUrl: string): Promise<ExtractedArticle> {
   if (!res.ok) throw new Error(`El sitio respondió con error ${res.status}. Probá abrir el link en el navegador.`)
 
   const html = await res.text()
-  const article = parseArticle(html, res.url || url.toString())
+  return parseArticle(html, res.url || url.toString())
+}
+
+export async function fetchArticle(rawUrl: string): Promise<ExtractedArticle> {
+  const article = await fetchPage(rawUrl)
   if (!article.title || article.blocks.length === 0) {
     throw new Error('No se encontró el texto de la nota en esa página. Puede que el sitio la cargue de otra forma; cargala a mano.')
   }

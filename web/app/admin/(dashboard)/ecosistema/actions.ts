@@ -7,6 +7,10 @@ import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
 import type { EcosystemListingKind } from '@/lib/types'
+import { isEcosystemKind } from '@/lib/ecosystem-kinds'
+import { getAIProvider } from '@/lib/karai/ai-provider'
+import { fetchPage } from '@/lib/news-import/extract'
+import { buildListingDraft, type ListingDraft } from '@/lib/news-import/listing-draft'
 
 export type EcosystemListingActionState = { error: string | null }
 
@@ -51,6 +55,9 @@ async function uploadImage(formData: FormData, supabase: ReturnType<typeof creat
 }
 
 async function extractPayload(formData: FormData, supabase: ReturnType<typeof createSupabaseAdmin>) {
+  const kind = formData.get('kind')
+  if (!isEcosystemKind(kind)) throw new Error('Elegí qué tipo de aviso es.')
+
   const title = ((formData.get('title') as string) || '').trim()
   if (!title) throw new Error('El título es obligatorio.')
 
@@ -70,7 +77,7 @@ async function extractPayload(formData: FormData, supabase: ReturnType<typeof cr
   if (!publisherName) throw new Error('El nombre de quien publica es obligatorio.')
 
   return {
-    kind: formData.get('kind') as EcosystemListingKind,
+    kind,
     title,
     location,
     modality,
@@ -144,4 +151,22 @@ export async function toggleActive(formData: FormData) {
 
   await supabase.from('ecosystem_listings').update({ is_active: !isActive }).eq('id', id)
   revalidatePath('/admin/ecosistema')
+}
+
+export type ListingPrefillResult = { ok: true; draft: ListingDraft } | { ok: false; error: string }
+
+// Arma un borrador del aviso a partir de un link encontrado en internet; no guarda nada.
+export async function prefillListingFromUrl(kind: EcosystemListingKind, url: string): Promise<ListingPrefillResult> {
+  const auth = await getAuthContext()
+  if (!auth) return { ok: false, error: 'No tenés permiso para cargar avisos.' }
+  if (!isEcosystemKind(kind)) return { ok: false, error: 'Elegí primero qué tipo de aviso es.' }
+  if (!url.trim()) return { ok: false, error: 'Pegá el link del aviso.' }
+
+  try {
+    const page = await fetchPage(url)
+    if (!page.title) return { ok: false, error: 'No se pudo leer esa página. Cargá el aviso a mano.' }
+    return { ok: true, draft: await buildListingDraft(page, kind, getAIProvider()) }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'No se pudo leer el link.' }
+  }
 }

@@ -12,6 +12,7 @@ import {
   ListChecks,
   Megaphone,
   Newspaper,
+  PlusCircle,
   Radio,
   Sparkles,
   TrendingUp,
@@ -33,7 +34,13 @@ export interface NavGroup {
 
 // Menú del panel ordenado por tareas (rediseño 2026-09), pensado para quien recién empieza.
 export const ADMIN_NAV: NavGroup[] = [
-  { label: null, items: [{ href: '/admin', label: 'Inicio', icon: LayoutDashboard }] },
+  {
+    label: null,
+    items: [
+      { href: '/admin', label: 'Inicio', icon: LayoutDashboard },
+      { href: '/admin/cargar', label: 'Cargar algo nuevo', icon: PlusCircle },
+    ],
+  },
   {
     label: 'Contenido',
     items: [

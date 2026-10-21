@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { AppCta } from '@/components/site/AppCta'
-import { PLAY_STORE_URL } from '@/lib/store-links'
-import { WHATSAPP_URL } from '@/lib/social-links'
+import { storeUrlForUserAgent } from '@/lib/store-links'
 
 export const metadata: Metadata = {
   title: 'Descargá la app',
@@ -19,8 +20,12 @@ const FEATURES = [
   { title: 'Karai, tu asistente', text: 'Preguntale lo que necesites saber del agro, cuando quieras.' },
 ]
 
-// Página de descarga: App Store ya publicada; Google Play aparece cuando PLAY_STORE_URL tenga el link.
-export default function DescargarPage() {
+// Desde el celular, /descargar lleva directo a la tienda que corresponde (Android → Google Play,
+// iPhone → App Store); en la computadora se ve la página con los dos botones.
+export default async function DescargarPage() {
+  const storeUrl = storeUrlForUserAgent((await headers()).get('user-agent') ?? '')
+  if (storeUrl) redirect(storeUrl)
+
   return (
     <>
       <Header />
@@ -29,15 +34,6 @@ export default function DescargarPage() {
           title="Todo el agro paraguayo, en tu celular"
           body="Agroconecta es gratis. Descargala, elegí tus intereses y empezá a ver lo que más te sirve."
         />
-
-        {!PLAY_STORE_URL && (
-          <p className="text-center text-muted">
-            ¿Tenés Android? La app para Google Play sale muy pronto.{' '}
-            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-lime hover:text-lime-dark">
-              Avisame por WhatsApp
-            </a>
-          </p>
-        )}
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (

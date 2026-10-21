@@ -53,7 +53,7 @@ export function SplashScreen() {
       </div>
 
       <p className="text-muted text-sm mt-3 animate-fade-up" style={{ animationDelay: '150ms', opacity: 0 }}>
-        Noticias agropecuarias del Paraguay
+        Ecosistema digital del agro
       </p>
 
       <div className="mt-10 w-40 h-0.5 bg-secondary rounded-full overflow-hidden">

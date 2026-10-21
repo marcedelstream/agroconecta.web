@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/store-links'
 
 interface Props {
@@ -19,18 +18,12 @@ export function AppCta({
         <h2 className="font-display font-extrabold text-3xl md:text-4xl leading-tight mt-3">{title}</h2>
         <p className="text-white/75 text-base md:text-lg mt-3 leading-relaxed">{body}</p>
         <div className="flex flex-wrap gap-3 mt-7">
-          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand text-navy font-bold px-5 py-3 hover:bg-brand-dark transition-colors">
+          <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-brand text-navy font-bold px-5 py-3 hover:bg-brand-dark transition-colors">
+            Descargar en Google Play
+          </a>
+          <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white text-navy font-bold px-5 py-3 hover:bg-white/90 transition-colors">
             Descargar en App Store
           </a>
-          {PLAY_STORE_URL ? (
-            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white text-navy font-bold px-5 py-3 hover:bg-white/90 transition-colors">
-              Descargar en Google Play
-            </a>
-          ) : (
-            <Link href="/descargar" className="inline-flex items-center gap-2 rounded-full border border-white/30 text-white font-semibold px-5 py-3 hover:bg-white/10 transition-colors">
-              Google Play — muy pronto
-            </Link>
-          )}
         </div>
       </div>
     </section>

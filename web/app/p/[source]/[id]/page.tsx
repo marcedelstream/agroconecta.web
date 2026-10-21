@@ -122,13 +122,9 @@ export default async function SharedItemPage({ params }: Props) {
             <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm">
               Descargar en App Store
             </a>
-            {PLAY_STORE_URL ? (
-              <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm">
-                Descargar en Google Play
-              </a>
-            ) : (
-              <Link href="/descargar" className="btn-ghost text-sm">Google Play — muy pronto</Link>
-            )}
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="btn-ghost text-sm">
+              Descargar en Google Play
+            </a>
           </div>
         </section>
       </main>

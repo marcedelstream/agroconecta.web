@@ -4,6 +4,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { ShortsSection } from '@/components/ShortsSection'
 import { AppCta } from '@/components/site/AppCta'
+import { AppHero } from '@/components/site/AppHero'
 import { HeroSearch } from '@/components/site/HeroSearch'
 import { HomeRow } from '@/components/site/HomeRow'
 import { KaraiBlock } from '@/components/site/KaraiBlock'
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 
 const ofType = (items: FeedCandidate[], types: FeedContentType[], n: number) => items.filter((c) => types.includes(c.contentType)).slice(0, n)
 
-// Portada de la web oficial: primero el buscador; debajo, la landing de la app.
+// Portada de la web oficial: primero descargar la app, después el buscador y la landing.
 export default async function HomePage() {
   const { items } = await buildExploreCatalog(createSupabaseAdmin(), null).catch(() => ({ items: [] as FeedCandidate[] }))
 
@@ -32,6 +33,7 @@ export default async function HomePage() {
     <>
       <Header />
       <main>
+        <AppHero />
         <HeroSearch />
 
         <div className="site-container space-y-16 md:space-y-24 py-12 md:py-16">

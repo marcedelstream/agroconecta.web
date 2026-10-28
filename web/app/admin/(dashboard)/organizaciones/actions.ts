@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { contentKey, saveContentTags, tagsFromForm } from '@/lib/content-tags'
 
 export type OrganizationActionState = { error: string | null }
 
@@ -100,8 +101,9 @@ export async function createOrganization(
     await requireAdmin()
     const supabase = createSupabaseAdmin()
     const payload = await extractPayload(formData, supabase)
-    const { error } = await supabase.from('organizations').insert(payload)
+    const { error, data: created } = await supabase.from('organizations').insert(payload).select('id').single()
     if (error) return { error: error.message }
+    await saveContentTags(supabase, contentKey('org', created.id), tagsFromForm(formData))
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'No se pudo crear la organización.' }
   }
@@ -122,6 +124,7 @@ export async function updateOrganization(
     const payload = await extractPayload(formData, supabase)
     const { error } = await supabase.from('organizations').update(payload).eq('id', id)
     if (error) return { error: error.message }
+    await saveContentTags(supabase, contentKey('org', id), tagsFromForm(formData))
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'No se pudo guardar la organización.' }
   }

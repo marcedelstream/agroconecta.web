@@ -8,6 +8,8 @@ import type { EcosystemListingActionState } from './actions'
 import { Help } from '@/components/admin/ui'
 import { KindPicker } from './KindPicker'
 import { LinkPrefill } from './LinkPrefill'
+import { TagPicker } from '@/components/admin/TagPicker'
+import type { TagGroup } from '@/lib/content-tags'
 
 interface Props {
   listing?: EcosystemListingRow
@@ -15,6 +17,8 @@ interface Props {
   initialKind?: EcosystemListingKind
   action: (prev: EcosystemListingActionState, formData: FormData) => Promise<EcosystemListingActionState>
   submitLabel: string
+  tagGroups?: TagGroup[]
+  selectedTags?: string[]
 }
 
 type Fields = Omit<ListingDraft, 'warning'>
@@ -68,7 +72,7 @@ function Chips({ options, value, onPick }: { options: string[]; value: string; o
   )
 }
 
-export function EcosystemListingForm({ listing, initialKind, action, submitLabel }: Props) {
+export function EcosystemListingForm({ listing, initialKind, action, submitLabel, tagGroups = [], selectedTags = [] }: Props) {
   const [state, formAction, isPending] = useActionState(action, { error: null })
   const [kind, setKind] = useState<EcosystemListingKind | null>(listing?.kind ?? initialKind ?? null)
   const [fields, setFields] = useState<Fields>(() => fieldsFrom(listing))
@@ -159,6 +163,8 @@ export function EcosystemListingForm({ listing, initialKind, action, submitLabel
         <p className="text-xs text-muted">Máx. 4 MB. Si subís un archivo, reemplaza al link de abajo.</p>
         <input className={inputClass} placeholder="O pegá el link de una imagen: https://..." {...bind('image_url')} />
       </Step>
+
+      <TagPicker groups={tagGroups} selected={selectedTags} />
 
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <input type="checkbox" name="is_active" defaultChecked={listing?.is_active ?? true} className="w-4 h-4 rounded accent-lime" />

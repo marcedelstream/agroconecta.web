@@ -1,6 +1,9 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import type { EventScheduleItemRow, PostRow } from '@/lib/types'
-import { addScheduleItem, deleteScheduleItem, tagPostToEvent, saveEventMedia } from './actions'
+import { addScheduleItem, deleteScheduleItem, tagPostToEvent, saveEventMedia, saveEventTags } from './actions'
+import { TagPicker } from '@/components/admin/TagPicker'
+import { contentKey, loadContentTags, loadTagGroups } from '@/lib/content-tags'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { PageHeader } from '@/components/admin/ui'
 import { Help } from '@/components/admin/ui'
 
@@ -27,7 +30,8 @@ type PostPick = Pick<PostRow, 'id' | 'title'>
 
 async function loadEventData(slug: string) {
   const supabase = await createSupabaseServer()
-  const [schedule, taggedPosts, recentPosts, media] = await Promise.all([
+  const admin = createSupabaseAdmin()
+  const [schedule, taggedPosts, recentPosts, media, tagGroups, tags] = await Promise.all([
     supabase
       .from('event_schedule_items')
       .select('*')
@@ -50,6 +54,8 @@ async function loadEventData(slug: string) {
       .select('*')
       .eq('event_slug', slug)
       .maybeSingle(),
+    loadTagGroups(admin),
+    loadContentTags(admin, contentKey('event', slug)),
   ])
 
   return {
@@ -57,6 +63,8 @@ async function loadEventData(slug: string) {
     taggedPosts: (taggedPosts.data ?? []) as PostPick[],
     recentPosts: (recentPosts.data ?? []) as PostPick[],
     media: (media.data ?? null) as EventMediaRow | null,
+    tagGroups,
+    tags,
   }
 }
 
@@ -156,6 +164,20 @@ export default async function EventosPage({
               <button type="submit" className="btn-primary text-xs justify-self-start">
                 Guardar imágenes
               </button>
+            </form>
+          </div>
+
+          <div className="card">
+            <h2 className="font-display font-semibold text-base text-foreground mb-1">
+              Etiquetas — <code>{slug}</code>
+            </h2>
+            <p className="text-muted text-xs mb-4">
+              Con qué temas se relaciona el evento. Se le recomienda y se le avisa a quien sigue esas etiquetas.
+            </p>
+            <form action={saveEventTags} className="space-y-4">
+              <input type="hidden" name="event_slug" value={slug} />
+              <TagPicker groups={data.tagGroups} selected={data.tags} />
+              <button type="submit" className="btn-primary text-xs">Guardar etiquetas</button>
             </form>
           </div>
 

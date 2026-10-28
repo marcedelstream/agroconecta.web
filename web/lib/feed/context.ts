@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js'
+import { attachContentTags } from '@/lib/content-tags'
 import { loadEventCandidates, loadLibraryCandidates, loadListingCandidates, loadPostCandidates } from './candidates'
 import { loadEngagement, loadUserFeedState, loadWeights, type UserFeedState } from './signals'
 import type { FeedCandidate, FeedContentItem, FeedEngagement, FeedWeights } from './types'
@@ -33,7 +34,8 @@ export async function loadRankingContext(admin: SupabaseClient, userId: string |
     loadWeights(admin),
     loadEngagement(admin, asOf),
   ])
-  return { candidates: [...posts, ...listings, ...events, ...books], state, weights, engagement }
+  const candidates = await attachContentTags(admin, [...posts, ...listings, ...events, ...books])
+  return { candidates, state, weights, engagement }
 }
 
 /** Solo necesita el estado del usuario y los contadores (Guardados no carga el resto del contexto). */

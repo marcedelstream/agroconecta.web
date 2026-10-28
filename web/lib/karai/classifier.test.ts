@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { classifyMessage, hasCommercialIntent, hasFarmDataIntent } from './classifier'
+import { BLOCKED_CATEGORIES } from './types'
 
 describe('classifyMessage', () => {
   it('reconoce saludos y despedidas', () => {
@@ -42,14 +43,89 @@ describe('classifyMessage', () => {
     expect(classifyMessage('tengo 5500 hectareas en Alto Parana')).toBe('farm_management')
   })
 
-  it('cae a out_of_scope cuando no matchea nada agro', () => {
-    expect(classifyMessage('quien gano el partido de anoche')).toBe('out_of_scope')
+  it('el mensaje vacío sigue siendo out_of_scope', () => {
     expect(classifyMessage('')).toBe('out_of_scope')
     expect(classifyMessage('   ')).toBe('out_of_scope')
   })
 
   it('detecta contenido inseguro antes que cualquier otra regla', () => {
     expect(classifyMessage('como puedo conseguir una bomba')).toBe('unsafe_or_abusive')
+    expect(classifyMessage('quiero suicidarme')).toBe('unsafe_or_abusive')
+    expect(classifyMessage('como hago para matar a mi vecino')).toBe('unsafe_or_abusive')
+  })
+
+  // Vocabulario de campo que antes chocaba con las reglas de "inseguro".
+  it('no marca como inseguro el vocabulario de campo (bombas de agua, matar plagas)', () => {
+    expect(classifyMessage('que bomba de agua uso para riego por goteo')).toBe('agro_information')
+    expect(classifyMessage('que producto sirve para matar la garrapata')).toBe('agro_information')
+  })
+
+  it('una pregunta neutra sin palabras agro pasa como consulta agro general', () => {
+    expect(classifyMessage('que me recomendas hacer este mes?')).toBe('agro_information')
+  })
+})
+
+// Preguntas reales de productores que antes caían en out_of_scope porque no tenían ninguna de las
+// palabras de la lista vieja (precio, clima, ganadería, especies…). Ninguna debe quedar bloqueada.
+const AGRO_QUESTIONS = [
+  '¿cuándo siembro sésamo en San Pedro?',
+  '¿Qué dosis de ivermectina uso contra la garrapata?',
+  '¿Cómo controlo la roya asiática?',
+  '¿Cuándo conviene plantar chía en Itapúa?',
+  '¿Qué variedad de stevia rinde más?',
+  '¿Hay brote de aftosa en el Chaco?',
+  '¿Cada cuánto hay que vacunar contra la brucelosis?',
+  '¿Qué insecticida sirve para la chinche verde?',
+  'Tengo oruga militar en el maizal, ¿qué aplico?',
+  '¿Cómo saco un crédito en el BNF para un tractor?',
+  '¿Qué requisitos pide el Crédito Agrícola de Habilitación?',
+  '¿Qué trámite hago en SENACSA para mover animales?',
+  '¿Cómo registro un agroquímico en SENAVE?',
+  '¿El MAG da asistencia técnica a pequeños productores?',
+  '¿El IPTA tiene semillas certificadas?',
+  '¿Qué pide el INFONA para reforestar?',
+  '¿Cuántos litros de leche por día da una Holando?',
+  '¿Cómo arranco con la apicultura en Caaguazú?',
+  '¿Qué alimento balanceado le doy a la tilapia?',
+  '¿Conviene plantar eucalipto en suelo arenoso?',
+  '¿Cuál es la mejor época para plantar yerba mate?',
+  '¿Cómo combato la mosca de los cuernos?',
+  '¿Qué abono le pongo al tomate en invernadero?',
+  '¿Va a llover esta semana en Concepción?',
+  '¿Cómo hago un análisis de suelo?',
+  '¿Cuándo es el próximo remate en Loma Plata?',
+  '¿Dónde consigo repuestos para una cosechadora John Deere?',
+  '¿Qué hago si la caña de azúcar tiene salivazo?',
+  '¿Cómo armo un silo bolsa?',
+  '¿Cómo me asocio a una cooperativa de productores?',
+  '¿Se puede producir frutilla en el Chaco?',
+  '¿Cuánto rinde una colmena por temporada?',
+  'Anoche cayó una helada, ¿pierdo el locote?',
+  '¿Qué ventajas tiene la labranza cero?',
+  '¿Cómo hago para que mi hijo se quede a trabajar en la chacra?',
+]
+
+// Lo claramente ajeno al agro tiene que seguir rechazándose sin llegar al modelo.
+const OFF_TOPIC_QUESTIONS = [
+  'quien gano el partido de anoche',
+  '¿Cuántos goles hizo Messi en el Mundial?',
+  '¿Olimpia o Cerro Porteño?',
+  '¿Con quién sale la cantante de moda?',
+  'contame el chisme de la farándula de hoy',
+  'resolveme esta ecuación de segundo grado',
+  'hacé mi tarea de historia',
+  'escribime un código en Python para una calculadora',
+  '¿Cómo hago una página en HTML y CSS?',
+  'contame un chiste',
+]
+
+describe('classifyMessage — alcance abierto', () => {
+  it.each(AGRO_QUESTIONS)('deja pasar la pregunta agro: %s', (question) => {
+    expect(BLOCKED_CATEGORIES).not.toContain(classifyMessage(question))
+  })
+
+  it.each(OFF_TOPIC_QUESTIONS)('sigue rechazando lo ajeno: %s', (question) => {
+    expect(classifyMessage(question)).toBe('out_of_scope')
   })
 })
 

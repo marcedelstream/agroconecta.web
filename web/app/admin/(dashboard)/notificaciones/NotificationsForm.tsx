@@ -72,7 +72,6 @@ export function NotificationsForm() {
           <option value="">Todos los dispositivos (sin filtrar)</option>
           <option value="breakingNews">Noticias de último momento</option>
           <option value="priceAlerts">Alertas de precios</option>
-          <option value="weatherAlerts">Alertas climáticas</option>
           <option value="institutionalUpdates">Avisos institucionales</option>
         </select>
       </div>

@@ -7,6 +7,7 @@ import { createOrganization } from './actions'
 import { PageHeader, Notice } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
+import { loadTagGroups } from '@/lib/content-tags'
 
 const STATUS_ORDER: Record<string, number> = { overdue: 0, trial: 1, active: 2, paused: 3 }
 
@@ -42,7 +43,7 @@ interface Props {
 
 export default async function OrganizacionesPage({ searchParams }: Props) {
   const { estado, ...feedback } = await searchParams
-  const allOrgs = await loadOrgs()
+  const [allOrgs, tagGroups] = await Promise.all([loadOrgs(), loadTagGroups(createSupabaseAdmin())])
   const overdueCount = allOrgs.filter((org) => org.commercial_status === 'overdue').length
   const orgs = estado === 'overdue' ? allOrgs.filter((org) => org.commercial_status === 'overdue') : allOrgs
 
@@ -77,7 +78,7 @@ export default async function OrganizacionesPage({ searchParams }: Props) {
               <h2 className="font-display font-semibold text-base text-foreground mb-3">
                 Nueva organización
               </h2>
-              <OrganizationForm action={createOrganization} submitLabel="Crear organización" />
+              <OrganizationForm action={createOrganization} submitLabel="Crear organización" tagGroups={tagGroups} />
             </div>
         </CreateDrawer>
       </div>

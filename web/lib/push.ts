@@ -4,7 +4,8 @@ import { createSupabaseAdmin } from './supabase-admin'
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
 
-export type NotificationCategory = 'breakingNews' | 'priceAlerts' | 'weatherAlerts' | 'institutionalUpdates'
+// weatherAlerts queda por compatibilidad con perfiles viejos; desde 2026-10-28 no se ofrece ni se envía.
+export type NotificationCategory = 'breakingNews' | 'priceAlerts' | 'weatherAlerts' | 'institutionalUpdates' | 'topicAlerts'
 
 export interface PushPayload {
   title: string

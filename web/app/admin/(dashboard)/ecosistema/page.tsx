@@ -9,6 +9,7 @@ import { PageHeader, Notice } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
 import { isEcosystemKind } from '@/lib/ecosystem-kinds'
+import { loadTagGroups } from '@/lib/content-tags'
 
 async function loadListings() {
   const supabase = createSupabaseAdmin()
@@ -30,7 +31,7 @@ export default async function EcosistemaPage({ searchParams }: Props) {
   const { kind, nuevo, ...feedback } = await searchParams
   // ?nuevo=empleo llega desde "Cargar algo nuevo": abre el alta con el tipo ya elegido.
   const initialKind = isEcosystemKind(nuevo) ? nuevo : isEcosystemKind(kind) ? kind : undefined
-  const { listings, error } = await loadListings()
+  const [{ listings, error }, tagGroups] = await Promise.all([loadListings(), loadTagGroups(createSupabaseAdmin())])
   const filtered = kind ? listings.filter((l) => l.kind === kind) : listings
 
   const TABS: { label: string; value: EcosystemListingKind | '' }[] = [
@@ -63,7 +64,7 @@ export default async function EcosistemaPage({ searchParams }: Props) {
 
       <div className="mb-5 flex justify-end">
         <CreateDrawer label="Nuevo aviso" title="Nuevo aviso" description="Un empleo, curso o clasificado para la app." defaultOpen={!!nuevo}>
-          <EcosystemListingForm key={initialKind ?? 'elegir'} action={createListing} initialKind={initialKind} submitLabel="Publicar aviso" />
+          <EcosystemListingForm key={initialKind ?? 'elegir'} action={createListing} initialKind={initialKind} submitLabel="Publicar aviso" tagGroups={tagGroups} />
         </CreateDrawer>
       </div>
 

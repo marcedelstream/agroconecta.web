@@ -1,4 +1,5 @@
 import {
+  Tags,
   BarChart3,
   Bell,
   BookOpen,
@@ -54,6 +55,7 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     label: 'La app',
     items: [
+      { href: '/admin/intereses', label: 'Categorías y etiquetas', icon: Tags },
       { href: '/admin/encuestas', label: 'Encuestas y quiz', icon: ListChecks },
       { href: '/admin/en-vivo', label: 'En vivo', icon: Radio },
       { href: '/admin/notificaciones', label: 'Notificaciones', icon: Bell },

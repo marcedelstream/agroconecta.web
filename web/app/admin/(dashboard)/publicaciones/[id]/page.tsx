@@ -1,3 +1,5 @@
+import { extraPostCategories } from '@/lib/interest-options'
+import { contentKey, loadContentTags, loadTagGroups } from '@/lib/content-tags'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
@@ -39,6 +41,12 @@ export default async function EditarPublicacionPage({ params }: Props) {
 
   const boundUpdate = updatePost.bind(null, id)
 
+  const admin = createSupabaseAdmin()
+  const [extraCategories, tagGroups, selectedTags] = await Promise.all([
+    extraPostCategories(admin),
+    loadTagGroups(admin),
+    loadContentTags(admin, contentKey('post', id)),
+  ])
   return (
     <div className="max-w-4xl">
       <div className="flex items-start justify-between mb-6 gap-4">
@@ -70,7 +78,7 @@ export default async function EditarPublicacionPage({ params }: Props) {
       </div>
 
       <div className="card">
-        <PostForm post={post} orgs={orgs} action={boundUpdate} />
+        <PostForm post={post} orgs={orgs} action={boundUpdate} extraCategories={extraCategories} tagGroups={tagGroups} selectedTags={selectedTags} />
       </div>
     </div>
   )

@@ -1,3 +1,6 @@
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { extraPostCategories } from '@/lib/interest-options'
+import { loadTagGroups } from '@/lib/content-tags'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { PostForm } from '../PostForm'
 import { createPost } from '../actions'
@@ -19,12 +22,14 @@ export default async function NuevaPublicacionPage({ searchParams }: { searchPar
   // ?tipo=video llega desde "Cargar algo nuevo" con el tipo de contenido ya elegido.
   const draft = tipo && tipo in CONTENT_TYPE_LABELS ? { content_type: tipo as ContentType } : undefined
 
+  const admin = createSupabaseAdmin()
+  const [extraCategories, tagGroups] = await Promise.all([extraPostCategories(admin), loadTagGroups(admin)])
   return (
     <div className="max-w-4xl">
       <PageHeader title="Nueva publicación" help="Completá los campos. Podés guardarla como borrador o publicarla directo." />
 
       <div className="card">
-        <PostForm orgs={orgs} draft={draft} action={createPost} />
+        <PostForm orgs={orgs} draft={draft} action={createPost} extraCategories={extraCategories} tagGroups={tagGroups} />
       </div>
     </div>
   )

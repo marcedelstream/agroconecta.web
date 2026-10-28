@@ -53,7 +53,9 @@ export async function proxy(request: NextRequest) {
   // el ícono de /karai/login queda pidiendo sesión y el navegador nunca lo muestra.
   const isPublicIcon = /^\/karai\/(icon|apple-icon|favicon)/.test(effectivePathname)
   const isLoginPage = effectivePathname === '/admin/login' || effectivePathname === '/karai/login'
-  if (isLoginPage || isPublicIcon) return pass()
+  // /karai sin sesión es la vidriera pública; la página misma decide si muestra eso o el chat.
+  const isKaraiLanding = effectivePathname === '/karai'
+  if (isLoginPage || isPublicIcon || isKaraiLanding) return pass()
 
   const response = pass()
 

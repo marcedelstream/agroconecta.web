@@ -9,6 +9,8 @@ import { sendPushToAll } from '@/lib/push'
 import { uniquePostSlug } from '@/lib/post-slug'
 import { friendlyDbError, validatePost } from '@/lib/post-validation'
 import { flyerHtml } from '@/lib/flyer'
+import { contentKey, saveContentTags, tagsFromForm } from '@/lib/content-tags'
+import { notifyContentTopics } from '@/lib/topic-push'
 
 export type ActionState = { error: string | null }
 
@@ -150,6 +152,9 @@ export async function approvePost(formData: FormData) {
       body: post.summary || 'Nueva publicación importante en Agroconecta.',
       data: { articleId: id },
     }, 'breakingNews').catch(() => null)
+  } else {
+    // Las importantes ya van a todos; el resto, a quien sigue sus etiquetas.
+    await notifyContentTopics(supabase, contentKey('post', id))
   }
 
   revalidatePath('/admin/publicaciones')
@@ -227,8 +232,10 @@ export async function createPost(
   }
 
   const slug = await uniquePostSlug(supabase, payload.title)
-  const { error } = await supabase.from('posts').insert({ ...payload, slug })
+  const { error, data: created } = await supabase.from('posts').insert({ ...payload, slug }).select('id').single()
   if (error) return { error: friendlyDbError(error.message) }
+  await saveContentTags(supabase, contentKey('post', created.id), tagsFromForm(formData))
+  if (payload.editorial_status === 'published' && !payload.is_important) await notifyContentTopics(supabase, contentKey('post', created.id))
 
   revalidatePath('/admin/publicaciones')
   revalidatePath('/admin')
@@ -261,6 +268,8 @@ export async function updatePost(
 
   const { error, data: updated } = await supabase.from('posts').update(payload).eq('id', id).select('slug').maybeSingle()
   if (error) return { error: friendlyDbError(error.message) }
+  await saveContentTags(supabase, contentKey('post', id), tagsFromForm(formData))
+  if (payload.editorial_status === 'published' && !payload.is_important) await notifyContentTopics(supabase, contentKey('post', id))
 
   revalidatePath('/admin/publicaciones')
   revalidatePath('/admin')

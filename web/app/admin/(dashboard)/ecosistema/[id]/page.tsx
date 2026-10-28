@@ -5,6 +5,7 @@ import { ECOSYSTEM_KIND_LABELS, type EcosystemListingRow } from '@/lib/types'
 import { EcosystemListingForm } from '../EcosystemListingForm'
 import { updateListing, deleteListing } from '../actions'
 import { ConfirmSubmitButton } from '../../ConfirmSubmitButton'
+import { contentKey, loadContentTags, loadTagGroups } from '@/lib/content-tags'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -26,6 +27,8 @@ export default async function EcosistemaDetailPage({ params }: Props) {
   if (!listing) notFound()
 
   const updateAction = updateListing.bind(null, listing.id)
+  const admin = createSupabaseAdmin()
+  const [tagGroups, selectedTags] = await Promise.all([loadTagGroups(admin), loadContentTags(admin, contentKey('listing', listing.id))])
 
   return (
     <div className="max-w-3xl">
@@ -41,7 +44,7 @@ export default async function EcosistemaDetailPage({ params }: Props) {
       </div>
 
       <div className="space-y-6">
-        <EcosystemListingForm listing={listing} action={updateAction} submitLabel="Guardar cambios" />
+        <EcosystemListingForm listing={listing} action={updateAction} submitLabel="Guardar cambios" tagGroups={tagGroups} selectedTags={selectedTags} />
 
         <div className="card border-danger/30">
           <h2 className="font-display font-semibold text-base text-danger mb-2">Eliminar publicación</h2>

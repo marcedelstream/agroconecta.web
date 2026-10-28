@@ -4,10 +4,12 @@ import { useActionState } from 'react'
 import { LIBRARY_CATEGORY_LABELS, type LibraryCategory } from '@/lib/types'
 import { createLibraryItem, type LibraryActionState } from './actions'
 import { Help } from '@/components/admin/ui'
+import { TagPicker } from '@/components/admin/TagPicker'
+import type { TagGroup } from '@/lib/content-tags'
 
 const initialState: LibraryActionState = { error: null }
 
-export function LibraryForm() {
+export function LibraryForm({ tagGroups = [] }: { tagGroups?: TagGroup[] }) {
   const [state, formAction, isPending] = useActionState(createLibraryItem, initialState)
 
   return (
@@ -73,6 +75,8 @@ export function LibraryForm() {
         />
         <p className="text-xs text-muted mt-1">Máx. 30 MB. Se guarda en un bucket privado.</p>
       </div>
+
+      <TagPicker groups={tagGroups} />
 
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <input type="checkbox" name="is_published" defaultChecked className="w-4 h-4 rounded accent-lime" />

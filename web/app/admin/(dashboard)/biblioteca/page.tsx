@@ -7,6 +7,7 @@ import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 import { PageHeader, Notice } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
+import { loadTagGroups } from '@/lib/content-tags'
 
 async function loadItems() {
   const supabase = createSupabaseAdmin()
@@ -22,7 +23,7 @@ async function loadItems() {
 
 export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<FeedbackParams & { nuevo?: string }> }) {
   const { nuevo, ...feedback } = await searchParams
-  const { items, error } = await loadItems()
+  const [{ items, error }, tagGroups] = await Promise.all([loadItems(), loadTagGroups(createSupabaseAdmin())])
 
   return (
     <div className="max-w-6xl">
@@ -37,7 +38,7 @@ export default async function BibliotecaPage({ searchParams }: { searchParams: P
 
       <div className="mb-5 flex justify-end">
         <CreateDrawer label="Nuevo título" title="Nuevo título" description="Un libro o guía en PDF para leer desde la app." defaultOpen={!!nuevo}>
-            <LibraryForm />
+            <LibraryForm tagGroups={tagGroups} />
         </CreateDrawer>
       </div>
 

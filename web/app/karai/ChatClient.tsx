@@ -263,6 +263,17 @@ export function KaraiChatClient({ email }: { email: string }) {
     [loading, conversationId, loadConversations, loadQuota],
   )
 
+  // Pregunta de ejemplo de la vidriera (?q=…): se manda una sola vez al abrir. El ref evita el doble
+  // envío del modo estricto de React en desarrollo, y el effect de arriba ya limpia la URL.
+  const initialQuestionSent = useRef(false)
+  useEffect(() => {
+    const question = searchParams.get('q')
+    if (!question || searchParams.get('c') || initialQuestionSent.current) return
+    initialQuestionSent.current = true
+    sendMessage(question.slice(0, 500))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleSend(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = input.trim()

@@ -8,7 +8,6 @@ export type SendState = { error: string | null; sent: boolean }
 const VALID_CATEGORIES: NotificationCategory[] = [
   'breakingNews',
   'priceAlerts',
-  'weatherAlerts',
   'institutionalUpdates',
 ]
 

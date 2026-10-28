@@ -2,6 +2,8 @@
 
 import { randomUUID } from 'node:crypto'
 import { redirect } from 'next/navigation'
+import { contentKey, saveContentTags, tagsFromForm } from '@/lib/content-tags'
+import { notifyContentTopics } from '@/lib/topic-push'
 import { revalidatePath } from 'next/cache'
 import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
@@ -98,8 +100,10 @@ export async function createListing(
     await requireAdmin()
     const supabase = createSupabaseAdmin()
     const payload = await extractPayload(formData, supabase)
-    const { error } = await supabase.from('ecosystem_listings').insert(payload)
+    const { error, data: created } = await supabase.from('ecosystem_listings').insert(payload).select('id').single()
     if (error) return { error: error.message }
+    await saveContentTags(supabase, contentKey('listing', created.id), tagsFromForm(formData))
+    if (payload.is_active) await notifyContentTopics(supabase, contentKey('listing', created.id))
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'No se pudo crear la publicación.' }
   }
@@ -119,6 +123,8 @@ export async function updateListing(
     const payload = await extractPayload(formData, supabase)
     const { error } = await supabase.from('ecosystem_listings').update(payload).eq('id', id)
     if (error) return { error: error.message }
+    await saveContentTags(supabase, contentKey('listing', id), tagsFromForm(formData))
+    if (payload.is_active) await notifyContentTopics(supabase, contentKey('listing', id))
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'No se pudo guardar la publicación.' }
   }
@@ -150,6 +156,7 @@ export async function toggleActive(formData: FormData) {
   const isActive = formData.get('is_active') === 'true'
 
   await supabase.from('ecosystem_listings').update({ is_active: !isActive }).eq('id', id)
+  if (!isActive) await notifyContentTopics(supabase, contentKey('listing', id))
   revalidatePath('/admin/ecosistema')
 }
 

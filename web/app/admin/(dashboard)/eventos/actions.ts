@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { contentKey, saveContentTags, tagsFromForm } from '@/lib/content-tags'
+import { notifyContentTopics } from '@/lib/topic-push'
 
 const EVENT_MEDIA_BUCKET = 'event-media'
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024
@@ -106,4 +108,15 @@ export async function tagPostToEvent(formData: FormData) {
   await supabase.from('posts').update({ event_tag: eventSlug }).eq('id', postId)
   revalidatePath('/admin/eventos')
   revalidatePath('/admin/publicaciones')
+}
+
+export async function saveEventTags(formData: FormData) {
+  await requireAdmin()
+  const eventSlug = String(formData.get('event_slug') ?? '').trim()
+  if (!eventSlug) return
+  const db = createSupabaseAdmin()
+  await saveContentTags(db, contentKey('event', eventSlug), tagsFromForm(formData))
+  // La primera vez que un evento próximo queda etiquetado se avisa a quien sigue esos temas (una sola vez).
+  await notifyContentTopics(db, contentKey('event', eventSlug))
+  revalidatePath('/admin/eventos')
 }

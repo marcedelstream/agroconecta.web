@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { attachContentTags } from '@/lib/content-tags'
 import {
   EVENT_COLUMNS,
   LIBRARY_COLUMNS,
@@ -41,11 +42,11 @@ export async function loadCandidatesByKeys(
     libraryIds.length ? db.from('library_items').select(LIBRARY_COLUMNS).in('id', libraryIds).eq('is_published', true) : null,
   ])
 
-  const found: FeedCandidate[] = [
+  const found: FeedCandidate[] = await attachContentTags(db, [
     ...((posts?.data ?? []) as unknown as PostRow[]).map((r) => mapPostRow(r, now)),
     ...((listings?.data ?? []) as ListingRow[]).map(mapListingRow),
     ...((books?.data ?? []) as LibraryRow[]).map(mapLibraryRow),
     ...(events && eventRows?.data ? await mapEventRows(events, eventRows.data as EventRow[]) : []),
-  ]
+  ])
   return new Map(found.map((c) => [c.key, c]))
 }

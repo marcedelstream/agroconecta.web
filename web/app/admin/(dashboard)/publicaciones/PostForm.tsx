@@ -8,6 +8,8 @@ import { compressImage, MAX_UPLOAD_BYTES } from '@/lib/compress-image'
 import { validatePost } from '@/lib/post-validation'
 import { isFlyerContent } from '@/lib/flyer'
 import { Help } from '@/components/admin/ui'
+import { TagPicker } from '@/components/admin/TagPicker'
+import type { TagGroup } from '@/lib/content-tags'
 
 interface Props {
   post?: PostRow
@@ -15,6 +17,10 @@ interface Props {
   draft?: Partial<PostRow>
   orgs: Pick<OrganizationRow, 'id' | 'name'>[]
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>
+  /** Rubros nuevos cargados en /admin/intereses que todavía no son categoría fija. */
+  extraCategories?: { value: string; label: string }[]
+  tagGroups?: TagGroup[]
+  selectedTags?: string[]
 }
 
 const inputClass =
@@ -22,7 +28,7 @@ const inputClass =
 
 const labelClass = 'block text-sm font-medium text-foreground mb-1.5'
 
-export function PostForm({ post, draft, orgs, action }: Props) {
+export function PostForm({ post, draft, orgs, action, extraCategories = [], tagGroups = [], selectedTags = [] }: Props) {
   const [errors, setErrors] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -253,6 +259,9 @@ export function PostForm({ post, draft, orgs, action }: Props) {
             {(Object.entries(CATEGORY_LABELS) as [NewsCategory, string][]).map(([val, label]) => (
               <option key={val} value={val}>{label}</option>
             ))}
+            {extraCategories.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
           </select>
         </div>
 
@@ -344,6 +353,8 @@ export function PostForm({ post, draft, orgs, action }: Props) {
           />
         </div>
       </div>
+
+      <TagPicker groups={tagGroups} selected={selectedTags} />
 
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { authenticateKaraiRequest } from '@/lib/karai/auth'
 import { uniquePostSlug } from '@/lib/post-slug'
+import { loadInterestOptions } from '@/lib/interest-options'
+import { contentKey, saveContentTags } from '@/lib/content-tags'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,10 +13,11 @@ export const dynamic = 'force-dynamic'
 
 const PUBLISHING_STATUSES = ['trial', 'active']
 const TYPES = ['article', 'video'] as const
-const CATEGORIES = ['agricultura', 'ganaderia', 'horticultura', 'tecnologia', 'mercados']
+const BASE_CATEGORIES = ['agricultura', 'ganaderia', 'horticultura', 'tecnologia', 'mercados']
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const IMAGE_TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 const LIMITS = { title: 140, summary: 300, content: 12_000 }
+const MAX_TAGS = 8
 
 interface OrgRow {
   organizations: { id: string; name: string; logo_url: string | null; commercial_status: string } | null
@@ -47,6 +50,7 @@ interface Body {
   youtubeUrl?: string
   imageBase64?: string
   imageType?: string
+  tags?: string[]
 }
 
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
@@ -66,7 +70,12 @@ export async function POST(request: Request) {
   const title = text(body.title, LIMITS.title)
   const summary = text(body.summary, LIMITS.summary)
   const content = text(body.content, LIMITS.content)
-  const category = CATEGORIES.includes(body.category ?? '') ? body.category! : 'agricultura'
+  const options = await loadInterestOptions(auth.admin, true)
+  const rubros = options.filter((o) => o.kind === 'rubro').map((o) => o.value)
+  const validTags = new Set(options.filter((o) => o.kind === 'produccion').map((o) => o.value))
+  const tags = Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === 'string' && validTags.has(t)).slice(0, MAX_TAGS) : []
+  const categories = new Set([...BASE_CATEGORIES, ...rubros])
+  const category = categories.has(body.category ?? '') ? body.category! : 'agricultura'
   const youtubeUrl = text(body.youtubeUrl, 300)
   if (title.length < 5 || summary.length < 10) return NextResponse.json({ error: 'Completá el título y la bajada.' }, { status: 400 })
   if (type === 'video' && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(youtubeUrl)) {
@@ -84,7 +93,7 @@ export async function POST(request: Request) {
     imageUrl = auth.admin.storage.from('post-images').getPublicUrl(path).data.publicUrl
   }
 
-  const { error } = await auth.admin.from('posts').insert({
+  const { error, data: created } = await auth.admin.from('posts').insert({
     organization_id: org.id,
     author_id: auth.profileId,
     title,
@@ -96,10 +105,11 @@ export async function POST(request: Request) {
     editorial_status: 'pending_review',
     image_url: imageUrl,
     youtube_url: type === 'video' ? youtubeUrl : null,
-  })
+  }).select('id').single()
   if (error) {
     console.error('POST /api/publish falló:', error.message)
     return NextResponse.json({ error: 'No pudimos enviar la publicación.' }, { status: 500 })
   }
+  await saveContentTags(auth.admin, contentKey('post', created.id), tags)
   return NextResponse.json({ ok: true })
 }

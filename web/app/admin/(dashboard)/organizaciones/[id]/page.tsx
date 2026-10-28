@@ -6,9 +6,14 @@ import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, type OrganizationRow, ty
 import { OrganizationForm } from '../OrganizationForm'
 import { updateOrganization } from '../actions'
 import { DeleteOrgButton } from './DeleteOrgButton'
+import { AllyContentCard } from './AllyContentCard'
+import { Notice } from '@/components/admin/ui'
+import type { FeedbackParams } from '@/lib/admin-feedback'
+import { contentKey, loadContentTags, loadTagGroups } from '@/lib/content-tags'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams: Promise<FeedbackParams>
 }
 
 async function loadOrg(id: string) {
@@ -48,9 +53,15 @@ const COMMERCIAL_STATUS_LABELS: Record<string, string> = {
   paused: 'Pausada',
 }
 
-export default async function OrgDetailPage({ params }: Props) {
+export default async function OrgDetailPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { org, posts } = await loadOrg(id)
+  const feedback = await searchParams
+  const admin = createSupabaseAdmin()
+  const [{ org, posts }, tagGroups, selectedTags] = await Promise.all([
+    loadOrg(id),
+    loadTagGroups(admin),
+    loadContentTags(admin, contentKey('org', id)),
+  ])
   if (!org) notFound()
 
   const updateAction = updateOrganization.bind(null, org.id)
@@ -62,6 +73,7 @@ export default async function OrgDetailPage({ params }: Props) {
           ← Organizaciones
         </Link>
       </div>
+      <Notice {...feedback} />
 
       <div className="flex items-start gap-4 mb-8">
         {org.logo_url ? (
@@ -94,10 +106,12 @@ export default async function OrgDetailPage({ params }: Props) {
           <h2 className="font-display font-semibold text-base text-foreground mb-3">
             Editar organización
           </h2>
-          <OrganizationForm organization={org} action={updateAction} submitLabel="Guardar cambios" />
+          <OrganizationForm organization={org} action={updateAction} submitLabel="Guardar cambios" tagGroups={tagGroups} selectedTags={selectedTags} />
         </div>
 
         <div className="space-y-6">
+          <AllyContentCard orgId={org.id} />
+
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display font-semibold text-base text-foreground flex items-center gap-2">

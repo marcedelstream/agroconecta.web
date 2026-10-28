@@ -12,11 +12,16 @@ import {
 } from '@/lib/types'
 import type { OrganizationActionState } from './actions'
 import { Help } from '@/components/admin/ui'
+import { TagPicker } from '@/components/admin/TagPicker'
+import type { TagGroup } from '@/lib/content-tags'
 
 interface Props {
   organization?: OrganizationRow
   action: (prev: OrganizationActionState, formData: FormData) => Promise<OrganizationActionState>
   submitLabel: string
+  /** Temas del aliado: su ficha aparece y se recomienda a quien sigue esas etiquetas. */
+  tagGroups?: TagGroup[]
+  selectedTags?: string[]
 }
 
 const inputClass =
@@ -48,7 +53,7 @@ const ALLY_CATEGORIES: { value: AllyCategory; label: string }[] = (
   Object.entries(ALLY_CATEGORY_LABELS) as [AllyCategory, string][]
 ).map(([value, label]) => ({ value, label }))
 
-export function OrganizationForm({ organization, action, submitLabel }: Props) {
+export function OrganizationForm({ organization, action, submitLabel, tagGroups = [], selectedTags = [] }: Props) {
   const [state, formAction, isPending] = useActionState(action, { error: null })
 
   return (
@@ -229,6 +234,8 @@ export function OrganizationForm({ organization, action, submitLabel }: Props) {
         />
         <span className="text-sm text-foreground">Cuenta verificada</span>
       </label>
+
+      <TagPicker groups={tagGroups} selected={selectedTags} />
 
       <button type="submit" disabled={isPending} className="btn-primary text-sm">
         {isPending ? 'Guardando...' : submitLabel}

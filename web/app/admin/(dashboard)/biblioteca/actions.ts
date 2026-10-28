@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { backWithOk } from '@/lib/admin-feedback'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
+import { contentKey, saveContentTags, tagsFromForm } from '@/lib/content-tags'
 
 export type LibraryActionState = { error: string | null }
 
@@ -86,7 +87,7 @@ export async function createLibraryItem(
 
   const pageCount = String(formData.get('page_count') ?? '').trim()
 
-  const { error } = await supabase.from('library_items').insert({
+  const { error, data: created } = await supabase.from('library_items').insert({
     title,
     author: (String(formData.get('author') ?? '').trim() || null),
     description,
@@ -96,9 +97,10 @@ export async function createLibraryItem(
     file_type: file.type,
     page_count: pageCount ? Number(pageCount) : null,
     is_published: formData.get('is_published') === 'on',
-  })
+  }).select('id').single()
 
   if (error) return { error: error.message }
+  await saveContentTags(supabase, contentKey('library', created.id), tagsFromForm(formData))
 
   revalidatePath('/admin/biblioteca')
   backWithOk('/admin/biblioteca', 'Título agregado a la biblioteca.')

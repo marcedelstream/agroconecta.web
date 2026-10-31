@@ -54,6 +54,8 @@ export type SeenState = 'seen' | 'skipped'
 
 export interface FeedUserSignals {
   department: string | null
+  /** Todos los que eligió, para quien tiene campos o clientes en varias zonas. */
+  departments?: string[]
   profession: string | null
   interests: string[]
   followedOrgIds: Set<string>

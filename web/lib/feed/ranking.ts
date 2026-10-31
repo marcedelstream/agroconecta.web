@@ -81,7 +81,8 @@ export function interestMatch(c: FeedCandidate, u: FeedUserSignals): number {
 
 export function geoMatch(c: FeedCandidate, u: FeedUserSignals): number {
   if (c.targetDepartments.length === 0) return 0.5
-  return u.department && c.targetDepartments.includes(u.department) ? 1 : 0
+  const mine = [u.department, ...(u.departments ?? [])]
+  return c.targetDepartments.some((d) => mine.includes(d)) ? 1 : 0
 }
 
 export function professionAffinity(c: FeedCandidate, u: FeedUserSignals): number {

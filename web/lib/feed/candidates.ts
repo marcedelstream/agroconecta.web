@@ -18,7 +18,7 @@ import type { FeedCandidate } from './types'
 // Carga los candidatos del feed desde sus tres fuentes (por ventana de fechas). Cada fuente es
 // best-effort: si una falla (tabla sin migrar, base de eventos caída) el feed sale con las otras.
 
-const POSTS_WINDOW_DAYS = 60
+const POSTS_WINDOW_DAYS = 365
 const POSTS_LIMIT = 200
 const LISTINGS_LIMIT = 100
 const EVENTS_LIMIT = 60

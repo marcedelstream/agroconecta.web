@@ -46,7 +46,7 @@ export async function loadUserFeedState(db: SupabaseClient, userId: string | nul
   const [profile, interests, facets, subs, events, likes, saves] = await Promise.all([
     db.from('profiles').select('department,profession').eq('id', userId).maybeSingle(),
     db.from('user_interests').select('category').eq('user_id', userId),
-    db.from('user_profile_facets').select('value').eq('user_id', userId).in('facet', ['rubro', 'produccion']),
+    db.from('user_profile_facets').select('facet,value').eq('user_id', userId).in('facet', ['rubro', 'produccion', 'departamento']),
     db.from('user_subscriptions').select('organization_id').eq('user_id', userId),
     db
       .from('feed_events')
@@ -66,9 +66,10 @@ export async function loadUserFeedState(db: SupabaseClient, userId: string | nul
     else if (!seen.has(key)) seen.set(key, 'seen')
   }
 
+  const facetRows = (facets.data ?? []) as { facet: string; value: string }[]
   const interestList = [
     ...((interests.data ?? []) as { category: string }[]).map((r) => r.category),
-    ...((facets.data ?? []) as { value: string }[]).map((r) => r.value),
+    ...facetRows.filter((r) => r.facet !== 'departamento').map((r) => r.value),
   ]
 
   const p = profile.data as { department: string | null; profession: string | null } | null
@@ -76,6 +77,7 @@ export async function loadUserFeedState(db: SupabaseClient, userId: string | nul
   return {
     signals: {
       department: p?.department ?? null,
+      departments: facetRows.filter((r) => r.facet === 'departamento').map((r) => r.value),
       profession: p?.profession ?? null,
       interests: [...new Set(interestList)],
       followedOrgIds: new Set(((subs.data ?? []) as { organization_id: string }[]).map((r) => r.organization_id)),

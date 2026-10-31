@@ -24,18 +24,40 @@ export interface RankingContext {
   engagement: Map<string, FeedEngagement>
 }
 
-export async function loadRankingContext(admin: SupabaseClient, userId: string | null, asOf: Date): Promise<RankingContext> {
-  const [posts, listings, events, books, state, weights, engagement] = await Promise.all([
+// Todo lo que es igual para todos se guarda un minuto en memoria: sin esto cada apertura del Inicio o del feed
+// repetía unas diez consultas, y además dos bases distintas (segundos de espera en el teléfono).
+const SHARED_TTL_MS = 60_000
+type SharedData = Pick<RankingContext, 'candidates' | 'weights' | 'engagement'>
+let shared: { at: number; data: Promise<SharedData> } | null = null
+
+async function loadShared(admin: SupabaseClient, asOf: Date): Promise<SharedData> {
+  const [posts, listings, events, books, weights, engagement] = await Promise.all([
     loadPostCandidates(admin, asOf),
     loadListingCandidates(admin, asOf),
     loadEventCandidates(createEventsClient(), asOf),
     loadLibraryCandidates(admin),
-    loadUserFeedState(admin, userId, asOf),
     loadWeights(admin),
     loadEngagement(admin, asOf),
   ])
   const candidates = await attachContentTags(admin, [...posts, ...listings, ...events, ...books])
-  return { candidates, state, weights, engagement }
+  return { candidates, weights, engagement }
+}
+
+function sharedData(admin: SupabaseClient, asOf: Date): Promise<SharedData> {
+  if (shared && Date.now() - shared.at < SHARED_TTL_MS) return shared.data
+  const data = loadShared(admin, asOf)
+  const entry = { at: Date.now(), data }
+  shared = entry
+  // Un error no queda guardado: la próxima visita reintenta.
+  data.catch(() => {
+    if (shared === entry) shared = null
+  })
+  return data
+}
+
+export async function loadRankingContext(admin: SupabaseClient, userId: string | null, asOf: Date): Promise<RankingContext> {
+  const [data, state] = await Promise.all([sharedData(admin, asOf), loadUserFeedState(admin, userId, asOf)])
+  return { ...data, state }
 }
 
 /** Solo necesita el estado del usuario y los contadores (Guardados no carga el resto del contexto). */

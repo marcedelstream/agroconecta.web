@@ -55,10 +55,11 @@ export async function buildFeedPage(
     loadRankingContext(admin, userId, asOf),
     userId ? loadInteractive(admin, userId, asOf).catch(() => [] as FeedInteractiveItem[]) : Promise.resolve([] as FeedInteractiveItem[]),
   ])
-  const ranked = withoutSeen(
-    spaceOut(chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)), 'libro'),
-    sessionSeen,
-  )
+  const ordered = spaceOut(chronologicalEvents(rankFeed(ctx.candidates, ctx.state.signals, ctx.engagement, ctx.weights, asOf)), 'libro')
+  // Lo ya visto va al final en vez de desaparecer: con pocos intereses o poco contenido nuevo, el feed nunca
+  // queda vacío.
+  const fresh = withoutSeen(ordered, sessionSeen)
+  const ranked = [...fresh, ...ordered.filter((c) => sessionSeen.has(c.key))]
   const sponsored = await loadSponsored(admin, userId, ctx.state.signals, asOf).catch(() => [] as FeedSponsoredItem[])
   const merged = interleaveEvery<FeedCandidate | FeedInteractiveItem, FeedSponsoredItem>(
     interleaveInteractive<FeedCandidate, FeedInteractiveItem>(ranked, interactive),

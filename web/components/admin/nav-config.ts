@@ -1,4 +1,5 @@
 import {
+  Image as ImageIcon,
   Tags,
   BarChart3,
   Bell,
@@ -66,6 +67,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { href: '/admin/organizaciones', label: 'Organizaciones', icon: Building2 },
       { href: '/admin/banners', label: 'Publicidad', icon: Megaphone, also: ['/admin/publicidad'] },
+      { href: '/admin/portadas', label: 'Portadas del perfil', icon: ImageIcon },
       { href: '/admin/premios', label: 'Premios y canjes', icon: Gift },
     ],
   },

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Plus, X } from 'lucide-react'
+import { Pencil, Plus, X } from 'lucide-react'
 
 interface Props {
   /** Texto del botón que lo abre, ej. "Nueva fuente". */
@@ -13,12 +13,14 @@ interface Props {
   description?: string
   /** Abre el panel apenas carga la pantalla (ej. al llegar desde "Cargar algo nuevo"). */
   defaultOpen?: boolean
+  /** 'edit': botón chico con lápiz, para editar una fila de la lista con el mismo panel. */
+  variant?: 'create' | 'edit'
   children: React.ReactNode
 }
 
 // Formulario de alta en un panel que entra desde la derecha (rediseño del admin): la pantalla queda
 // en una sola columna con la lista a lo ancho, y el formulario aparece solo cuando se lo pide.
-export function CreateDrawer({ label, title, description, defaultOpen = false, children }: Props) {
+export function CreateDrawer({ label, title, description, defaultOpen = false, variant = 'create', children }: Props) {
   const [open, setOpen] = useState(defaultOpen)
   const params = useSearchParams()
   const feedback = params.get('ok') ?? params.get('error')
@@ -37,8 +39,8 @@ export function CreateDrawer({ label, title, description, defaultOpen = false, c
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="btn-primary text-sm gap-2">
-        <Plus size={16} aria-hidden /> {label}
+      <button type="button" onClick={() => setOpen(true)} className={variant === 'edit' ? 'btn-ghost text-xs gap-1' : 'btn-primary text-sm gap-2'}>
+        {variant === 'edit' ? <Pencil size={14} aria-hidden /> : <Plus size={16} aria-hidden />} {label}
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={title}>

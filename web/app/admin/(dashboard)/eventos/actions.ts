@@ -51,17 +51,18 @@ export async function saveEventMedia(formData: FormData) {
   const eventSlug = String(formData.get('event_slug') ?? '').trim()
   if (!eventSlug) return
 
-  // Foto de perfil (profile_image_url) fuera de uso por ahora — se omite del payload a
-  // propósito para no pisar un valor ya cargado antes; la columna sigue existiendo por si
-  // se retoma más adelante.
+  // profile_image_url volvió a usarse (2026-11-04) como logo del evento: el círculo del evento destacado de la app.
   const bannerUrl = await uploadEventImage(formData.get('banner_image_file'), supabase, 'banner')
   const existingBannerUrl = String(formData.get('existing_banner_url') ?? '').trim() || null
+  const logoUrl = await uploadEventImage(formData.get('profile_image_file'), supabase, 'profile')
+  const existingLogoUrl = String(formData.get('existing_profile_url') ?? '').trim() || null
   const isActive = formData.get('is_active') === 'on'
 
   await supabase.from('event_media').upsert(
     {
       event_slug: eventSlug,
       banner_image_url: bannerUrl ?? existingBannerUrl,
+      profile_image_url: logoUrl ?? existingLogoUrl,
       is_active: isActive,
       updated_at: new Date().toISOString(),
     },

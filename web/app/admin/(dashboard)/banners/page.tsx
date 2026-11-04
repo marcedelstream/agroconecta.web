@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { CATEGORY_LABELS, DEPARTMENT_LABELS, LINK_TYPE_LABELS, PLACEMENT_LABELS, type AdCampaignRow, type AdPlacement } from '@/lib/types'
-import { deleteBanner, toggleBanner } from './actions'
+import { deleteBanner, setBannerOrder, toggleBanner } from './actions'
 import { BannerForm } from './BannerForm'
 import { ConfirmSubmitButton } from '../ConfirmSubmitButton'
 import { PageHeader, SectionTabs, Notice } from '@/components/admin/ui'
@@ -14,10 +14,12 @@ async function loadBanners() {
   const supabase = createSupabaseAdmin()
   const { data, error } = await supabase
     .from('ad_campaigns')
-    .select('id,title,image_url,placement,target_professions,target_departments,target_categories,starts_at,ends_at,is_active,link_type,link_target')
+    // '*' y orden acá (no en la consulta): sort_order existe recién después de fix-v2-ad-carousel.sql.
+    .select('*')
     .order('created_at', { ascending: false })
+  const banners = ((data ?? []) as AdCampaignRow[]).sort((a, b) => (a.sort_order ?? 100) - (b.sort_order ?? 100))
   return {
-    banners: (data ?? []) as AdCampaignRow[],
+    banners,
     error: error?.message ?? null,
   }
 }
@@ -91,6 +93,14 @@ export default async function BannersPage({ searchParams }: { searchParams: Prom
                   </td>
                   <td className="text-xs text-muted">
                     {(banner.placement?.length ? banner.placement : (['home'] as AdPlacement[])).map((p) => PLACEMENT_LABELS[p]).join(', ')}
+                    {banner.placement?.includes('inicio_carrusel') && (
+                      <form action={setBannerOrder} className="mt-2 flex items-center gap-1">
+                        <input type="hidden" name="id" value={banner.id} />
+                        <span>Orden</span>
+                        <input name="sort_order" type="number" min={1} step={1} defaultValue={banner.sort_order ?? 100} className="input w-16 py-1 text-xs" />
+                        <button type="submit" className="btn text-xs">Guardar</button>
+                      </form>
+                    )}
                   </td>
                   <td className="text-xs text-muted">
                     {banner.link_type

@@ -74,3 +74,57 @@ export async function toggleInteractive(formData: FormData) {
   revalidatePath(PATH)
   backWithOk(PATH, formData.get('is_active') === 'true' ? 'Pausado: ya no aparece en la app.' : 'Activado: aparece en el feed.')
 }
+
+/**
+ * Editar una encuesta (pedido 2026-11-04). Las opciones se actualizan por posición, así los votos ya hechos
+ * siguen contando para la misma opción. Sacar una opción que ya tiene votos no se permite (se borrarían).
+ */
+export async function updatePoll(formData: FormData) {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const question = String(formData.get('question') ?? '').trim()
+  const options = lines(formData.get('options'))
+  if (!id || !question || options.length < MIN_OPTIONS || options.length > MAX_OPTIONS) {
+    backWithError(PATH, `La encuesta necesita una pregunta y entre ${MIN_OPTIONS} y ${MAX_OPTIONS} opciones (una por línea).`)
+  }
+  const db = createSupabaseAdmin()
+  const { data: current } = await db.from('poll_options').select('id,position').eq('poll_id', id).order('position')
+  const existing = current ?? []
+  const removed = existing.slice(options.length).map((o) => o.id)
+  if (removed.length > 0) {
+    const { count } = await db.from('poll_votes').select('option_id', { count: 'exact', head: true }).in('option_id', removed)
+    if ((count ?? 0) > 0) backWithError(PATH, 'No se puede sacar una opción que ya tiene votos. Cambiale el texto en vez de borrarla.')
+    await db.from('poll_options').delete().in('id', removed)
+  }
+  await db.from('polls').update({ question }).eq('id', id)
+  for (const [i, label] of options.entries()) {
+    const row = existing[i]
+    if (row) await db.from('poll_options').update({ label }).eq('id', row.id)
+    else await db.from('poll_options').insert({ poll_id: id, label, position: i + 1 })
+  }
+  revalidatePath(PATH)
+  backWithOk(PATH, 'Encuesta actualizada.')
+}
+
+/** Editar un quiz: título, preguntas, opciones y cuál es la correcta (no cambia los puntos ya ganados). */
+export async function updateQuiz(formData: FormData) {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const title = String(formData.get('title') ?? '').trim()
+  if (!id || !title) backWithError(PATH, 'El quiz necesita un título.')
+  const db = createSupabaseAdmin()
+  const { data: rows } = await db.from('quiz_questions').select('id,position').eq('quiz_id', id).order('position')
+  for (const [i, row] of (rows ?? []).entries()) {
+    const question = String(formData.get(`q${i}`) ?? '').trim()
+    const options = lines(formData.get(`o${i}`))
+    const correct = Number(formData.get(`c${i}`)) - 1
+    if (!question || options.length < MIN_OPTIONS || options.length > MAX_OPTIONS || !(correct >= 0 && correct < options.length)) {
+      backWithError(PATH, 'Revisá el quiz: cada pregunta necesita texto, de 2 a 5 opciones y el número de la correcta.')
+    }
+    await db.from('quiz_questions').update({ question, options }).eq('id', row.id)
+    await db.from('quiz_answer_keys').upsert({ question_id: row.id, correct_index: correct }, { onConflict: 'question_id' })
+  }
+  await db.from('quizzes').update({ title }).eq('id', id)
+  revalidatePath(PATH)
+  backWithOk(PATH, 'Quiz actualizado.')
+}

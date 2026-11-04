@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthContext } from '@/lib/auth-roles'
-import { backWithOk } from '@/lib/admin-feedback'
+import { backWithError, backWithOk } from '@/lib/admin-feedback'
 
 export type BannerActionState = { error: string | null }
 
@@ -61,11 +61,13 @@ async function uploadBannerImage(formData: FormData): Promise<string> {
 }
 
 function optionalV2Fields(formData: FormData) {
-  const fields: Record<string, string> = {}
+  const fields: Record<string, string | number> = {}
   for (const key of ['advertiser_name', 'body', 'cta_label'] as const) {
     const value = String(formData.get(key) ?? '').trim()
     if (value) fields[key] = key === 'cta_label' ? value.slice(0, 18) : value
   }
+  const order = Number(formData.get('sort_order'))
+  if (formData.get('sort_order') && Number.isFinite(order)) fields.sort_order = Math.round(order)
   return fields
 }
 
@@ -142,4 +144,16 @@ export async function deleteBanner(formData: FormData) {
 
   await supabase.from('ad_campaigns').delete().eq('id', id)
   revalidatePath('/admin/banners')
+}
+
+/** Orden de un banner en el carrusel del Inicio (columna de fix-v2-ad-carousel.sql). */
+export async function setBannerOrder(formData: FormData) {
+  await requireAdmin()
+  const id = String(formData.get('id') ?? '')
+  const order = Math.round(Number(formData.get('sort_order')))
+  if (!id || !Number.isFinite(order)) return
+  const { error } = await createSupabaseAdmin().from('ad_campaigns').update({ sort_order: order }).eq('id', id)
+  if (error) backWithError('/admin/banners', 'No se pudo guardar el orden. ¿Ya corriste fix-v2-ad-carousel.sql?')
+  revalidatePath('/admin/banners')
+  backWithOk('/admin/banners', 'Orden guardado.')
 }

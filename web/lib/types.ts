@@ -151,8 +151,9 @@ export const LINK_TYPE_LABELS: Record<AdLinkType, string> = {
 }
 
 // 'feed' y 'article_inline' son de la app v2 (feed vertical): item a pantalla completa y bloque
-// dentro de la noticia. Requieren supabase/fix-v2-live-ads.sql.
-export type AdPlacement = 'home' | 'article' | 'precios' | 'videos' | 'feed' | 'article_inline'
+// dentro de la noticia. Requieren supabase/fix-v2-live-ads.sql. 'inicio_carrusel' es el carrusel del Inicio
+// (fix-v2-ad-carousel.sql, que suma sort_order).
+export type AdPlacement = 'home' | 'article' | 'precios' | 'videos' | 'feed' | 'article_inline' | 'inicio_carrusel'
 
 export const PLACEMENT_LABELS: Record<AdPlacement, string> = {
   home: 'Inicio',
@@ -161,6 +162,7 @@ export const PLACEMENT_LABELS: Record<AdPlacement, string> = {
   videos: 'Videos',
   feed: 'App v2 · Feed',
   article_inline: 'App v2 · Dentro de la noticia',
+  inicio_carrusel: 'App v2 · Carrusel del Inicio',
 }
 
 export interface AdCampaignRow {
@@ -176,6 +178,8 @@ export interface AdCampaignRow {
   is_active: boolean
   link_type: AdLinkType | null
   link_target: string | null
+  /** Solo existe después de fix-v2-ad-carousel.sql. */
+  sort_order?: number | null
 }
 
 export type EcosystemListingKind = 'empleo' | 'clasificado' | 'curso'

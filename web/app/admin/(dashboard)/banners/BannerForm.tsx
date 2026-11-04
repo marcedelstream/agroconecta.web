@@ -52,6 +52,11 @@ export function BannerForm() {
             </label>
           ))}
         </div>
+        <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+          Orden en el carrusel del Inicio
+          <input name="sort_order" type="number" min={1} step={1} className="input w-20" placeholder="1" />
+          <Help text="Solo para 'App v2 · Carrusel del Inicio'. 1 sale primero. Después lo podés cambiar en la tabla." />
+        </label>
       </div>
 
       <div className="space-y-2">

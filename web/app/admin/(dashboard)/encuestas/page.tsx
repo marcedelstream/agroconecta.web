@@ -3,21 +3,17 @@ import { createPoll, createQuiz, toggleInteractive } from './actions'
 import { EmptyState, FieldLabel, Notice, PageHeader } from '@/components/admin/ui'
 import type { FeedbackParams } from '@/lib/admin-feedback'
 import { CreateDrawer } from '@/components/admin/CreateDrawer'
+import { EditPoll, EditQuiz, type EditablePoll, type EditableQuiz } from './EditForms'
 
 export const dynamic = 'force-dynamic'
 
-interface PollRow {
-  id: string
-  question: string
+interface PollRow extends EditablePoll {
   is_active: boolean
   poll_votes: { count: number }[]
 }
 
-interface QuizRow {
-  id: string
-  title: string
+interface QuizRow extends EditableQuiz {
   is_active: boolean
-  quiz_questions: { count: number }[]
 }
 
 function ToggleForm({ id, kind, active }: { id: string; kind: 'poll' | 'quiz'; active: boolean }) {
@@ -37,10 +33,15 @@ export default async function EncuestasPage({ searchParams }: { searchParams: Pr
   const feedback = await searchParams
   const db = createSupabaseAdmin()
   const [polls, quizzes] = await Promise.all([
-    db.from('polls').select('id,question,is_active,poll_votes(count)').order('created_at', { ascending: false }),
-    db.from('quizzes').select('id,title,is_active,quiz_questions(count)').order('created_at', { ascending: false }),
+    db.from('polls').select('id,question,is_active,poll_votes(count),poll_options(label,position)').order('created_at', { ascending: false }),
+    db.from('quizzes').select('id,title,is_active,quiz_questions(id,position,question,options)').order('created_at', { ascending: false }),
   ])
   const error = polls.error ?? quizzes.error
+  const questionIds = ((quizzes.data ?? []) as QuizRow[]).flatMap((q) => q.quiz_questions.map((x) => x.id))
+  const { data: keys } = questionIds.length
+    ? await db.from('quiz_answer_keys').select('question_id,correct_index').in('question_id', questionIds)
+    : { data: [] }
+  const correct = new Map((keys ?? []).map((k) => [k.question_id as string, k.correct_index as number]))
 
   return (
     <div className="max-w-6xl space-y-8">
@@ -92,15 +93,15 @@ export default async function EncuestasPage({ searchParams }: { searchParams: Pr
                 <td>Encuesta</td>
                 <td className="text-foreground">{p.question}</td>
                 <td>{p.poll_votes?.[0]?.count ?? 0} votos</td>
-                <td><ToggleForm id={p.id} kind="poll" active={p.is_active} /></td>
+                <td><div className="flex items-center gap-2"><ToggleForm id={p.id} kind="poll" active={p.is_active} /><EditPoll poll={p} /></div></td>
               </tr>
             ))}
             {((quizzes.data ?? []) as QuizRow[]).map((q) => (
               <tr key={q.id}>
                 <td>Quiz</td>
                 <td className="text-foreground">{q.title}</td>
-                <td>{q.quiz_questions?.[0]?.count ?? 0} preguntas</td>
-                <td><ToggleForm id={q.id} kind="quiz" active={q.is_active} /></td>
+                <td>{q.quiz_questions?.length ?? 0} preguntas</td>
+                <td><div className="flex items-center gap-2"><ToggleForm id={q.id} kind="quiz" active={q.is_active} /><EditQuiz quiz={q} correct={correct} /></div></td>
               </tr>
             ))}
           </tbody>

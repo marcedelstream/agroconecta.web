@@ -25,14 +25,16 @@ export async function loadEventsContext(): Promise<string> {
   const client = getEventsClient()
   if (!client) return ''
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Asuncion' })
+  // También los de las últimas dos semanas, marcados como terminados: "¿cómo estuvo la Expo?" necesita saber que ya pasó.
+  const since = new Date(Date.now() - 14 * 86_400_000).toLocaleDateString('en-CA', { timeZone: 'America/Asuncion' })
   const { data, error } = await client
     .from('events')
     .select('title,category,date,end_date,time,location,city,department')
     .eq('is_approved', true)
-    .gte('date', today)
+    .gte('date', since)
     .order('date', { ascending: true })
-    .limit(15)
+    .limit(25)
 
   if (error || !data?.length) return ''
 
@@ -40,9 +42,18 @@ export async function loadEventsContext(): Promise<string> {
     .map((e) => {
       const place = [e.location, e.city, e.department].filter(Boolean).join(', ')
       const when = e.time ? `${e.date} ${e.time}` : e.date
-      return `- ${e.title}${e.category ? ` [${e.category}]` : ''} — ${when}${place ? ` — ${place}` : ''}`
+      const until = e.end_date && e.end_date !== e.date ? ` al ${e.end_date}` : ''
+      return `- ${e.title}${e.category ? ` [${e.category}]` : ''} — ${when}${until} (${eventStatus(e, today)})${place ? ` — ${place}` : ''}`
     })
     .join('\n')
 
-  return `\n\nPróximos eventos del agro (eventosagropy.com, ecosistema de Agroconecta):\n${block}`
+  return `\n\nEventos del agro (eventosagropy.com, ecosistema de Agroconecta; fechas AAAA-MM-DD y su estado respecto de hoy):\n${block}`
+}
+
+/** "terminó", "en curso" o "próximo" respecto de hoy (fechas AAAA-MM-DD en hora de Paraguay). */
+export function eventStatus(e: { date: string; end_date: string | null }, today: string): string {
+  const end = e.end_date ?? e.date
+  if (end < today) return 'terminó'
+  if (e.date <= today) return 'en curso'
+  return 'próximo'
 }

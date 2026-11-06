@@ -495,9 +495,10 @@ export async function runSyndication(options: { dryRun?: boolean } = {}) {
   if (error) throw new Error(error.message)
 
   const sources = (data ?? []) as NewsSourceRow[]
-  const results: SyndicationResult[] = []
 
-  for (const source of sources) {
+  // Las fuentes van en paralelo (antes una por una tardaba ~2 minutos con 10 fuentes y no entraba en el tiempo de una
+  // función de Vercel). Dentro de cada fuente las notas siguen en orden, para no duplicar al deduplicar.
+  const results = await Promise.all(sources.map(async (source): Promise<SyndicationResult> => {
     let checked = 0
     let imported = 0
     let skipped = 0
@@ -529,8 +530,8 @@ export async function runSyndication(options: { dryRun?: boolean } = {}) {
       }
     }
 
-    results.push({ sourceId: source.id, sourceName: source.name, checked, imported, skipped, error: resultError })
-  }
+    return { sourceId: source.id, sourceName: source.name, checked, imported, skipped, error: resultError }
+  }))
 
   return {
     dryRun,

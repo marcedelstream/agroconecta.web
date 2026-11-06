@@ -397,7 +397,7 @@ async function fetchHtmlOgItems(source: NewsSourceRow): Promise<SyndicatedItem[]
   }]
 }
 
-async function fetchItems(source: NewsSourceRow) {
+export async function fetchItems(source: NewsSourceRow) {
   if (source.source_type === 'wordpress') return enrichItemsWithArticleContent(await fetchWordPressItems(source), source)
   if (source.source_type === 'html_og') return enrichItemsWithArticleContent(await fetchHtmlOgItems(source), source)
   return fetchRssItems(source)
@@ -416,7 +416,17 @@ async function uniqueSlug(supabase: ReturnType<typeof createSupabaseAdmin>, titl
   }
 }
 
-function contentForPolicy(_source: NewsSourceRow, item: SyndicatedItem) {
+const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+/**
+ * Las fuentes del Estado se republican completas. Los medios colegas ('preview_only') van solo con el resumen y el
+ * link a su nota: no copiamos su trabajo y les mandamos lectores (antes la política se ignoraba y se copiaba todo).
+ */
+export function contentForPolicy(source: Pick<NewsSourceRow, 'name' | 'republish_policy'>, item: Pick<SyndicatedItem, 'contentHtml' | 'summary' | 'canonicalUrl'>) {
+  if (source.republish_policy === 'preview_only') {
+    const summary = item.summary || truncateMeta(item.contentHtml, 280)
+    return `<p>${escapeHtml(summary)}</p><p><a href="${escapeHtml(item.canonicalUrl)}">Leé la nota completa en ${escapeHtml(source.name)}</a></p>`
+  }
   return item.contentHtml || `<p>${item.summary}</p>`
 }
 

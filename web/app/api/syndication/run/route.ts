@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isCronAuthorized } from '@/lib/cron-auth'
 import { runSyndication } from '@/lib/syndication'
 
 export const dynamic = 'force-dynamic'
 // Con todas las fuentes puede pasar el minuto: se le da el máximo del plan.
 export const maxDuration = 300
 
-function isAuthorized(request: NextRequest) {
-  // CRON_SECRET: la carga diaria de Vercel (vercel.json) lo manda sola como "Bearer". SYNDICATION_RUN_TOKEN: para
-  // correrla a mano.
-  const tokens = [process.env.SYNDICATION_RUN_TOKEN, process.env.CRON_SECRET].filter((t): t is string => !!t)
-
-  if (tokens.length === 0) {
-    return process.env.NODE_ENV !== 'production'
-  }
-
-  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
-  const queryToken = request.nextUrl.searchParams.get('token')
-  return tokens.some((t) => bearer === t || queryToken === t)
-}
-
 async function handle(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json(
       { ok: false, error: 'unauthorized' },
       { status: 401 },

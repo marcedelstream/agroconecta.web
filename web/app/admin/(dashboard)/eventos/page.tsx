@@ -135,10 +135,11 @@ export default async function EventosPage({
                   className="mt-0.5 h-4 w-4 accent-lime"
                 />
                 <span>
-                  <span className="block text-sm font-medium text-foreground">Evento activo (destacado en el Home de la app)</span>
+                  <span className="block text-sm font-medium text-foreground">Destacar en el Inicio de la app</span>
                   <span className="block text-xs text-muted mt-0.5">
-                    Mientras esté sin marcar podés probar el hub del evento tranquilo — no se muestra en el Home.
-                    Se puede tener más de un evento activo a la vez: aparecen juntos en un carrusel destacado.
+                    Mientras esté sin marcar podés dejar todo preparado (programa, logo, banner): no se muestra en el Inicio.
+                    Al marcarlo aparece como &quot;Evento destacado&quot; con sus disertaciones; si hay más de uno marcado,
+                    se ven en un carrusel. Cuando el evento termina deja de mostrarse solo.
                   </span>
                 </span>
               </label>

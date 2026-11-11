@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
 }
 
-const UPDATED = '29 de septiembre de 2026'
+const UPDATED = '11 de noviembre de 2026'
 
 const soporte = <Link href="/soporte" className="text-lime hover:underline">la página de Soporte</Link>
 const reglamento = <Link href="/reglamento-puntos" className="text-lime hover:underline">Reglamento de puntos</Link>
@@ -37,23 +37,27 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
     ),
   },
   {
-    title: '2. Para qué los usamos',
+    title: '2. Inicio de sesión con Google o Apple',
+    body: 'Si entrás con Google o con Apple, de esa cuenta recibimos solo tu nombre, tu correo y, en el caso de Google, tu foto de perfil. Los usamos únicamente para crear tu cuenta, identificarte cuando volvés a entrar y mostrar tu nombre en tu perfil. No pedimos acceso a tus correos, contactos, calendario ni archivos. No vendemos esos datos, no los usamos para publicidad y no los compartimos con terceros, salvo los proveedores que necesitamos para que el inicio de sesión funcione (Supabase). El uso de la información recibida de las APIs de Google cumple la Política de datos de usuario de los servicios de API de Google, incluidos los requisitos de uso limitado.',
+  },
+  {
+    title: '3. Para qué los usamos',
     body: 'Para ordenar tu feed con lo que más te interesa, recomendarte eventos y contenido cercano, sumar y canjear tus puntos, responderte con Karai, mostrarte publicidad acorde a tu profesión, departamento e intereses, enviarte las notificaciones que activaste y entender, de forma agregada, cómo se usa la app para mejorarla.',
   },
   {
-    title: '3. Publicidad',
+    title: '4. Publicidad',
     body: 'Los anuncios siempre están marcados como "Patrocinado" y podés ver por qué te aparecen. Se eligen con los datos que declaraste en tu perfil; no seguimos lo que hacés en otras apps o sitios. A los anunciantes les mostramos solo resultados agregados (cuántas personas vieron o tocaron su anuncio, por departamento), nunca tus datos personales.',
   },
   {
-    title: '4. Karai',
+    title: '5. Karai',
     body: 'Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje puntual para poder contactarte; nunca el resto de la conversación. Si tenés KARAI Campo, los datos de tu establecimiento que cargás en Mi campo (o que mencionás en el chat: hectáreas, animales, cultivos) se usan únicamente para que Karai te responda mejor: no se muestran a nadie, no se venden y no se usan para publicidad. Los podés editar o borrar cuando quieras.',
   },
   {
-    title: '5. Perfil público',
+    title: '6. Perfil público',
     body: 'Tu perfil profesional es privado. Solo se puede ver con un link si vos activás "Perfil público" y elegís tu dirección. En ese caso se muestran tu nombre, cargo, formación, experiencia, especialidades y redes; nunca tu correo ni tu teléfono. Lo podés desactivar cuando quieras.',
   },
   {
-    title: '6. Puntos y canjes',
+    title: '7. Puntos y canjes',
     body: (
       <>
         Los puntos que sumás y lo que canjeás quedan registrados en tu cuenta. Cuando canjeás un premio, compartimos con
@@ -63,15 +67,15 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
     ),
   },
   {
-    title: '7. Con quién compartimos tus datos',
+    title: '8. Con quién compartimos tus datos',
     body: 'No vendemos tus datos personales. Solo los procesan los proveedores que la app necesita para funcionar: almacenamiento y base de datos (Supabase), alojamiento de la web (Vercel), envío de notificaciones (Expo), inicio de sesión (Google y Apple), envío de correos (Resend) y el proveedor de inteligencia artificial de Karai.',
   },
   {
-    title: '8. Almacenamiento y seguridad',
+    title: '9. Almacenamiento y seguridad',
     body: 'Tus datos se guardan en Supabase con controles de acceso: cada persona solo puede ver y modificar lo suyo, y lo que tiene valor (puntos, canjes, respuestas del quiz) lo decide el servidor, no la app. Trabajamos para mantener medidas de seguridad razonables.',
   },
   {
-    title: '9. Tus derechos',
+    title: '10. Tus derechos',
     body: (
       <>
         Podés ver y corregir tus datos desde tu perfil en la app, y pedirnos una copia o la corrección de cualquier dato
@@ -80,7 +84,7 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
     ),
   },
   {
-    title: '10. Eliminación de cuenta',
+    title: '11. Eliminación de cuenta',
     body: (
       <>
         Podés eliminar tu cuenta en cualquier momento desde la app: Perfil → Más → Eliminar cuenta. Se borran tu perfil,
@@ -91,15 +95,15 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
     ),
   },
   {
-    title: '11. Notificaciones',
+    title: '12. Notificaciones',
     body: 'Son opcionales. Te avisamos de noticias importantes, precios o recordatorios de eventos y remates que activaste, solo en las categorías que elegiste. Las podés desactivar desde tu perfil o desde los ajustes de tu teléfono.',
   },
   {
-    title: '12. Cambios a esta política',
+    title: '13. Cambios a esta política',
     body: 'Podemos actualizar esta política cuando la app cambie. Si el cambio es importante, te lo vamos a avisar en la app.',
   },
   {
-    title: '13. Contacto',
+    title: '14. Contacto',
     body: <>Si tenés preguntas sobre tus datos personales, escribinos desde {soporte}.</>,
   },
 ]

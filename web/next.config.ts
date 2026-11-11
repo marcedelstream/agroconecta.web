@@ -13,6 +13,15 @@ const config: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
+  // Direcciones que se suelen escribir de memoria (Google tenía cargada /privacidad en la pantalla del login).
+  async redirects() {
+    return [
+      { source: '/privacidad', destination: '/politica', permanent: true },
+      { source: '/privacy', destination: '/politica', permanent: true },
+      { source: '/terms', destination: '/terminos', permanent: true },
+      { source: '/condiciones', destination: '/terminos', permanent: true },
+    ]
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },

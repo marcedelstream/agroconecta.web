@@ -1,19 +1,23 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
+import type { EventAudience } from '@/lib/event-audience'
 import { sendManualPush, type SendState } from './actions'
 import { Help } from '@/components/admin/ui'
 
 const initial: SendState = { error: null, sent: false }
 
-export function NotificationsForm() {
+export function NotificationsForm({ events }: { events: EventAudience[] }) {
   const [state, action, pending] = useActionState(sendManualPush, initial)
+  const [eventSlug, setEventSlug] = useState('')
 
   return (
     <form action={action} className="flex flex-col gap-4">
       {state.sent && (
         <div className="rounded-lg bg-lime/10 border border-lime/30 px-4 py-3 text-sm text-lime">
-          Notificación enviada correctamente a todos los dispositivos.
+          {state.devices !== undefined
+            ? `Notificación enviada a ${state.devices} ${state.devices === 1 ? 'teléfono' : 'teléfonos'} de los adheridos al evento.`
+            : 'Notificación enviada correctamente a todos los dispositivos.'}
         </div>
       )}
       {state.error && (
@@ -21,6 +25,28 @@ export function NotificationsForm() {
           {state.error}
         </div>
       )}
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-muted uppercase tracking-wide">
+          Destinatarios
+        <Help text="Elegí un evento para que el aviso llegue solo a quienes activaron su campanita en la app (o le pusieron recordatorio). Al tocar el aviso se abre el evento." /></label>
+        <select
+          name="event_slug"
+          value={eventSlug}
+          onChange={(e) => setEventSlug(e.target.value)}
+          className="rounded-lg border border-bdr bg-secondary px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-lime/60 transition-colors"
+        >
+          <option value="">Todos los usuarios de la app</option>
+          {events.map((ev) => (
+            <option key={ev.slug} value={ev.slug}>
+              Solo adheridos a {ev.title} ({ev.count} {ev.count === 1 ? 'persona' : 'personas'})
+            </option>
+          ))}
+        </select>
+        {events.length === 0 && (
+          <p className="text-xs text-muted">Todavía nadie activó la campanita de un evento.</p>
+        )}
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
@@ -60,7 +86,7 @@ export function NotificationsForm() {
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      {!eventSlug && <div className="flex flex-col gap-1.5">
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
           Categoría <span className="text-muted font-normal">(filtra por lo que cada usuario activó en su perfil)</span>
         <Help text="Solo la reciben quienes tienen esa categoría activada. Sin categoría, llega a todos." /></label>
@@ -74,7 +100,7 @@ export function NotificationsForm() {
           <option value="priceAlerts">Alertas de precios</option>
           <option value="institutionalUpdates">Avisos institucionales</option>
         </select>
-      </div>
+      </div>}
 
       <button
         type="submit"

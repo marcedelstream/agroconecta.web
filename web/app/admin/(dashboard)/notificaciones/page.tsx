@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
 import { NotificationsForm } from './NotificationsForm'
 import { PageHeader } from '@/components/admin/ui'
+import { listEventAudiences } from '@/lib/event-audience'
 
 export const metadata: Metadata = { title: 'Notificaciones — Admin Agroconecta' }
 
-export default function NotificacionesPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function NotificacionesPage() {
+  const events = await listEventAudiences().catch(() => [])
   return (
     <div className="max-w-xl">
       <PageHeader title="Notificaciones" help="Mandá un aviso al teléfono de los usuarios de la app. Llega al instante y no se puede deshacer." />
@@ -20,7 +24,7 @@ export default function NotificacionesPage() {
 
       <div className="rounded-xl border border-bdr bg-surface p-6">
         <h2 className="text-sm font-semibold text-foreground mb-4">Envío manual</h2>
-        <NotificationsForm />
+        <NotificationsForm events={events} />
       </div>
     </div>
   )

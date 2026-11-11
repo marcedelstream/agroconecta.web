@@ -1,9 +1,10 @@
 'use server'
 
 import { getAuthContext } from '@/lib/auth-roles'
-import { sendPushToAll, type NotificationCategory } from '@/lib/push'
+import { eventAudienceUserIds } from '@/lib/event-audience'
+import { sendPushToAll, sendPushToUsers, type NotificationCategory } from '@/lib/push'
 
-export type SendState = { error: string | null; sent: boolean }
+export type SendState = { error: string | null; sent: boolean; devices?: number }
 
 const VALID_CATEGORIES: NotificationCategory[] = [
   'breakingNews',
@@ -27,6 +28,23 @@ export async function sendManualPush(
     : undefined
 
   if (!title || !body) return { error: 'El título y el cuerpo son obligatorios.', sent: false }
+
+  // "Solo adheridos a un evento": va a quienes prendieron su campanita (o le pusieron recordatorio) y al tocarla abre
+  // el evento, salvo que se haya puesto una nota.
+  const eventSlug = (formData.get('event_slug') as string | null)?.trim()
+  if (eventSlug) {
+    try {
+      const devices = await sendPushToUsers(await eventAudienceUserIds(eventSlug), {
+        title,
+        body,
+        data: articleId ? { articleId } : { eventSlug },
+      })
+      if (devices === 0) return { error: 'Ninguno de los adheridos a ese evento tiene las notificaciones activadas.', sent: false }
+      return { error: null, sent: true, devices }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'No se pudo enviar la notificación.', sent: false }
+    }
+  }
 
   try {
     await sendPushToAll({

@@ -50,6 +50,7 @@ export function Footer() {
             <span className="text-xs text-muted uppercase tracking-wider font-display font-semibold">Ayuda</span>
             <Link href="/soporte" className="text-muted hover:text-foreground transition-colors">Soporte</Link>
             <Link href="/politica" className="text-muted hover:text-foreground transition-colors">Política de privacidad</Link>
+            <Link href="/terminos" className="text-muted hover:text-foreground transition-colors">Condiciones del servicio</Link>
             <Link href="/reglamento-puntos" className="text-muted hover:text-foreground transition-colors">Reglamento de puntos</Link>
             <Link href="/copyright" className="text-muted hover:text-foreground transition-colors">Copyright</Link>
           </div>

@@ -24,6 +24,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.5,
     },
+    ...['politica', 'terminos'].map((path) => ({
+      url: `${siteUrl}/${path}`,
+      lastModified: now,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    })),
   ]
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

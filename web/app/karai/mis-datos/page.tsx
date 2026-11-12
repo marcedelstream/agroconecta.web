@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServer } from '@/lib/supabase-server'
+import { createSupabaseAdmin } from '@/lib/supabase-admin'
+import { CONSENT_AI, CONSENT_FARM, getConsentState, type ConsentState } from '@/lib/karai/consents'
 import type { ExtractedFarmData } from '@/lib/karai/farm-extraction'
 import { MisDatosClient } from './MisDatosClient'
 
@@ -19,12 +21,27 @@ export default async function MisDatosPage() {
   const initialData = (farmRow?.data ?? {}) as ExtractedFarmData
   const memberSince = profile?.created_at ? new Date(profile.created_at).getFullYear() : null
 
+  // `consents` solo tiene policy de lectura si se corrió fix-v2-onboarding.sql, así que se lee con el
+  // cliente admin — acotado al user.id de la sesión ya validada arriba.
+  let consents: { ai: ConsentState; campo: ConsentState } = { ai: 'none', campo: 'none' }
+  try {
+    const admin = createSupabaseAdmin()
+    const [ai, campo] = await Promise.all([
+      getConsentState(admin, user.id, CONSENT_AI),
+      getConsentState(admin, user.id, CONSENT_FARM),
+    ])
+    consents = { ai, campo }
+  } catch (err) {
+    console.error('mis-datos: no se pudo leer consents:', err)
+  }
+
   return (
     <MisDatosClient
       initialData={initialData}
       profileName={profile?.name ?? null}
       memberSince={memberSince}
       leads={leads ?? []}
+      consents={consents}
     />
   )
 }

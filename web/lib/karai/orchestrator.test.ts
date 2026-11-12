@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { recordLeadIfCommercial } from './orchestrator'
+import { orchestrateMessage, orchestrateMessageStream, recordLeadIfCommercial } from './orchestrator'
+import { AI_REVOKED_REPLY, CONSENT_AI } from './consents'
+import { createFakeAdmin } from './test-helpers'
+
+describe('uso de IA revocado', () => {
+  it('no procesa ni guarda nada: 403 antes de crear conversación o llamar al proveedor', async () => {
+    for (const run of [orchestrateMessage, orchestrateMessageStream]) {
+      const { admin, tables } = createFakeAdmin({
+        consents: [{ profile_id: 'u1', consent_type: CONSENT_AI, status: 'revoked' }],
+        conversations: [],
+        conversation_messages: [],
+      })
+      const result = await run({ admin, profileId: 'u1', channel: 'web', conversationId: null, message: 'precio de la soja' })
+      expect(result).toEqual({ ok: false, status: 403, error: AI_REVOKED_REPLY })
+      expect(tables.conversations).toHaveLength(0)
+      expect(tables.conversation_messages).toHaveLength(0)
+    }
+  })
+})
 
 // Requisito explícito del producto (2026-09-01): el admin NUNCA debe poder leer las conversaciones
 // privadas de los usuarios — cuando Karai detecta intención comercial, solo se guarda el mensaje

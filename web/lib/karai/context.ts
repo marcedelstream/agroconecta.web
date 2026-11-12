@@ -159,13 +159,19 @@ async function loadOwnFarmContext(admin: ReturnType<typeof createSupabaseAdmin>,
   return `\n\nDatos de finca que este usuario ya registró con vos (información privada suya, no la compartas con otros usuarios):\n${lines.join('\n')}`
 }
 
-export async function buildContext(admin: ReturnType<typeof createSupabaseAdmin>, profileId: string, message = ''): Promise<string> {
+// includeFarm=false cuando el usuario revocó "Mi campo" (consents): no se lee su farm_profile.
+export async function buildContext(
+  admin: ReturnType<typeof createSupabaseAdmin>,
+  profileId: string,
+  message = '',
+  { includeFarm = true }: { includeFarm?: boolean } = {},
+): Promise<string> {
   const terms = queryTerms(message)
   const [publicContext, eventsContext, knowledgeContext, ownFarmContext] = await Promise.all([
     loadPublicContext(admin, terms),
     loadEventsContext(),
     loadKnowledgeContext(admin, terms),
-    loadOwnFarmContext(admin, profileId),
+    includeFarm ? loadOwnFarmContext(admin, profileId) : Promise.resolve(''),
   ])
 
   return `${nowContext()}\n\n${publicContext}${eventsContext}${knowledgeContext}${ownFarmContext}`

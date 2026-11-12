@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   },
 }
 
-const UPDATED = '11 de noviembre de 2026'
+// Si cambia, actualizar también CONSENT_POLICY_VERSION en lib/karai/consents.ts.
+const UPDATED = '12 de noviembre de 2026'
 
 const soporte = <Link href="/soporte" className="text-lime hover:underline">la página de Soporte</Link>
 const reglamento = <Link href="/reglamento-puntos" className="text-lime hover:underline">Reglamento de puntos</Link>
@@ -50,7 +51,41 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: '5. Karai',
-    body: 'Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee. Para generar las respuestas, tus mensajes se procesan con un proveedor de inteligencia artificial. Si en un mensaje mostrás interés comercial (por ejemplo, que querés vender o comprar), guardamos solo ese mensaje puntual para poder contactarte; nunca el resto de la conversación. Si tenés KARAI Campo, los datos de tu establecimiento que cargás en Mi campo (o que mencionás en el chat: hectáreas, animales, cultivos) se usan únicamente para que Karai te responda mejor: no se muestran a nadie, no se venden y no se usan para publicidad. Los podés editar o borrar cuando quieras.',
+    body: (
+      <>
+        Tus conversaciones con Karai son privadas: el equipo de Agroconecta no las lee, salvo que sea necesario para
+        resolver un problema técnico o investigar un abuso del servicio.
+        <br />
+        <br />
+        <strong>Inteligencia artificial.</strong> Para generar las respuestas, tus mensajes (y, si usás Mi campo, los datos
+        de tu establecimiento que sean relevantes para tu consulta) se envían a OpenAI, nuestro proveedor de inteligencia
+        artificial, que los procesa en servidores ubicados en Estados Unidos. Configuramos el servicio para que OpenAI no
+        guarde las respuestas generadas y, según sus condiciones vigentes, los datos enviados a su API no se usan para
+        entrenar sus modelos. Aun así, OpenAI puede conservar registros técnicos de seguridad y control de abusos por un
+        plazo de hasta 30 días, según sus propias políticas.
+        <br />
+        <br />
+        <strong>Cuánto tiempo guardamos los chats.</strong> Las conversaciones se guardan para que puedas retomarlas y se
+        eliminan automáticamente cuando pasan 365 días sin actividad. También las podés borrar vos en cualquier momento.
+        Los datos de tu finca en Mi campo no dependen de las conversaciones: se conservan hasta que los borres.
+        <br />
+        <br />
+        <strong>Oportunidades comerciales.</strong> Si en un mensaje mostrás interés comercial (por ejemplo, que querés
+        vender o comprar), o tocás &quot;Avisar a Agroconecta&quot;, guardamos solo ese mensaje puntual para poder contactarte;
+        nunca el resto de la conversación. Esos registros se conservan aunque borres la conversación, y se eliminan si
+        eliminás tu cuenta o nos lo pedís desde {soporte}.
+        <br />
+        <br />
+        <strong>Mi campo.</strong> Si tenés KARAI Campo, los datos de tu establecimiento que cargás en Mi campo (o que
+        mencionás en el chat: hectáreas, animales, cultivos) se usan únicamente para que Karai te responda mejor: no se
+        muestran a nadie, no se venden y no se usan para publicidad. Los podés editar o borrar cuando quieras.
+        <br />
+        <br />
+        <strong>Tu consentimiento.</strong> Registramos tu consentimiento para el uso de inteligencia artificial y de Mi
+        campo la primera vez que usás cada función, y podés revocarlo cuando quieras desde Mis datos → Privacidad. Si lo
+        revocás, Karai deja de usar esa función; lo que ya está guardado se borra con las opciones de esta política.
+      </>
+    ),
   },
   {
     title: '6. Perfil público',
@@ -68,7 +103,7 @@ const SECTIONS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: '8. Con quién compartimos tus datos',
-    body: 'No vendemos tus datos personales. Solo los procesan los proveedores que la app necesita para funcionar: almacenamiento y base de datos (Supabase), alojamiento de la web (Vercel), envío de notificaciones (Expo), inicio de sesión (Google y Apple), envío de correos (Resend) y el proveedor de inteligencia artificial de Karai.',
+    body: 'No vendemos tus datos personales. Solo los procesan los proveedores que la app necesita para funcionar: almacenamiento y base de datos (Supabase), alojamiento de la web (Vercel), envío de notificaciones (Expo), inicio de sesión (Google y Apple), envío de correos (Resend) y OpenAI, el proveedor de inteligencia artificial de Karai. Al usar Karai, tus mensajes se envían a los servidores de OpenAI en Estados Unidos, por lo que esa parte del procesamiento ocurre fuera de Paraguay.',
   },
   {
     title: '9. Almacenamiento y seguridad',

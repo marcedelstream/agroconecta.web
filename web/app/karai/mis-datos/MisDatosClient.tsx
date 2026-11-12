@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { saveFarmProfile } from './actions'
+import { saveFarmProfile, setKaraiConsent } from './actions'
 import type { ExtractedFarmData, FarmAnimalRow, FarmCultivoRow } from '@/lib/karai/farm-extraction'
+import type { ConsentState } from '@/lib/karai/consents'
 
 interface Lead {
   id: string
@@ -17,9 +18,10 @@ interface Props {
   profileName: string | null
   memberSince: number | null
   leads: Lead[]
+  consents: { ai: ConsentState; campo: ConsentState }
 }
 
-type Section = 'finca' | 'ganaderia' | 'agricultura' | 'comercial'
+type Section = 'finca' | 'ganaderia' | 'agricultura' | 'comercial' | 'privacidad'
 
 const INTERESES_BASE = [
   'Vender ganado gordo',
@@ -65,8 +67,10 @@ const labelClass = 'text-[11px] font-bold uppercase tracking-wider text-[var(--k
 const cellInputClass =
   'w-full bg-transparent border border-transparent rounded-[9px] px-2.5 py-2 text-[13.5px] font-semibold text-[var(--k-text)] outline-none transition-colors hover:bg-[var(--k-bg)] focus:bg-[var(--k-bg)] focus:border-[var(--k-lime)]'
 
-export function MisDatosClient({ initialData, profileName, memberSince, leads }: Props) {
+export function MisDatosClient({ initialData, profileName, memberSince, leads, consents: initialConsents }: Props) {
   const [data, setData] = useState<ExtractedFarmData>(initialData)
+  const [consents, setConsents] = useState(initialConsents)
+  const [consentBusy, setConsentBusy] = useState<'ai' | 'campo' | null>(null)
   const [section, setSection] = useState<Section>('finca')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -143,11 +147,27 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
     setSavedLabel('Guardado ahora')
   }
 
+  async function handleConsent(kind: 'ai' | 'campo', granted: boolean) {
+    if (!granted && !confirm(kind === 'ai'
+      ? 'Si desactivás la IA, Karai deja de responderte hasta que la vuelvas a activar. ¿Desactivar?'
+      : 'Si desactivás Mi campo, Karai deja de usar y guardar los datos de tu finca. Tus datos actuales no se borran: podés editarlos o eliminarlos acá. ¿Desactivar?')) return
+    setConsentBusy(kind)
+    setError(null)
+    const result = await setKaraiConsent(kind, granted)
+    setConsentBusy(null)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+    setConsents((prev) => ({ ...prev, [kind]: granted ? 'granted' : 'revoked' }))
+  }
+
   const sections: { id: Section; label: string; count: string }[] = [
     { id: 'finca', label: 'Datos de la finca', count: String(FINCA_FIELDS.filter((k) => Boolean(data[k])).length) },
     { id: 'ganaderia', label: 'Ganadería', count: String(animales.length) },
     { id: 'agricultura', label: 'Agricultura', count: String(cultivos.length) },
     { id: 'comercial', label: 'Comercial', count: String(leads.length) },
+    { id: 'privacidad', label: 'Privacidad', count: String((consents.ai === 'revoked' ? 0 : 1) + (consents.campo === 'revoked' ? 0 : 1)) },
   ]
 
   const orgInitials = (data.nombre || profileName || 'MD').slice(0, 2).toUpperCase()
@@ -386,6 +406,31 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
               </div>
             )}
 
+            {section === 'privacidad' && (
+              <Card title="Privacidad y consentimientos" subtitle="Elegí qué puede hacer Karai con tu información">
+                <div className="px-5 md:px-[22px] flex flex-col">
+                  <ConsentRow
+                    title="Respuestas con inteligencia artificial"
+                    description="Tus mensajes se envían a OpenAI (servidores en EE. UU.) para generar la respuesta. Si lo desactivás, Karai no te responde hasta que lo vuelvas a activar."
+                    state={consents.ai}
+                    busy={consentBusy === 'ai'}
+                    onChange={(granted) => handleConsent('ai', granted)}
+                  />
+                  <ConsentRow
+                    title="Mi campo"
+                    description="Karai usa y guarda los datos de tu finca (hectáreas, animales, cultivos) para responderte a medida. Si lo desactivás, deja de usarlos y guardarlos; lo que ya cargaste no se borra."
+                    state={consents.campo}
+                    busy={consentBusy === 'campo'}
+                    onChange={(granted) => handleConsent('campo', granted)}
+                  />
+                  <p className="text-[12px] font-medium leading-relaxed text-[var(--k-muted-2)] py-4">
+                    Registramos tu elección la primera vez que usás cada función. Más detalle en la{' '}
+                    <Link href="/politica" className="underline text-[var(--k-lime-text)]">política de privacidad</Link>.
+                  </p>
+                </div>
+              </Card>
+            )}
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[var(--k-sidebar)] border border-[var(--k-border)] rounded-2xl p-4 md:p-5">
               <p className="text-[12.5px] font-medium leading-relaxed text-[var(--k-muted-2)] max-w-[560px]">
                 Estos datos son solo tuyos. Agroconecta los usa únicamente para acercarte oportunidades que encajen con tu finca.
@@ -394,6 +439,39 @@ export function MisDatosClient({ initialData, profileName, memberSince, leads }:
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ConsentRow({
+  title,
+  description,
+  state,
+  busy,
+  onChange,
+}: {
+  title: string
+  description: string
+  state: ConsentState
+  busy: boolean
+  onChange: (granted: boolean) => void
+}) {
+  const active = state !== 'revoked'
+  const label = state === 'granted' ? 'Activado' : state === 'revoked' ? 'Desactivado' : 'Se activa al usarlo'
+  return (
+    <div className="flex items-center gap-4 py-4 border-b border-[var(--k-border)]">
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <p className="text-[13.5px] font-bold text-[var(--k-text)]">{title}</p>
+        <p className="text-[12px] font-medium leading-relaxed text-[var(--k-muted-2)]">{description}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--k-muted)]">{label}</p>
+      </div>
+      <button
+        onClick={() => onChange(!active)}
+        disabled={busy}
+        className="shrink-0 bg-[var(--k-bg)] border border-[var(--k-border-strong)] hover:border-[var(--k-border-hover)] text-[var(--k-text-soft)] rounded-[11px] py-2 px-3.5 text-[12.5px] font-semibold transition-colors disabled:opacity-60"
+      >
+        {busy ? 'Guardando...' : active ? 'Desactivar' : 'Activar'}
+      </button>
     </div>
   )
 }

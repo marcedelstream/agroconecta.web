@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { authenticateKaraiRequest } from '@/lib/karai/auth'
+import { MAX_MESSAGE_CHARS, messageTooLongReply } from '@/lib/karai/limits'
 
 // El botón "Avisar a Agroconecta" del chat — a diferencia de recordLeadIfCommercial (automático,
 // via clasificador), esto es el usuario pidiendo explícitamente que lo contacten sobre lo que se
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   const conversationId = typeof body?.conversationId === 'string' ? body.conversationId : null
   const excerpt = typeof body?.excerpt === 'string' ? body.excerpt.trim() : ''
   if (!excerpt) return NextResponse.json({ error: 'Falta el mensaje a compartir.' }, { status: 400 })
+  if (excerpt.length > MAX_MESSAGE_CHARS) return NextResponse.json({ error: messageTooLongReply() }, { status: 400 })
 
   if (conversationId) {
     const { data: conversation } = await auth.admin

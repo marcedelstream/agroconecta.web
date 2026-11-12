@@ -18,6 +18,12 @@ const OPENAI_URL = 'https://api.openai.com/v1/responses'
 const MODEL = 'gpt-5.6-luna'
 // Con 600 las respuestas con listas se cortaban a la mitad (el límite incluye el razonamiento del modelo).
 const OUTPUT_TOKENS = 1600
+// /v1/responses guarda cada respuesta 30 días por defecto (`store` omitido = true, ver la guía "Your
+// data" de OpenAI). No usamos previous_response_id ni leemos respuestas guardadas — mandamos el
+// historial completo cada vez — así que guardarlas no aporta nada y solo amplía lo que queda en
+// servidores de terceros: lo desactivamos. OpenAI igual puede retener logs de monitoreo de abuso
+// hasta 30 días (salvo Zero Data Retention aprobado); store:false no los elimina.
+const STORE_RESPONSES = false
 
 interface ResponsesApiOutputItem {
   type?: string
@@ -39,6 +45,7 @@ export class OpenAIProvider implements AIProvider {
         input: messages,
         max_output_tokens: maxOutputTokens,
         reasoning: { effort: 'low' },
+        store: STORE_RESPONSES,
       }),
     })
 
@@ -73,6 +80,7 @@ export class OpenAIProvider implements AIProvider {
         input: messages,
         max_output_tokens: OUTPUT_TOKENS,
         reasoning: { effort: 'low' },
+        store: STORE_RESPONSES,
         stream: true,
       }),
     })

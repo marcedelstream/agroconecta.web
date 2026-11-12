@@ -2,6 +2,7 @@ import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import { classifyMessage, hasCommercialIntent, hasFarmDataIntent, OUT_OF_SCOPE_REPLY, UNSAFE_REPLY } from './classifier'
 import { getAIProvider, type AIProvider } from './ai-provider'
 import { buildContext } from './context'
+import { AI_REVOKED_REPLY, CONSENT_AI, FARM_REVOKED_NOTE, getConsentState, recordFirstUse, resolveFarmConsent } from './consents'
 import { extractAndSaveFarmData } from './farm-extraction'
 import { dailyLimitFor, getUsageToday, isActiveMember, quotaReachedReply } from './quota'
 import { BLOCKED_CATEGORIES, type ChatMessage, type KaraiChannel, type ScopeCategory } from './types'
@@ -206,6 +207,11 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
   const trimmed = message.trim()
   if (!trimmed) return { ok: false, status: 400, error: 'Mensaje vacío.' }
 
+  // Si el usuario revocó el uso de IA, no se procesa nada (ni se guarda el mensaje).
+  if ((await getConsentState(admin, profileId, CONSENT_AI)) === 'revoked') {
+    return { ok: false, status: 403, error: AI_REVOKED_REPLY }
+  }
+
   // Plan gratis para todos (5 por día) y 15 para miembros: ya no se corta a quien no es miembro.
   const member = await isActiveMember(admin, profileId)
 
@@ -232,12 +238,17 @@ export async function orchestrateMessage(input: OrchestrateInput): Promise<Orche
     return { ok: false, status: 503, error: 'Karai todavía no está configurado (falta OPENAI_API_KEY).' }
   }
 
+  // Primer uso real de la IA: queda registrado el consentimiento (política vigente en metadata).
+  await recordFirstUse(admin, profileId, CONSENT_AI)
+  const farmAllowed = await resolveFarmConsent(admin, profileId)
+
   const history = await loadRecentHistory(admin, conversationId)
-  const context = await buildContext(admin, profileId, retrievalText(history, trimmed))
+  const context = await buildContext(admin, profileId, retrievalText(history, trimmed), { includeFarm: farmAllowed })
 
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'system', content: `Contexto de Agroconecta:\n${context}` },
+    ...(farmAllowed ? [] : [{ role: 'system' as const, content: FARM_REVOKED_NOTE }]),
     ...history,
     { role: 'user', content: trimmed },
   ]
@@ -285,6 +296,11 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
   const trimmed = message.trim()
   if (!trimmed) return { ok: false, status: 400, error: 'Mensaje vacío.' }
 
+  // Si el usuario revocó el uso de IA, no se procesa nada (ni se guarda el mensaje).
+  if ((await getConsentState(admin, profileId, CONSENT_AI)) === 'revoked') {
+    return { ok: false, status: 403, error: AI_REVOKED_REPLY }
+  }
+
   // Plan gratis para todos (5 por día) y 15 para miembros: ya no se corta a quien no es miembro.
   const member = await isActiveMember(admin, profileId)
 
@@ -311,12 +327,17 @@ export async function orchestrateMessageStream(input: OrchestrateInput): Promise
     return { ok: false, status: 503, error: 'Karai todavía no está configurado (falta OPENAI_API_KEY).' }
   }
 
+  // Primer uso real de la IA: queda registrado el consentimiento (política vigente en metadata).
+  await recordFirstUse(admin, profileId, CONSENT_AI)
+  const farmAllowed = await resolveFarmConsent(admin, profileId)
+
   const history = await loadRecentHistory(admin, conversationId)
-  const context = await buildContext(admin, profileId, retrievalText(history, trimmed))
+  const context = await buildContext(admin, profileId, retrievalText(history, trimmed), { includeFarm: farmAllowed })
 
   const messages: ChatMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'system', content: `Contexto de Agroconecta:\n${context}` },
+    ...(farmAllowed ? [] : [{ role: 'system' as const, content: FARM_REVOKED_NOTE }]),
     ...history,
     { role: 'user', content: trimmed },
   ]

@@ -1,5 +1,6 @@
 import type { createSupabaseAdmin } from '@/lib/supabase-admin'
 import type { AIProvider } from './ai-provider'
+import { CONSENT_FARM, getConsentState, recordFirstUse } from './consents'
 
 // Recopilación de datos de finca (KARAI_CONTEXTO_MAESTRO.md secc. 15, MVP recomendado, punto 4):
 // versión liviana — sin farms/lots/crops como entidades separadas todavía (eso es fase 2 completa),
@@ -101,6 +102,9 @@ export async function extractAndSaveFarmData(
   userMessage: string,
 ): Promise<void> {
   try {
+    // Mi campo revocado: ni se extrae ni se guarda nada de la finca.
+    if ((await getConsentState(admin, profileId, CONSENT_FARM)) === 'revoked') return
+
     const { text } = await provider.generate({
       messages: [
         { role: 'system', content: EXTRACTION_PROMPT },
@@ -118,6 +122,8 @@ export async function extractAndSaveFarmData(
     await admin
       .from('farm_profile')
       .upsert({ profile_id: profileId, data: merged, updated_at: new Date().toISOString() })
+
+    await recordFirstUse(admin, profileId, CONSENT_FARM)
   } catch (err) {
     // Best-effort: nunca debe romper la respuesta principal del chat.
     console.error('extractAndSaveFarmData falló:', err)

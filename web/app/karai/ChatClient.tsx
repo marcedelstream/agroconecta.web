@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import { MAX_MESSAGE_CHARS } from '@/lib/karai/limits'
 
 interface DisplayMessage {
   role: 'user' | 'assistant'
@@ -543,6 +544,7 @@ export function KaraiChatClient({ email }: { email: string }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Escribile a Karai — precios, clima, tus lotes…"
+                maxLength={MAX_MESSAGE_CHARS}
                 className="flex-1 min-w-0 bg-transparent border-none outline-none text-[var(--k-text)] text-[14.5px] font-medium py-2.5 placeholder:text-[var(--k-muted-3)]"
                 disabled={loading}
               />
@@ -565,7 +567,9 @@ export function KaraiChatClient({ email }: { email: string }) {
               )}
             </div>
             <p className="mt-[9px] text-center text-[11px] font-medium text-[var(--k-muted-4)]">
-              Karai puede equivocarse. Verificá precios y fechas antes de decidir.
+              Karai puede equivocarse. Verificá precios y fechas antes de decidir. Tus mensajes se procesan con inteligencia artificial de
+              OpenAI (EE. UU.); más en la{' '}
+              <Link href="/politica" className="underline hover:text-[var(--k-text)]">política de privacidad</Link>.
             </p>
           </form>
         </div>
